@@ -1,24 +1,34 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+// app/layout.tsx
+import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { useAuthStore } from "../store/authstore";
+import AuthNavigator from "./navigation/AuthNavigator";
+import TabNavigator from "./navigation/TabNavigator";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+  // simulate async restore (if needed)
+  useEffect(() => {
+    // example: check token or API
+    setTimeout(() => {
+      console.log("set user : null");
+      setUser(null); // change this logic accordingly
+    }, 1000);
+  }, []);
+
+  if (user === undefined) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" color={"red"} />
+      </View>
+    );
+  }
+
+  if (user === null) {
+    return <AuthNavigator />;
+  }
+
+  return <TabNavigator />;
 }

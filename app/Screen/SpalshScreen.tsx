@@ -1,14 +1,14 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-const explore = () => {
+const SpalshScreen = () => {
   return (
     <View>
-      <Text>explore</Text>
+      <Text>SpalshScreen</Text>
     </View>
   );
 };
 
-export default explore;
+export default SpalshScreen;
 
 const styles = StyleSheet.create({});

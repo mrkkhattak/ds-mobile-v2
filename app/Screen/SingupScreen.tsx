@@ -1,14 +1,14 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-const explore = () => {
+const SingupScreen = () => {
   return (
     <View>
-      <Text>explore</Text>
+      <Text>SingupScreen</Text>
     </View>
   );
 };
 
-export default explore;
+export default SingupScreen;
 
 const styles = StyleSheet.create({});
