@@ -2,9 +2,11 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import CleaningStruggleScreen from "../Screen/CleaningStruggleScreen";
 import Login from "../Screen/LoginScreen";
+import SetUpYourHomeScreen from "../Screen/SetUpYourHomeScreen";
 import Register from "../Screen/SingupScreen";
+import { AuthStackParamList } from "../types/navigator_type";
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthNavigator() {
   return (
@@ -17,6 +19,10 @@ export default function AuthNavigator() {
       <Stack.Screen
         name="CleaningStruggleScreen"
         component={CleaningStruggleScreen}
+      />
+      <Stack.Screen
+        name="SetUpYourHomeScreen"
+        component={SetUpYourHomeScreen}
       />
     </Stack.Navigator>
   );
