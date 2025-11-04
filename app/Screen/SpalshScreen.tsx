@@ -1,7 +1,13 @@
-import React from "react";
-import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Rect, Defs, Pattern, Use, Image as SvgImage } from "react-native-svg";
+import React from "react";
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Svg, { Rect } from "react-native-svg";
 
 const { width, height } = Dimensions.get("window");
 
@@ -15,136 +21,8 @@ const SpalshScreen = () => {
         end={{ x: 0.8, y: 1 }}
         style={styles.topSection}
       >
-        {/* Brush Pattern Overlay - Rotated */}
-        <View style={styles.brushPatternOverlay}>
-          <Svg
-            width={width * 1.5}
-            height={height * 0.7}
-            viewBox="0 0 393 493"
-            style={styles.brushPattern}
-          >
-            <Defs>
-              <Pattern
-                id="pattern0_1_490"
-                patternContentUnits="objectBoundingBox"
-                width="1"
-                height="1"
-              >
-                <SvgImage
-                  x="-0.00110179"
-                  y="0"
-                  width="950"
-                  height="1026"
-                  preserveAspectRatio="none"
-                  opacity="0.15"
-                  href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA7YAAAQCCAYAAACYBmR1AAAACXBIWXMAABYlAAAWJQFJUiTwAADa4UlEQVR4nO..."
-                />
-              </Pattern>
-            </Defs>
-            <Rect
-              x="173.471"
-              y="-122"
-              width="437"
-              height="473"
-              transform="rotate(25.3443 173.471 -122)"
-              fill="url(#pattern0_1_490)"
-              opacity="0.3"
-            />
-          </Svg>
-        </View>
-
-        {/* Star Icon */}
-        <View style={styles.starContainer}>
-          <Svg width="70" height="70" viewBox="0 0 70 70">
-            {/* Outer diamond */}
-            <Rect
-              x="10"
-              y="10"
-              width="50"
-              height="50"
-              fill="#FFC107"
-              transform="rotate(45 35 35)"
-            />
-            {/* Inner lighter diamond for depth */}
-            <Rect
-              x="20"
-              y="20"
-              width="30"
-              height="30"
-              fill="#FFD54F"
-              transform="rotate(45 35 35)"
-            />
-          </Svg>
-        </View>
-
-        {/* Brush Icon - Large Diagonal */}
-        <View style={styles.brushContainer}>
-          <Svg width="300" height="400" viewBox="0 0 300 400">
-            {/* Brush Handle (Teal/Turquoise) */}
-            <Rect
-              x="180"
-              y="20"
-              width="50"
-              height="280"
-              fill="#4DB8AC"
-              rx="10"
-            />
-            {/* Handle highlight */}
-            <Rect
-              x="190"
-              y="30"
-              width="15"
-              height="260"
-              fill="#6ECFC2"
-              rx="7"
-              opacity="0.6"
-            />
-
-            {/* Brush Head (Green) */}
-            <Rect
-              x="140"
-              y="260"
-              width="130"
-              height="110"
-              fill="#8BC34A"
-              rx="10"
-            />
-            {/* Brush head highlight */}
-            <Rect
-              x="150"
-              y="270"
-              width="110"
-              height="30"
-              fill="#AED581"
-              rx="8"
-              opacity="0.7"
-            />
-
-            {/* Bristle details */}
-            <Rect x="155" y="290" width="10" height="70" fill="#7CB342" opacity="0.5" />
-            <Rect x="175" y="290" width="10" height="70" fill="#7CB342" opacity="0.5" />
-            <Rect x="195" y="290" width="10" height="70" fill="#7CB342" opacity="0.5" />
-            <Rect x="215" y="290" width="10" height="70" fill="#7CB342" opacity="0.5" />
-            <Rect x="235" y="290" width="10" height="70" fill="#7CB342" opacity="0.5" />
-          </Svg>
-        </View>
-
-        {/* Lime/Lemon Slice at bottom of gradient */}
-        <View style={styles.limeContainer}>
-          <Svg width="140" height="70" viewBox="0 0 140 70">
-            {/* Outer rim - darker green */}
-            <Rect x="0" y="35" width="140" height="35" fill="#00C853" rx="70" />
-            {/* Inner section - lighter green */}
-            <Rect x="12" y="40" width="116" height="30" fill="#69F0AE" rx="58" />
-            {/* Center line */}
-            <Rect x="68" y="40" width="4" height="30" fill="#00C853" />
-            {/* Lime segments - radiating lines */}
-            <Rect x="45" y="42" width="3" height="28" fill="#00C853" transform="rotate(-35 46.5 56)" />
-            <Rect x="90" y="42" width="3" height="28" fill="#00C853" transform="rotate(35 91.5 56)" />
-            <Rect x="28" y="45" width="3" height="25" fill="#00C853" transform="rotate(-60 29.5 57.5)" />
-            <Rect x="107" y="45" width="3" height="25" fill="#00C853" transform="rotate(60 108.5 57.5)" />
-          </Svg>
-        </View>
+        {/* <BroomIcon /> */}
+        {/* <BroomAndStar /> */}
       </LinearGradient>
 
       {/* Bottom White Section */}
@@ -203,7 +81,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   topSection: {
-    height: height * 0.58,
+    height: "50%",
     width: "100%",
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,

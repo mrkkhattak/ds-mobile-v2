@@ -13,15 +13,13 @@ export default function RootLayout() {
   useEffect(() => {
     // example: check token or API
     setTimeout(() => {
-      console.log("set user : null");
-      setUser(null); // change this logic accordingly
-    }, 1000);
+      setUser(null);
+      // change this logic accordingly
+    }, 5000);
   }, []);
-
+  console.log(user);
   if (user === undefined) {
-    return (
-    <SplashScreen/>
-    );
+    return <SplashScreen />;
   }
 
   if (user === null) {
