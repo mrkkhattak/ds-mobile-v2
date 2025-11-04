@@ -4,6 +4,7 @@ import { ActivityIndicator, View } from "react-native";
 import { useAuthStore } from "../store/authstore";
 import AuthNavigator from "./navigation/AuthNavigator";
 import TabNavigator from "./navigation/TabNavigator";
+import SplashScreen from "../"
 
 export default function RootLayout() {
   const user = useAuthStore((s) => s.user);
@@ -20,9 +21,7 @@ export default function RootLayout() {
 
   if (user === undefined) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color={"red"} />
-      </View>
+    <SplashScreen/>
     );
   }
 
