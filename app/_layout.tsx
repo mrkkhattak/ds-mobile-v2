@@ -1,10 +1,9 @@
 // app/layout.tsx
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
 import { useAuthStore } from "../store/authstore";
 import AuthNavigator from "./navigation/AuthNavigator";
 import TabNavigator from "./navigation/TabNavigator";
-import SplashScreen from "../"
+import SplashScreen from "./Screen/SpalshScreen";
 
 export default function RootLayout() {
   const user = useAuthStore((s) => s.user);
