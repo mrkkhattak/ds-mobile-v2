@@ -95,8 +95,12 @@ export const useAuthStore = create<AuthState>()(
 
       resetPassword: async (email: string) => {
         try {
+          const redirectUrl = __DEV__
+            ? 'exp://192.168.100.24:8081/--/auth/callback'
+            : 'dailyspruce://auth/callback';
+
           const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: undefined,
+            redirectTo: redirectUrl,
           });
 
           return { error };
