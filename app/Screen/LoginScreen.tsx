@@ -67,7 +67,15 @@ const LoginScreen = () => {
       const { error } = await signIn(data.email, data.password);
 
       if (error) {
-        Alert.alert("Login Error", error.message || "Invalid credentials");
+        // Check if error is due to unconfirmed email
+        if (error.message?.includes("Email not confirmed")) {
+          Alert.alert(
+            "Email Not Confirmed",
+            "Please check your email and click the confirmation link before logging in."
+          );
+        } else {
+          Alert.alert("Login Error", error.message || "Invalid credentials");
+        }
         return;
       }
 

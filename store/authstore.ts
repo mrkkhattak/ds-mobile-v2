@@ -55,11 +55,10 @@ export const useAuthStore = create<AuthState>()(
 
           if (error) return { error };
 
-          if (data.session) {
-            set({ session: data.session, user: data.user });
-          }
+          // Don't set session/user on signup - wait for email confirmation
+          // User will need to confirm email before logging in
 
-          return { error: null };
+          return { error: null, data };
         } catch (error) {
           return { error };
         }

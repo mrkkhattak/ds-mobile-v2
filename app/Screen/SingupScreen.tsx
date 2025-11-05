@@ -86,8 +86,8 @@ const SignupScreen = () => {
       }
 
       Alert.alert(
-        "Success",
-        "Account created successfully! You can now log in.",
+        "Verify Your Email",
+        "We've sent a confirmation email to " + data.email + ". Please check your inbox and click the confirmation link to activate your account before logging in.",
         [
           {
             text: "OK",
