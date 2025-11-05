@@ -25,7 +25,9 @@ Splash.preventAutoHideAsync();
 export default function RootLayout() {
   const user = useAuthStore((s) => s.user);
   const loading = useAuthStore((s) => s.loading);
+  const isPasswordRecovery = useAuthStore((s) => s.isPasswordRecovery);
   const initialize = useAuthStore((s) => s.initialize);
+  const setIsPasswordRecovery = useAuthStore((s) => s.setIsPasswordRecovery);
 
   // Load Poppins fonts
   const [fontsLoaded] = useFonts({
@@ -43,7 +45,7 @@ export default function RootLayout() {
     initialize();
   }, [initialize]);
 
-  // Handle deep linking for email confirmation
+  // Handle deep linking for email confirmation and password reset
   useEffect(() => {
     const handleDeepLink = async (event: { url: string }) => {
       const url = event.url;
@@ -56,22 +58,27 @@ export default function RootLayout() {
       const refreshToken = urlObj.searchParams.get("refresh_token");
       const type = urlObj.searchParams.get("type");
 
-      if (type === "signup" && accessToken && refreshToken) {
+      if (accessToken && refreshToken) {
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         });
 
         if (error) {
-          Alert.alert("Error", "Failed to confirm email. Please try again.");
+          Alert.alert("Error", "Failed to verify link. Please try again.");
           return;
         }
 
         if (data?.session) {
-          Alert.alert(
-            "Success",
-            "Email confirmed successfully! You can now use the app."
-          );
+          if (type === "signup") {
+            Alert.alert(
+              "Success",
+              "Email confirmed successfully! You can now use the app."
+            );
+          } else if (type === "recovery") {
+            // Set flag to show ResetPasswordScreen
+            setIsPasswordRecovery(true);
+          }
         }
       }
     };
@@ -85,7 +92,7 @@ export default function RootLayout() {
     const subscription = Linking.addEventListener("url", handleDeepLink);
 
     return () => subscription.remove();
-  }, []);
+  }, [setIsPasswordRecovery]);
 
   // Hide splash when fonts are ready
   useEffect(() => {
@@ -100,7 +107,7 @@ export default function RootLayout() {
   }
 
   // Show appropriate navigator based on auth state
-  if (user === null) {
+  if (user === null || isPasswordRecovery) {
     return <AuthNavigator />;
   }
 

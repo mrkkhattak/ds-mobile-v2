@@ -8,9 +8,11 @@ type AuthState = {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isPasswordRecovery: boolean;
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
+  setIsPasswordRecovery: (isRecovery: boolean) => void;
   initialize: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -24,10 +26,12 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       session: null,
       loading: true,
+      isPasswordRecovery: false,
 
       setUser: (user) => set({ user }),
       setSession: (session) => set({ session }),
       setLoading: (loading) => set({ loading }),
+      setIsPasswordRecovery: (isRecovery) => set({ isPasswordRecovery: isRecovery }),
 
       initialize: async () => {
         try {
@@ -115,6 +119,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         session: state.session,
         user: state.user,
+        // Don't persist isPasswordRecovery flag
       }),
     }
   )
