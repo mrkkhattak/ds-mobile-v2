@@ -94,6 +94,7 @@ const SetUpYourHomeScreen = () => {
           flexGrow: 1,
           alignItems: "center",
           paddingVertical: 24,
+          paddingHorizontal: 15,
         }}
       >
         <View

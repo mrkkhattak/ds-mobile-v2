@@ -91,7 +91,9 @@ const CreateYourAccountScreen = () => {
               />
               <SecondaryButton
                 label="Sign up with Apple"
-                onPress={() => {}}
+                onPress={() => {
+                  navigation.goBack();
+                }}
                 textStyle={{ color: "#34276C" }}
                 buttonStyle={{ backgroundColor: "#FFFFFF" }}
               />

@@ -188,6 +188,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: "center",
     paddingVertical: 24,
+    paddingHorizontal: 20,
   },
   progressRow: {
     flexDirection: "row",

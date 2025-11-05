@@ -1,17 +1,17 @@
 // navigation/AuthNavigator.tsx
+import { useAuthStore } from "@/store/authstore";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import CleaningStruggleScreen from "../Screen/CleaningStruggleScreen";
+import ConfirmEmail from "../Screen/ConfirmEmail";
 import CreateYourAccountScreen from "../Screen/CreateYourAccountScreen";
 import ForgotPasswordScreen from "../Screen/ForgotPasswordScreen";
-import ResetPasswordScreen from "../Screen/ResetPasswordScreen";
-import ConfirmEmail from "../Screen/ConfirmEmail";
 import { default as LoginScreen } from "../Screen/LoginScreen";
 import PickYourTaskScreen from "../Screen/PickYourTaskScreen";
+import ResetPasswordScreen from "../Screen/ResetPasswordScreen";
 import SettingUpYourRoomScreen from "../Screen/SettingUpYourRoomScreen";
 import SetUpYourHomeScreen from "../Screen/SetUpYourHomeScreen";
 import Register from "../Screen/SingupScreen";
 import { AuthStackParamList } from "../types/navigator_type";
-import { useAuthStore } from "@/store/authstore";
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -21,7 +21,9 @@ export default function AuthNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName={isPasswordRecovery ? "ResetPasswordScreen" : "CleaningStruggleScreen"}
+      initialRouteName={
+        isPasswordRecovery ? "ResetPasswordScreen" : "CleaningStruggleScreen"
+      }
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={Register} />
@@ -33,10 +35,7 @@ export default function AuthNavigator() {
         name="ResetPasswordScreen"
         component={ResetPasswordScreen}
       />
-      <Stack.Screen
-        name="ConfirmEmail"
-        component={ConfirmEmail}
-      />
+      <Stack.Screen name="ConfirmEmail" component={ConfirmEmail} />
 
       <Stack.Screen
         name="CleaningStruggleScreen"

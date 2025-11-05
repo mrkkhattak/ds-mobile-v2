@@ -84,8 +84,9 @@ const PickYourTaskScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-
+          alignItems: "center",
           paddingVertical: 24,
+          paddingHorizontal: 20,
         }}
       >
         <View style={styles.progressRow}>
