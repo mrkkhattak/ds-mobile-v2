@@ -45,9 +45,22 @@ export default function RootLayout() {
 
   // Handle deep linking for email confirmation
   useEffect(() => {
-    const handleDeepLink = async (url: string) => {
-      if (url) {
-        const { data, error } = await supabase.auth.getSessionFromUrl({ url });
+    const handleDeepLink = async (event: { url: string }) => {
+      const url = event.url;
+
+      if (!url) return;
+
+      // Extract the URL query parameters
+      const urlObj = new URL(url);
+      const accessToken = urlObj.searchParams.get("access_token");
+      const refreshToken = urlObj.searchParams.get("refresh_token");
+      const type = urlObj.searchParams.get("type");
+
+      if (type === "signup" && accessToken && refreshToken) {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
 
         if (error) {
           Alert.alert("Error", "Failed to confirm email. Please try again.");
@@ -65,13 +78,11 @@ export default function RootLayout() {
 
     // Handle initial URL
     Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink(url);
+      if (url) handleDeepLink({ url });
     });
 
     // Handle URL when app is already open
-    const subscription = Linking.addEventListener("url", ({ url }) => {
-      handleDeepLink(url);
-    });
+    const subscription = Linking.addEventListener("url", handleDeepLink);
 
     return () => subscription.remove();
   }, []);
