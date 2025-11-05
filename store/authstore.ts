@@ -50,8 +50,8 @@ export const useAuthStore = create<AuthState>()(
       signUp: async (email: string, password: string) => {
         try {
           const redirectUrl = __DEV__
-            ? 'exp://192.168.100.24:8081/--/auth/callback'
-            : 'dailyspruce://auth/callback';
+            ? 'exp://192.168.100.24:8081/--/Screen/ConfirmEmail'
+            : 'dailyspruce://Screen/ConfirmEmail';
 
           const { data, error } = await supabase.auth.signUp({
             email,
@@ -100,8 +100,8 @@ export const useAuthStore = create<AuthState>()(
       resetPassword: async (email: string) => {
         try {
           const redirectUrl = __DEV__
-            ? 'exp://192.168.100.24:8081/--/auth/callback'
-            : 'dailyspruce://auth/callback';
+            ? 'exp://192.168.100.24:8081/--/Screen/ResetPasswordScreen'
+            : 'dailyspruce://Screen/ResetPasswordScreen';
 
           const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: redirectUrl,
