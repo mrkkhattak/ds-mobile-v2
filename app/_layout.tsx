@@ -48,33 +48,47 @@ export default function RootLayout() {
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
       console.log('Deep link received:', url);
-      const { path, queryParams } = Linking.parse(url);
 
-      // Check if this is an auth callback
-      if (queryParams?.access_token && queryParams?.refresh_token) {
+      // Parse URL manually to handle all formats
+      const urlObj = new URL(url);
+      const params = new URLSearchParams(urlObj.hash.replace('#', '?'));
+
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
+      const type = params.get('type');
+
+      // Check if this is an auth callback with tokens
+      if (access_token && refresh_token) {
         const { error } = await supabase.auth.setSession({
-          access_token: queryParams.access_token as string,
-          refresh_token: queryParams.refresh_token as string,
+          access_token,
+          refresh_token,
         });
 
         if (!error) {
-          // Check if this is a password recovery or email confirmation
-          const type = queryParams.type as string;
+          console.log('Session set successfully, type:', type);
+          // Check if this is a password recovery
           if (type === 'recovery') {
             setIsPasswordRecovery(true);
           }
-          // For email confirmation (type === 'signup'), the user state will update automatically
+          // For email confirmation (type === 'signup' or 'email_change'),
+          // the user state will update automatically and show TabNavigator
+        } else {
+          console.error('Error setting session:', error);
         }
       }
     };
 
-    // Check for initial URL
+    // Check for initial URL when app opens from a link
     Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink(url);
+      if (url) {
+        console.log('Initial URL:', url);
+        handleDeepLink(url);
+      }
     });
 
-    // Listen for URL changes
+    // Listen for URL changes when app is already open
     const subscription = Linking.addEventListener('url', (event) => {
+      console.log('URL event:', event.url);
       handleDeepLink(event.url);
     });
 
