@@ -12,11 +12,12 @@ import {
 } from "@expo-google-fonts/poppins";
 import * as Splash from "expo-splash-screen";
 import * as Linking from "expo-linking";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuthStore } from "../store/authstore";
 import AuthNavigator from "./navigation/AuthNavigator";
 import TabNavigator from "./navigation/TabNavigator";
 import { supabase } from "../lib/supabase";
+import SpalshScreen from "./Screen/SpalshScreen";
 
 // Keep the splash screen visible while fonts load
 Splash.preventAutoHideAsync();
@@ -27,6 +28,7 @@ export default function RootLayout() {
   const isPasswordRecovery = useAuthStore((s) => s.isPasswordRecovery);
   const initialize = useAuthStore((s) => s.initialize);
   const setIsPasswordRecovery = useAuthStore((s) => s.setIsPasswordRecovery);
+  const [showSplash, setShowSplash] = useState(true);
 
   // Load Poppins fonts
   const [fontsLoaded] = useFonts({
@@ -96,16 +98,33 @@ export default function RootLayout() {
   }, [setIsPasswordRecovery]);
 
 
-  // Hide splash when fonts are ready
+  // Hide native splash when fonts are ready
+  useEffect(() => {
+    if (fontsLoaded) {
+      Splash.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  // Show custom splash screen for minimum duration
   useEffect(() => {
     if (fontsLoaded && !loading) {
-      Splash.hideAsync();
+      // Show splash for at least 2 seconds
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 2000);
+
+      return () => clearTimeout(timer);
     }
   }, [fontsLoaded, loading]);
 
-  // Wait until fonts and auth are loaded
-  if (!fontsLoaded || loading) {
+  // Wait until fonts are loaded
+  if (!fontsLoaded) {
     return null;
+  }
+
+  // Show custom splash screen
+  if (showSplash || loading) {
+    return <SpalshScreen />;
   }
 
   // Show appropriate navigator based on auth state

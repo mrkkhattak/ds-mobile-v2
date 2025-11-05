@@ -35,6 +35,7 @@ export const useAuthStore = create<AuthState>()(
 
       initialize: async () => {
         try {
+          set({ loading: true });
           const { data: { session } } = await supabase.auth.getSession();
           set({ session, user: session?.user ?? null, loading: false });
 
@@ -119,8 +120,14 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         session: state.session,
         user: state.user,
-        // Don't persist isPasswordRecovery flag
+        // Don't persist loading or isPasswordRecovery flag
       }),
+      onRehydrateStorage: () => (state) => {
+        // Always set loading to true when rehydrating from storage
+        if (state) {
+          state.loading = true;
+        }
+      },
     }
   )
 );
