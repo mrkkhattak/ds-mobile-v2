@@ -11,11 +11,8 @@ import {
   useFonts,
 } from "@expo-google-fonts/poppins";
 import * as Splash from "expo-splash-screen";
-import * as Linking from "expo-linking";
 import React, { useEffect } from "react";
-import { Alert } from "react-native";
 import { useAuthStore } from "../store/authstore";
-import { supabase } from "../lib/supabase";
 import AuthNavigator from "./navigation/AuthNavigator";
 import TabNavigator from "./navigation/TabNavigator";
 
@@ -45,54 +42,6 @@ export default function RootLayout() {
     initialize();
   }, [initialize]);
 
-  // Handle deep linking for email confirmation and password reset
-  useEffect(() => {
-    const handleDeepLink = async (event: { url: string }) => {
-      const url = event.url;
-
-      if (!url) return;
-
-      // Extract the URL query parameters
-      const urlObj = new URL(url);
-      const accessToken = urlObj.searchParams.get("access_token");
-      const refreshToken = urlObj.searchParams.get("refresh_token");
-      const type = urlObj.searchParams.get("type");
-
-      if (accessToken && refreshToken) {
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-
-        if (error) {
-          Alert.alert("Error", "Failed to verify link. Please try again.");
-          return;
-        }
-
-        if (data?.session) {
-          if (type === "signup") {
-            Alert.alert(
-              "Success",
-              "Email confirmed successfully! You can now use the app."
-            );
-          } else if (type === "recovery") {
-            // Set flag to show ResetPasswordScreen
-            setIsPasswordRecovery(true);
-          }
-        }
-      }
-    };
-
-    // Handle initial URL
-    Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
-    });
-
-    // Handle URL when app is already open
-    const subscription = Linking.addEventListener("url", handleDeepLink);
-
-    return () => subscription.remove();
-  }, [setIsPasswordRecovery]);
 
   // Hide splash when fonts are ready
   useEffect(() => {
