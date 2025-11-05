@@ -2,6 +2,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  ActivityIndicator,
+  Alert,
   StatusBar,
   StyleSheet,
   Text,
@@ -14,6 +16,7 @@ import * as yup from "yup";
 import { SecondaryButton } from "@/components/ui/Buttons";
 import { CustomInput } from "@/components/ui/CustomTextInput";
 import { MainHeading, SubtitleText } from "@/components/ui/Heading";
+import { useAuthStore } from "@/store/authstore";
 
 import EyeIcon from "../../assets/images/icons/eye 1.svg";
 import PencilIcon from "../../assets/images/icons/pencil.svg";
@@ -43,6 +46,8 @@ type FormValues = {
 const LoginScreen = () => {
   const naviagation = useNavigation<NavigationProp>();
   const [securePassword, setSecurePassword] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const { signIn } = useAuthStore();
 
   const {
     control,
@@ -56,8 +61,22 @@ const LoginScreen = () => {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log("Login Data:", data);
+  const onSubmit = async (data: FormValues) => {
+    setIsLoading(true);
+    try {
+      const { error } = await signIn(data.email, data.password);
+
+      if (error) {
+        Alert.alert("Login Error", error.message || "Invalid credentials");
+        return;
+      }
+
+      naviagation.navigate("SetUpYourHome" as any);
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -136,12 +155,16 @@ const LoginScreen = () => {
       <View
         style={{ flex: 1, justifyContent: "flex-end", alignItems: "center" }}
       >
-        <SecondaryButton
-          label="Login"
-          onPress={handleSubmit(onSubmit)}
-          textStyle={{ color: "#FFFFFF" }}
-          buttonStyle={{ backgroundColor: "#8C50FB" }}
-        />
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#8C50FB" />
+        ) : (
+          <SecondaryButton
+            label="Login"
+            onPress={handleSubmit(onSubmit)}
+            textStyle={{ color: "#FFFFFF" }}
+            buttonStyle={{ backgroundColor: "#8C50FB" }}
+          />
+        )}
       </View>
 
       <TouchableOpacity

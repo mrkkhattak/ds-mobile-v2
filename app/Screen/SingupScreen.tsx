@@ -1,11 +1,14 @@
 import { SecondaryButton } from "@/components/ui/Buttons";
 import { CustomInput } from "@/components/ui/CustomTextInput";
 import { MainHeading, SubtitleText } from "@/components/ui/Heading";
+import { useAuthStore } from "@/store/authstore";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigation } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  ActivityIndicator,
+  Alert,
   StatusBar,
   StyleSheet,
   Text,
@@ -56,6 +59,8 @@ const SignupScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const [securePassword, setSecurePassword] = React.useState(true);
   const [secureConfirm, setSecureConfirm] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const { signUp } = useAuthStore();
 
   const {
     control,
@@ -70,8 +75,31 @@ const SignupScreen = () => {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log("Form Data:", data);
+  const onSubmit = async (data: FormValues) => {
+    setIsLoading(true);
+    try {
+      const { error } = await signUp(data.email, data.password);
+
+      if (error) {
+        Alert.alert("Sign Up Error", error.message || "Failed to create account");
+        return;
+      }
+
+      Alert.alert(
+        "Success",
+        "Account created successfully! You can now log in.",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("LoginScreen"),
+          },
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -164,20 +192,26 @@ const SignupScreen = () => {
       <View
         style={{ flex: 1, justifyContent: "flex-end", alignItems: "center" }}
       >
-        <SecondaryButton
-          label="Next"
-          onPress={handleSubmit(onSubmit)}
-          textStyle={{ color: "#FFFFFF" }}
-          buttonStyle={{ backgroundColor: "#8C50FB" }}
-        />
-        <SecondaryButton
-          label="Back"
-          onPress={() => {
-            navigation.goBack();
-          }}
-          textStyle={{ color: "#34276C" }}
-          buttonStyle={{ backgroundColor: "#FFFFFF", marginTop: 10 }}
-        />
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#8C50FB" />
+        ) : (
+          <>
+            <SecondaryButton
+              label="Next"
+              onPress={handleSubmit(onSubmit)}
+              textStyle={{ color: "#FFFFFF" }}
+              buttonStyle={{ backgroundColor: "#8C50FB" }}
+            />
+            <SecondaryButton
+              label="Back"
+              onPress={() => {
+                navigation.goBack();
+              }}
+              textStyle={{ color: "#34276C" }}
+              buttonStyle={{ backgroundColor: "#FFFFFF", marginTop: 10 }}
+            />
+          </>
+        )}
       </View>
 
       <SubtitleText

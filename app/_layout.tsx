@@ -15,14 +15,14 @@ import React, { useEffect } from "react";
 import { useAuthStore } from "../store/authstore";
 import AuthNavigator from "./navigation/AuthNavigator";
 import TabNavigator from "./navigation/TabNavigator";
-import SplashScreen from "./Screen/SpalshScreen";
 
 // Keep the splash screen visible while fonts load
 Splash.preventAutoHideAsync();
 
 export default function RootLayout() {
   const user = useAuthStore((s) => s.user);
-  const setUser = useAuthStore((s) => s.setUser);
+  const loading = useAuthStore((s) => s.loading);
+  const initialize = useAuthStore((s) => s.initialize);
 
   // Load Poppins fonts
   const [fontsLoaded] = useFonts({
@@ -35,26 +35,24 @@ export default function RootLayout() {
     "Inter-Medium": Inter_500Medium,
   });
 
-  // Simulate async auth restore (example)
+  // Initialize auth state
   useEffect(() => {
-    setTimeout(() => {
-      setUser(null); // Example: user not logged in
-    }, 2000);
-  }, []);
+    initialize();
+  }, [initialize]);
 
   // Hide splash when fonts are ready
   useEffect(() => {
-    if (fontsLoaded) Splash.hideAsync();
-  }, [fontsLoaded]);
+    if (fontsLoaded && !loading) {
+      Splash.hideAsync();
+    }
+  }, [fontsLoaded, loading]);
 
-  // Wait until fonts are loaded
-  if (!fontsLoaded) return null;
-
-  // Normal logic continues
-  if (user === undefined) {
-    return <SplashScreen />;
+  // Wait until fonts and auth are loaded
+  if (!fontsLoaded || loading) {
+    return null;
   }
 
+  // Show appropriate navigator based on auth state
   if (user === null) {
     return <AuthNavigator />;
   }

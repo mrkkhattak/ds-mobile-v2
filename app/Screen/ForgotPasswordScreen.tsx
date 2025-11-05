@@ -1,10 +1,11 @@
 import { SecondaryButton } from "@/components/ui/Buttons";
 import { CustomInput } from "@/components/ui/CustomTextInput";
 import { MainHeading, SubtitleText } from "@/components/ui/Heading";
+import { useAuthStore } from "@/store/authstore";
 import { yupResolver } from "@hookform/resolvers/yup";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, StatusBar, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import * as yup from "yup";
@@ -28,28 +29,42 @@ type FormValues = {
 
 const ForgotPasswordScreen = () => {
   const naviagation = useNavigation<NavigationProp>();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const { resetPassword } = useAuthStore();
 
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(schema),
   });
 
   const onSubmit = async (data: FormValues) => {
-    // try {
-    //   const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-    //     redirectTo: "https://yourapp.supabase.co/auth/v1/callback", // change to your redirect URL
-    //   });
-    //   if (error) throw error;
-    //   Alert.alert(
-    //     "Reset Link Sent",
-    //     "If an account exists with this email, you'll receive a reset link shortly."
-    //   );
-    // } catch (error: any) {
-    //   Alert.alert("Error", error.message || "Something went wrong");
-    // }
+    setIsLoading(true);
+    try {
+      const { error } = await resetPassword(data.email);
+
+      if (error) {
+        Alert.alert("Error", error.message || "Failed to send reset email");
+        return;
+      }
+
+      Alert.alert(
+        "Reset Link Sent",
+        "If an account exists with this email, you'll receive a reset link shortly.",
+        [
+          {
+            text: "OK",
+            onPress: () => naviagation.goBack(),
+          },
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -100,20 +115,26 @@ const ForgotPasswordScreen = () => {
 
         {/* Submit Button */}
         <View style={{ marginTop: 30 }}>
-          <SecondaryButton
-            label={isSubmitting ? "Sending..." : "Send Reset Link"}
-            onPress={handleSubmit(onSubmit)}
-            buttonStyle={{ backgroundColor: "#8C50FB" }}
-            textStyle={{ color: "#FFFFFF" }}
-          />
-          <SecondaryButton
-            label="Back"
-            onPress={() => {
-              naviagation.goBack();
-            }}
-            textStyle={{ color: "#34276C" }}
-            buttonStyle={{ backgroundColor: "#FFFFFF", marginTop: 10 }}
-          />
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#8C50FB" />
+          ) : (
+            <>
+              <SecondaryButton
+                label="Send Reset Link"
+                onPress={handleSubmit(onSubmit)}
+                buttonStyle={{ backgroundColor: "#8C50FB" }}
+                textStyle={{ color: "#FFFFFF" }}
+              />
+              <SecondaryButton
+                label="Back"
+                onPress={() => {
+                  naviagation.goBack();
+                }}
+                textStyle={{ color: "#34276C" }}
+                buttonStyle={{ backgroundColor: "#FFFFFF", marginTop: 10 }}
+              />
+            </>
+          )}
         </View>
       </View>
     </SafeAreaView>
