@@ -3,4 +3,9 @@ export type AuthStackParamList = {
   Register: undefined;
   CleaningStruggleScreen: undefined;
   SetUpYourHomeScreen: undefined;
+  PickYourTaskScreen: undefined;
+  SettingUpYourRoomScreen: undefined;
+  LoginScreen: undefined;
+  CreateYourAccountScreen: undefined;
+  ForgotPasswordScreen: undefined;
 };

@@ -1,7 +1,14 @@
 import React from "react";
 import { Text } from "react-native";
+import { TextStyle } from "react-native/Libraries/StyleSheet/StyleSheetTypes";
 
-export const MainHeading = ({ children }: { children: React.ReactNode }) => {
+export const MainHeading = ({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: TextStyle;
+}) => {
   return (
     <Text
       style={{
@@ -12,6 +19,7 @@ export const MainHeading = ({ children }: { children: React.ReactNode }) => {
         letterSpacing: -0.01,
         textAlign: "center",
         color: "#FFFFFF",
+        ...style,
       }}
     >
       {children}
@@ -19,7 +27,13 @@ export const MainHeading = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const SubtitleText = ({ children }: { children: React.ReactNode }) => {
+export const SubtitleText = ({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style: TextStyle;
+}) => {
   return (
     <Text
       style={{
@@ -30,7 +44,36 @@ export const SubtitleText = ({ children }: { children: React.ReactNode }) => {
         letterSpacing: 0.01, // 1%
         textAlign: "center",
         color: "#FFFFFF",
+        ...style,
       }}
+    >
+      {children}
+    </Text>
+  );
+};
+
+interface SecondryHeadingProps {
+  children: React.ReactNode;
+  style?: TextStyle;
+}
+
+export const SecondryHeading: React.FC<SecondryHeadingProps> = ({
+  children,
+  style,
+}) => {
+  return (
+    <Text
+      style={[
+        {
+          fontFamily: "Poppins",
+          fontWeight: "300",
+          fontSize: 24,
+          lineHeight: 48,
+          letterSpacing: -0.01,
+          textAlign: "center",
+        },
+        style,
+      ]}
     >
       {children}
     </Text>

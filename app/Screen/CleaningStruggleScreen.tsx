@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import * as yup from "yup";
@@ -16,9 +15,9 @@ import MainLayout from "@/components/layout/MainLayout";
 import { MainButton } from "@/components/ui/Buttons";
 import GradientProgressBar from "@/components/ui/GradentProgress";
 import { MainHeading, SubtitleText } from "@/components/ui/Heading";
+import SelectableCard from "@/components/ui/SelectedCard";
 import { useCleaningStruggleStore } from "@/store/cleaningStrugglesStore";
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import CalanderIcon from "../../assets/images/icons/calendarIcon.svg";
 import CleaningIcon from "../../assets/images/icons/cleaningIcon.svg";
@@ -118,7 +117,9 @@ const CleaningStruggleScreen = () => {
         {/* Headings */}
         <View style={{ marginTop: 32 }}>
           <MainHeading>What’s your cleaning struggle?</MainHeading>
-          <SubtitleText>(you can select multiple options)</SubtitleText>
+          <SubtitleText style={{ maxWidth: 300 }}>
+            (you can select multiple options)
+          </SubtitleText>
         </View>
 
         {/* Option Cards */}
@@ -131,34 +132,13 @@ const CleaningStruggleScreen = () => {
                 const isSelected = selected.includes(option.Label);
 
                 return (
-                  <TouchableOpacity
+                  <SelectableCard
                     key={idx}
+                    label={option.Label}
+                    icon={option.icon}
+                    isSelected={isSelected}
                     onPress={() => toggleOption(option.Label)}
-                    activeOpacity={0.85}
-                    style={{ width: "45%" }}
-                  >
-                    {isSelected ? (
-                      <LinearGradient
-                        colors={["#16C5E0", "#8DE016"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.cardSelected}
-                      >
-                        <View style={styles.gradientOverlay} />
-                        {option.icon}
-                        <Text style={[styles.cardText, { color: "white" }]}>
-                          {option.Label}
-                        </Text>
-                      </LinearGradient>
-                    ) : (
-                      <View style={styles.card}>
-                        {option.icon}
-                        <Text style={[styles.cardText, { color: "#42404E" }]}>
-                          {option.Label}
-                        </Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
@@ -191,7 +171,11 @@ const CleaningStruggleScreen = () => {
 
         {/* NEXT Button */}
 
-        <MainButton onPress={handleSubmit(onSubmit)} />
+        <MainButton
+          onPress={handleSubmit(onSubmit)}
+          label="NEXT"
+          style={{ marginTop: 10 }}
+        />
       </ScrollView>
     </MainLayout>
   );
