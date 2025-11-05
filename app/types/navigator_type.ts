@@ -9,4 +9,5 @@ export type AuthStackParamList = {
   CreateYourAccountScreen: undefined;
   ForgotPasswordScreen: undefined;
   ResetPasswordScreen: undefined;
+  ConfirmEmail: undefined;
 };

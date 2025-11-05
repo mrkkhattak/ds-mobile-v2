@@ -4,7 +4,7 @@ import { View, Text, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authstore';
 
-export default function AuthCallback() {
+export default function ConfirmEmail() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const setIsPasswordRecovery = useAuthStore((s) => s.setIsPasswordRecovery);

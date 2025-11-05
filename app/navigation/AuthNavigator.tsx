@@ -4,6 +4,7 @@ import CleaningStruggleScreen from "../Screen/CleaningStruggleScreen";
 import CreateYourAccountScreen from "../Screen/CreateYourAccountScreen";
 import ForgotPasswordScreen from "../Screen/ForgotPasswordScreen";
 import ResetPasswordScreen from "../Screen/ResetPasswordScreen";
+import ConfirmEmail from "../Screen/ConfirmEmail";
 import { default as LoginScreen } from "../Screen/LoginScreen";
 import PickYourTaskScreen from "../Screen/PickYourTaskScreen";
 import SettingUpYourRoomScreen from "../Screen/SettingUpYourRoomScreen";
@@ -31,6 +32,10 @@ export default function AuthNavigator() {
       <Stack.Screen
         name="ResetPasswordScreen"
         component={ResetPasswordScreen}
+      />
+      <Stack.Screen
+        name="ConfirmEmail"
+        component={ConfirmEmail}
       />
 
       <Stack.Screen
