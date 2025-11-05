@@ -1,18 +1,25 @@
 import { SecondaryButton } from "@/components/ui/Buttons";
 import { CustomInput } from "@/components/ui/CustomTextInput";
 import { MainHeading, SubtitleText } from "@/components/ui/Heading";
+import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/store/authstore";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useNavigation } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ActivityIndicator, Alert, StatusBar, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  StatusBar,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import * as yup from "yup";
 import EyeIcon from "../../assets/images/icons/eye 1.svg";
-import { useNavigation } from "expo-router";
 import { AuthStackParamList } from "../types/navigator_type";
-import { supabase } from "@/lib/supabase";
-import { useAuthStore } from "@/store/authstore";
 
 type NavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -36,6 +43,10 @@ type FormValues = {
 };
 
 const ResetPasswordScreen = () => {
+  const [securePassword, setSecurePassword] = React.useState(true);
+  const [secureConfirmPassword, setSecureConfirmPassword] =
+    React.useState(true);
+
   const navigation = useNavigation<NavigationProp>();
   const [isLoading, setIsLoading] = React.useState(false);
   const setIsPasswordRecovery = useAuthStore((s) => s.setIsPasswordRecovery);
@@ -91,9 +102,7 @@ const ResetPasswordScreen = () => {
       />
 
       <View style={styles.content}>
-        <MainHeading style={{ color: "#342868" }}>
-          Reset Password
-        </MainHeading>
+        <MainHeading style={{ color: "#342868" }}>Reset Password</MainHeading>
 
         <SubtitleText
           style={{
@@ -115,8 +124,14 @@ const ResetPasswordScreen = () => {
               placeholder="New Password"
               onChangeText={onChange}
               value={value}
-              icon={<EyeIcon />}
-              secureTextEntry={true}
+              icon={
+                <TouchableOpacity
+                  onPress={() => setSecurePassword(!securePassword)}
+                >
+                  <EyeIcon />
+                </TouchableOpacity>
+              }
+              secureTextEntry={securePassword}
             />
           )}
         />
@@ -136,8 +151,16 @@ const ResetPasswordScreen = () => {
               placeholder="Confirm New Password"
               onChangeText={onChange}
               value={value}
-              icon={<EyeIcon />}
-              secureTextEntry={true}
+              icon={
+                <TouchableOpacity
+                  onPress={() =>
+                    setSecureConfirmPassword(!secureConfirmPassword)
+                  }
+                >
+                  <EyeIcon />
+                </TouchableOpacity>
+              }
+              secureTextEntry={secureConfirmPassword}
             />
           )}
         />

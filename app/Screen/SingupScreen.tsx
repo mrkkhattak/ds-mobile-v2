@@ -81,17 +81,22 @@ const SignupScreen = () => {
       const { error } = await signUp(data.email, data.password);
 
       if (error) {
-        Alert.alert("Sign Up Error", error.message || "Failed to create account");
+        Alert.alert(
+          "Sign Up Error",
+          error.message || "Failed to create account"
+        );
         return;
       }
 
       Alert.alert(
         "Verify Your Email",
-        "We've sent a confirmation email to " + data.email + ". Please check your inbox and click the confirmation link to activate your account before logging in.",
+        "We've sent a confirmation email to " +
+          data.email +
+          ". Please check your inbox and click the confirmation link to activate your account before logging in.",
         [
           {
             text: "OK",
-            onPress: () => navigation.navigate("LoginScreen"),
+            onPress: () => navigation.navigate("Login"),
           },
         ]
       );

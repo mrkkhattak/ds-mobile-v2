@@ -78,8 +78,6 @@ const LoginScreen = () => {
         }
         return;
       }
-
-      naviagation.navigate("SetUpYourHome" as any);
     } catch (error: any) {
       Alert.alert("Error", error.message || "Something went wrong");
     } finally {
