@@ -45,11 +45,15 @@ export const useAuthStore = create<AuthState>()(
 
       signUp: async (email: string, password: string) => {
         try {
+          const redirectUrl = __DEV__
+            ? 'exp://192.168.100.24:8081/--/auth/callback'
+            : 'dailyspruce://auth/callback';
+
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
-              emailRedirectTo: 'dailyspruce://auth/callback',
+              emailRedirectTo: redirectUrl,
             },
           });
 
