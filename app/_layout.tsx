@@ -11,8 +11,11 @@ import {
   useFonts,
 } from "@expo-google-fonts/poppins";
 import * as Splash from "expo-splash-screen";
+import * as Linking from "expo-linking";
 import React, { useEffect } from "react";
+import { Alert } from "react-native";
 import { useAuthStore } from "../store/authstore";
+import { supabase } from "../lib/supabase";
 import AuthNavigator from "./navigation/AuthNavigator";
 import TabNavigator from "./navigation/TabNavigator";
 
@@ -39,6 +42,39 @@ export default function RootLayout() {
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Handle deep linking for email confirmation
+  useEffect(() => {
+    const handleDeepLink = async (url: string) => {
+      if (url) {
+        const { data, error } = await supabase.auth.getSessionFromUrl({ url });
+
+        if (error) {
+          Alert.alert("Error", "Failed to confirm email. Please try again.");
+          return;
+        }
+
+        if (data?.session) {
+          Alert.alert(
+            "Success",
+            "Email confirmed successfully! You can now use the app."
+          );
+        }
+      }
+    };
+
+    // Handle initial URL
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink(url);
+    });
+
+    // Handle URL when app is already open
+    const subscription = Linking.addEventListener("url", ({ url }) => {
+      handleDeepLink(url);
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   // Hide splash when fonts are ready
   useEffect(() => {
