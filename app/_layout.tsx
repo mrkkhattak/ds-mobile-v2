@@ -11,10 +11,12 @@ import {
   useFonts,
 } from "@expo-google-fonts/poppins";
 import * as Splash from "expo-splash-screen";
+import * as Linking from "expo-linking";
 import React, { useEffect } from "react";
 import { useAuthStore } from "../store/authstore";
 import AuthNavigator from "./navigation/AuthNavigator";
 import TabNavigator from "./navigation/TabNavigator";
+import { supabase } from "../lib/supabase";
 
 // Keep the splash screen visible while fonts load
 Splash.preventAutoHideAsync();
@@ -41,6 +43,48 @@ export default function RootLayout() {
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Handle deep links for authentication
+  useEffect(() => {
+    const handleDeepLink = async (url: string) => {
+      const { path, queryParams } = Linking.parse(url);
+
+      // Check if this is an auth callback
+      if (path?.includes('Screen/ResetPasswordScreen')) {
+        // Handle password recovery
+        if (queryParams?.access_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token: queryParams.access_token as string,
+            refresh_token: queryParams.refresh_token as string,
+          });
+
+          if (!error) {
+            setIsPasswordRecovery(true);
+          }
+        }
+      } else if (path?.includes('Screen/ConfirmEmail')) {
+        // Handle email confirmation
+        if (queryParams?.access_token) {
+          await supabase.auth.setSession({
+            access_token: queryParams.access_token as string,
+            refresh_token: queryParams.refresh_token as string,
+          });
+        }
+      }
+    };
+
+    // Check for initial URL
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink(url);
+    });
+
+    // Listen for URL changes
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleDeepLink(event.url);
+    });
+
+    return () => subscription.remove();
+  }, [setIsPasswordRecovery]);
 
 
   // Hide splash when fonts are ready
