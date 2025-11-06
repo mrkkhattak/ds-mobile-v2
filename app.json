@@ -11,7 +11,7 @@
 
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.doerz.daily-Spruce"
+      "bundleIdentifier": "com.doerz.dailyspruce"
     },
 
     "android": {
@@ -23,7 +23,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.doerz.daliy-spruce"
+      "package": "com.doerz.dailyspruce"
     },
 
     "web": {
