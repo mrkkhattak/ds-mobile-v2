@@ -5,12 +5,15 @@ import CleaningStruggleScreen from "../Screen/CleaningStruggleScreen";
 import ConfirmEmail from "../Screen/ConfirmEmail";
 import CreateYourAccountScreen from "../Screen/CreateYourAccountScreen";
 import ForgotPasswordScreen from "../Screen/ForgotPasswordScreen";
+import HereWhatWaitingForYouScreen from "../Screen/HereWhatWaitingForYouScreen";
 import { default as LoginScreen } from "../Screen/LoginScreen";
+import PaymentScreen from "../Screen/PaymentScreen";
 import PickYourTaskScreen from "../Screen/PickYourTaskScreen";
 import ResetPasswordScreen from "../Screen/ResetPasswordScreen";
 import SettingUpYourRoomScreen from "../Screen/SettingUpYourRoomScreen";
 import SetUpYourHomeScreen from "../Screen/SetUpYourHomeScreen";
 import Register from "../Screen/SingupScreen";
+import YouAreInRightSpaceScreen from "../Screen/YouAreInRightSpaceScreen";
 import { AuthStackParamList } from "../types/navigator_type";
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -53,6 +56,15 @@ export default function AuthNavigator() {
       <Stack.Screen
         name="CreateYourAccountScreen"
         component={CreateYourAccountScreen}
+      />
+      <Stack.Screen
+        name="YouAreInRightSpaceScreen"
+        component={YouAreInRightSpaceScreen}
+      />
+      <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+      <Stack.Screen
+        name="HereWhatWaitingForYouScreen"
+        component={HereWhatWaitingForYouScreen}
       />
     </Stack.Navigator>
   );

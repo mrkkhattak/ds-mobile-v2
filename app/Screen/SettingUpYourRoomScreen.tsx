@@ -16,7 +16,7 @@ const SettingUpYourRoomScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   useEffect(() => {
     setTimeout(() => {
-      navigation.navigate("CreateYourAccountScreen");
+      navigation.navigate("YouAreInRightSpaceScreen");
     }, 5000);
   }, []);
   return (

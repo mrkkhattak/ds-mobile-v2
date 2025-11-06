@@ -10,4 +10,7 @@ export type AuthStackParamList = {
   ForgotPasswordScreen: undefined;
   ResetPasswordScreen: undefined;
   ConfirmEmail: undefined;
+  YouAreInRightSpaceScreen: undefined;
+  PaymentScreen: undefined;
+  HereWhatWaitingForYouScreen: undefined;
 };
