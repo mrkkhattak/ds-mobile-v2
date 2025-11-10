@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/n
 import { AuthStackParamList } from "../types/navigator_type";
 
 // Import your SVG icons
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon1 from "../../assets/images/icons/Library.svg";
 import Icon3 from "../../assets/images/icons/Shuffle (1).svg";
 import Icon2 from "../../assets/images/icons/Shuffle.svg";
@@ -50,6 +51,10 @@ const HereWhatWaitingForYouScreen = () => {
         "Invite your cleaning crew to join and share the load together.",
     },
   ];
+  const finishOnboarding = async () => {
+    await AsyncStorage.setItem("hasSeenOnboarding", "true");
+    navigation.navigate("CreateYourAccountScreen");
+  };
 
   return (
     <MainLayout>
@@ -82,11 +87,7 @@ const HereWhatWaitingForYouScreen = () => {
             label="INVITE YOUR CLEANING CREW"
             style={{ marginBottom: 10 }}
           />
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate("CreateYourAccountScreen");
-            }}
-          >
+          <TouchableOpacity onPress={finishOnboarding}>
             <SubtitleText style={{ marginTop: 10, marginBottom: 10 }}>
               Skip
             </SubtitleText>

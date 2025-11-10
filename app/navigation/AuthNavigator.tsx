@@ -1,6 +1,9 @@
 // navigation/AuthNavigator.tsx
 import { useAuthStore } from "@/store/authstore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
 import CleaningStruggleScreen from "../Screen/CleaningStruggleScreen";
 import ConfirmEmail from "../Screen/ConfirmEmail";
 import CreateYourAccountScreen from "../Screen/CreateYourAccountScreen";
@@ -20,13 +23,39 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthNavigator() {
   const isPasswordRecovery = useAuthStore((s) => s.isPasswordRecovery);
+  const [initialRoute, setInitialRoute] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const value = await AsyncStorage.getItem("hasSeenOnboarding");
+        console.log("value", value);
+        if (isPasswordRecovery) {
+          setInitialRoute("ResetPasswordScreen");
+        } else if (value === "true") {
+          setInitialRoute("CreateYourAccountScreen");
+        } else {
+          setInitialRoute("CleaningStruggleScreen"); // first onboarding screen
+        }
+      } catch (error) {
+        setInitialRoute("CleaningStruggleScreen");
+      }
+    };
+    checkOnboarding();
+  }, [isPasswordRecovery]);
+  if (!initialRoute) {
+    // optional loading screen
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName={
-        isPasswordRecovery ? "ResetPasswordScreen" : "CleaningStruggleScreen"
-      }
+      initialRouteName={initialRoute}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={Register} />
