@@ -14,7 +14,10 @@ type AuthState = {
   setLoading: (loading: boolean) => void;
   setIsPasswordRecovery: (isRecovery: boolean) => void;
   initialize: () => Promise<void>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (
+    email: string,
+    password: string
+  ) => Promise<{ data?: any; error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -31,12 +34,15 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
       setSession: (session) => set({ session }),
       setLoading: (loading) => set({ loading }),
-      setIsPasswordRecovery: (isRecovery) => set({ isPasswordRecovery: isRecovery }),
+      setIsPasswordRecovery: (isRecovery) =>
+        set({ isPasswordRecovery: isRecovery }),
 
       initialize: async () => {
         try {
           set({ loading: true });
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
           set({ session, user: session?.user ?? null, loading: false });
 
           supabase.auth.onAuthStateChange((_event, session) => {
@@ -51,8 +57,8 @@ export const useAuthStore = create<AuthState>()(
       signUp: async (email: string, password: string) => {
         try {
           const redirectUrl = __DEV__
-            ? 'exp://192.168.100.24:8081/--/Screen/ConfirmEmail'
-            : 'dailyspruce://Screen/ConfirmEmail';
+            ? "exp://192.168.100.24:8081/--/Screen/ConfirmEmail"
+            : "dailyspruce://Screen/ConfirmEmail";
 
           const { data, error } = await supabase.auth.signUp({
             email,
@@ -101,8 +107,8 @@ export const useAuthStore = create<AuthState>()(
       resetPassword: async (email: string) => {
         try {
           const redirectUrl = __DEV__
-            ? 'exp://192.168.100.24:8081/--/Screen/ResetPasswordScreen'
-            : 'dailyspruce://Screen/ResetPasswordScreen';
+            ? "exp://192.168.100.24:8081/--/Screen/ResetPasswordScreen"
+            : "dailyspruce://Screen/ResetPasswordScreen";
 
           const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: redirectUrl,
