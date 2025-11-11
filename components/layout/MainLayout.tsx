@@ -1,8 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React, { ReactNode } from "react";
 import { StatusBar, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { SafeAreaView } from "react-native-safe-area-context";
 interface MainLayoutProps {
   children: ReactNode;
 }
