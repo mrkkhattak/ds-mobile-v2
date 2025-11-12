@@ -10,13 +10,13 @@ import {
   Poppins_700Bold,
   useFonts,
 } from "@expo-google-fonts/poppins";
-import * as Splash from "expo-splash-screen";
 import * as Linking from "expo-linking";
+import * as Splash from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/authstore";
 import AuthNavigator from "./navigation/AuthNavigator";
 import TabNavigator from "./navigation/TabNavigator";
-import { supabase } from "../lib/supabase";
 import SpalshScreen from "./Screen/SpalshScreen";
 
 // Keep the splash screen visible while fonts load
@@ -49,15 +49,15 @@ export default function RootLayout() {
   // Handle deep links for authentication
   useEffect(() => {
     const handleDeepLink = async (url: string) => {
-      console.log('Deep link received:', url);
+      console.log("Deep link received:", url);
 
       // Parse URL manually to handle all formats
       const urlObj = new URL(url);
-      const params = new URLSearchParams(urlObj.hash.replace('#', '?'));
+      const params = new URLSearchParams(urlObj.hash.replace("#", "?"));
 
-      const access_token = params.get('access_token');
-      const refresh_token = params.get('refresh_token');
-      const type = params.get('type');
+      const access_token = params.get("access_token");
+      const refresh_token = params.get("refresh_token");
+      const type = params.get("type");
 
       // Check if this is an auth callback with tokens
       if (access_token && refresh_token) {
@@ -67,15 +67,15 @@ export default function RootLayout() {
         });
 
         if (!error) {
-          console.log('Session set successfully, type:', type);
+          console.log("Session set successfully, type:", type);
           // Check if this is a password recovery
-          if (type === 'recovery') {
+          if (type === "recovery") {
             setIsPasswordRecovery(true);
           }
           // For email confirmation (type === 'signup' or 'email_change'),
           // the user state will update automatically and show TabNavigator
         } else {
-          console.error('Error setting session:', error);
+          console.error("Error setting session:", error);
         }
       }
     };
@@ -83,20 +83,19 @@ export default function RootLayout() {
     // Check for initial URL when app opens from a link
     Linking.getInitialURL().then((url) => {
       if (url) {
-        console.log('Initial URL:', url);
+        console.log("Initial URL:", url);
         handleDeepLink(url);
       }
     });
 
     // Listen for URL changes when app is already open
-    const subscription = Linking.addEventListener('url', (event) => {
-      console.log('URL event:', event.url);
+    const subscription = Linking.addEventListener("url", (event) => {
+      console.log("URL event:", event.url);
       handleDeepLink(event.url);
     });
 
     return () => subscription.remove();
   }, [setIsPasswordRecovery]);
-
 
   // Hide native splash when fonts are ready
   useEffect(() => {

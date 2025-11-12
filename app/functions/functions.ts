@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-
 export interface GlobalTask {
   id: string;
   name: string;
@@ -34,9 +33,50 @@ export interface TaskWithAssignment {
   created_at: string;
   updated_at: string;
   assign_user_id: string | null;
+  assign_user_email: string | null;
   owner_user_id: string | null;
 }
 
+export interface SpruceTask {
+  id: string;
+  assign_user_id: string;
+  global_task_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  global_task: GlobalTask | null;
+  assigned_user: {
+    email: string;
+    id: string;
+  } | null;
+}
+
+export interface SpruceTaskDetails {
+  assignment_id: string;
+  assigned_at: string;
+  updated_at: string;
+  assign_user_id: string;
+  assign_user_email: string | null;
+  owner_user_id: string;
+  owner_user_email: string | null;
+
+  task_id: string;
+  task_name: string;
+  description_us: string | null;
+  description_uk: string | null;
+  description_row: string | null;
+  icon_name: string | null;
+  child_friendly: boolean | null;
+  estimated_effort: number | null;
+  points: number | null;
+  room: string | null;
+  category: string | null;
+  keywords: string[] | null;
+  display_names: Record<string, any> | null; // JSONB field
+  unique_completions: number | null;
+  total_completions: number | null;
+  effort_level: string | null;
+}
 export async function getGlobalTasks(): Promise<GlobalTask[]> {
   const { data, error } = await supabase
     .from("global_tasks")
@@ -51,137 +91,90 @@ export async function getGlobalTasks(): Promise<GlobalTask[]> {
   return data || [];
 }
 
-// ✅ 1. Fetch tasks assigned to a specific user
-export async function getAssignedTasks(
-  assignUserId: string
-): Promise<TaskWithAssignment[]> {
-  const { data, error } = await supabase
-    .from("spruce_tasks")
-    .select(
-      `
-      id,
-      assign_user_id,
-      user_id,
-      created_at,
-      updated_at,
-      global_tasks (
-        id,
-        name,
-        description_us,
-        description_uk,
-        description_row,
-        icon_name,
-        child_friendly,
-        estimated_effort,
-        points,
-        room,
-        category,
-        is_active,
-        created_at,
-        updated_at
-      )
-    `
-    )
-    .eq("assign_user_id", assignUserId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching assigned tasks:", error.message);
-    throw error;
-  }
-
-  return (data || []).map((item: any) => ({
-    assignment_id: item.id,
-    task_id: item.global_tasks.id,
-    task_name: item.global_tasks.name,
-    task_description_us: item.global_tasks.description_us,
-    task_description_uk: item.global_tasks.description_uk,
-    task_description_row: item.global_tasks.description_row,
-    icon_name: item.global_tasks.icon_name,
-    child_friendly: item.global_tasks.child_friendly,
-    estimated_effort: item.global_tasks.estimated_effort,
-    points: item.global_tasks.points,
-    room: item.global_tasks.room,
-    category: item.global_tasks.category,
-    is_active: item.global_tasks.is_active,
-    created_at: item.global_tasks.created_at,
-    updated_at: item.global_tasks.updated_at,
-    assign_user_id: item.assign_user_id,
-    owner_user_id: item.user_id,
-  }));
-}
-
-// ✅ 2. Fetch all tasks (with assignment info if any)
-export async function getAllTasksWithAssignments(): Promise<
-  TaskWithAssignment[]
-> {
+export const fetchAndGroupTasks = async () => {
   const { data, error } = await supabase
     .from("global_tasks")
-    .select(
-      `
-      *,
-      spruce_tasks (
-        id,
-        assign_user_id,
-        user_id,
-        created_at,
-        updated_at
-      )
-    `
-    )
-    .order("created_at", { ascending: false });
+    .select("*")
+    .order("category", { ascending: true });
 
   if (error) {
-    console.error("Error fetching tasks with assignments:", error.message);
-    throw error;
+    console.error("Error fetching tasks:", error);
+    return {};
   }
 
-  const result: TaskWithAssignment[] = [];
-  (data || []).forEach((task: any) => {
-    if (task.spruce_tasks && task.spruce_tasks.length > 0) {
-      task.spruce_tasks.forEach((st: any) => {
-        result.push({
-          assignment_id: st.id,
-          task_id: task.id,
-          task_name: task.name,
-          task_description_us: task.description_us,
-          task_description_uk: task.description_uk,
-          task_description_row: task.description_row,
-          icon_name: task.icon_name,
-          child_friendly: task.child_friendly,
-          estimated_effort: task.estimated_effort,
-          points: task.points,
-          room: task.room,
-          category: task.category,
-          is_active: task.is_active,
-          created_at: task.created_at,
-          updated_at: task.updated_at,
-          assign_user_id: st.assign_user_id,
-          owner_user_id: st.user_id,
-        });
-      });
-    } else {
-      result.push({
-        assignment_id: null,
-        task_id: task.id,
-        task_name: task.name,
-        task_description_us: task.description_us,
-        task_description_uk: task.description_uk,
-        task_description_row: task.description_row,
-        icon_name: task.icon_name,
-        child_friendly: task.child_friendly,
-        estimated_effort: task.estimated_effort,
-        points: task.points,
-        room: task.room,
-        category: task.category,
-        is_active: task.is_active,
-        created_at: task.created_at,
-        updated_at: task.updated_at,
-        assign_user_id: null,
-        owner_user_id: null,
-      });
+  // Group tasks by category
+  const groupedTasks: Record<string, any[]> = {};
+
+  data.forEach((task) => {
+    const category = task.category || "Uncategorized";
+    if (!groupedTasks[category]) {
+      groupedTasks[category] = [];
     }
+    groupedTasks[category].push(task);
   });
 
-  return result;
-}
+  return groupedTasks;
+};
+
+export const getAssignedSpruceTasks = async (
+  user_id: string
+): Promise<SpruceTaskDetails[] | null> => {
+  const { data, error } = await supabase.rpc("get_spruce_tasks_with_users", {
+    assign_id: user_id,
+  });
+
+  console.log("data", data);
+  if (error) {
+    console.error("Error fetching spruce tasks:", error.message);
+    return null;
+  }
+
+  return data as SpruceTaskDetails[];
+};
+
+export const assignTaskToUser = async (
+  global_task_id: string,
+  user_id: string
+): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.from("spruce_tasks").insert([
+      {
+        global_task_id,
+        user_id,
+      },
+    ]);
+
+    if (error) {
+      console.error("Error assigning task:", error.message);
+      return false;
+    }
+
+    console.log("Task assigned successfully:", data);
+    return true;
+  } catch (err) {
+    console.error("Unexpected error assigning task:", err);
+    return false;
+  }
+};
+
+export const removeAssignedTask = async (
+  globalTaskId: string,
+  userId: string
+) => {
+  try {
+    const { error } = await supabase
+      .from("spruce_tasks")
+      .delete()
+      .eq("global_task_id", globalTaskId)
+      .eq("user_id", userId); // ✅ fixed column name
+
+    if (error) {
+      console.error("Error removing task:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Unexpected error removing task:", err);
+    return false;
+  }
+};

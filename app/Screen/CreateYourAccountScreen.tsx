@@ -40,7 +40,7 @@ const CreateYourAccountScreen = () => {
       </View>
       <View style={{ flex: 1, justifyContent: "flex-end" }}>
         <Image
-          source={require("../../assets/images/happy-family-housekeeping-together-flat-illustration 1.png")}
+          source={require("../../assets/images/family.png")}
           resizeMode="cover"
           style={{ height: 220, width: "100%" }}
         />

@@ -127,7 +127,10 @@ const PickYourTaskScreen: React.FC = () => {
                 return (
                   <TouchableOpacity
                     onPress={toggleTask}
-                    style={{ width: "100%", marginTop: 24 }}
+                    style={{
+                      width: "100%",
+                      marginTop: 24,
+                    }}
                   >
                     {isSelected ? (
                       <LinearGradient

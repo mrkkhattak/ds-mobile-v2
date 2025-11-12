@@ -4,9 +4,11 @@ import React from "react";
 import { Text, View } from "react-native";
 import Settings from "../(tabs)/explore";
 import Home from "../(tabs)/index";
-import Icon2 from "../../assets/images/icons/Shuffle.svg";
+import Icon2 from "../../assets/images/icons/Group 38.svg";
 
-import Icon3 from "../../assets/images/icons/Shuffle (1).svg";
+import AddIcon from "../../assets/images/icons/Add.svg";
+import Icon3 from "../../assets/images/icons/Group 37.svg";
+import TaskList from "../Screen/TaskList";
 
 const Tab = createBottomTabNavigator();
 
@@ -26,7 +28,7 @@ export default function TabNavigator() {
       }}
     >
       <Tab.Screen
-        name="Home"
+        name="Library"
         component={Home}
         options={{
           tabBarIcon: ({ focused }) => (
@@ -38,7 +40,38 @@ export default function TabNavigator() {
               }}
             >
               <Icon3
-                width={200}
+                width={100}
+                height={60}
+                fill={focused ? "#4A00E0" : "#AAA"}
+              />
+              <Text
+                style={{
+                  color: focused ? "#4A00E0" : "#AAA",
+                  fontSize: 15,
+                  marginTop: 4,
+                  fontWeight: "600",
+                }}
+              >
+                Library
+              </Text>
+            </View>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Add"
+        component={TaskList}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={{
+                alignItems: "center",
+
+                width: 200,
+              }}
+            >
+              <AddIcon
+                width={100}
                 height={100}
                 fill={focused ? "#8DE016" : "#AAA"}
               />
@@ -50,14 +83,14 @@ export default function TabNavigator() {
                   fontWeight: "600",
                 }}
               >
-                Home
+                Add
               </Text>
             </View>
           ),
         }}
       />
       <Tab.Screen
-        name="Settings"
+        name="Shuffle"
         component={Settings}
         options={{
           tabBarIcon: ({ focused }) => (
@@ -68,19 +101,19 @@ export default function TabNavigator() {
               }}
             >
               <Icon2
-                width={200}
-                height={100}
-                fill={focused ? "#8DE016" : "#AAA"}
+                width={100}
+                height={60}
+                fill={focused ? "#4A00E0" : "#AAA"}
               />
               <Text
                 style={{
-                  color: focused ? "#8DE016" : "#575261",
+                  color: focused ? "#4A00E0" : "#AAA",
                   fontSize: 15,
                   marginTop: 4,
                   fontWeight: "600",
                 }}
               >
-                Settings
+                Shuffle
               </Text>
             </View>
           ),

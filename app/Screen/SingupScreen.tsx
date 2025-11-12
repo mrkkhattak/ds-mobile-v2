@@ -1,7 +1,11 @@
 import { SecondaryButton } from "@/components/ui/Buttons";
 import { CustomInput } from "@/components/ui/CustomTextInput";
 import { MainHeading, SubtitleText } from "@/components/ui/Heading";
+import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authstore";
+import { useCleaningStruggleStore } from "@/store/cleaningStrugglesStore";
+import { useRoomSelectionStore } from "@/store/roomSelectionStore";
+import { useTaskStore } from "@/store/taskStore";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigation } from "expo-router";
 import React from "react";
@@ -61,6 +65,9 @@ const SignupScreen = () => {
   const [secureConfirm, setSecureConfirm] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
   const { signUp } = useAuthStore();
+  const { struggles, otherText } = useCleaningStruggleStore();
+  const { selectedRooms } = useRoomSelectionStore();
+  const { selectedTask } = useTaskStore();
 
   const {
     control,
@@ -78,7 +85,11 @@ const SignupScreen = () => {
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     try {
-      const { error } = await signUp(data.email, data.password);
+      // 1️⃣ Create Supabase account
+      const { data: signUpData, error } = await signUp(
+        data.email,
+        data.password
+      );
 
       if (error) {
         Alert.alert(
@@ -88,6 +99,26 @@ const SignupScreen = () => {
         return;
       }
 
+      const user = signUpData?.user;
+      if (!user) {
+        Alert.alert("Error", "No user returned from Supabase");
+        return;
+      }
+
+      // 3️⃣ Insert into survey table
+      const { error: surveyError } = await supabase.from("surveys").insert({
+        user_id: user.id,
+        struggles,
+        selected_rooms: selectedRooms,
+        selected_tasks: selectedTask,
+        other_text: otherText || null,
+      });
+
+      if (surveyError) {
+        console.error("Survey insert error:", surveyError);
+      }
+
+      // 4️⃣ Alert user
       Alert.alert(
         "Verify Your Email",
         "We've sent a confirmation email to " +
@@ -100,6 +131,11 @@ const SignupScreen = () => {
           },
         ]
       );
+
+      // 5️⃣ (optional) Reset local stores after saving
+      useCleaningStruggleStore.getState().reset();
+      useRoomSelectionStore.getState().reset();
+      useTaskStore.getState().reset();
     } catch (error: any) {
       Alert.alert("Error", error.message || "Something went wrong");
     } finally {
