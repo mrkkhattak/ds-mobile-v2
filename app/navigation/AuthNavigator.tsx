@@ -23,7 +23,7 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthNavigator() {
   const isPasswordRecovery = useAuthStore((s) => s.isPasswordRecovery);
-  const [initialRoute, setInitialRoute] = useState<string | null>(null);
+  const [initialRoute, setInitialRoute] = useState<string | null | any>(null);
 
   useEffect(() => {
     const checkOnboarding = async () => {

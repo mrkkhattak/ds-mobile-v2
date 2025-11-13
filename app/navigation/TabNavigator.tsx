@@ -3,12 +3,12 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
 import { Text, View } from "react-native";
 import Settings from "../(tabs)/explore";
-import Home from "../(tabs)/index";
 import Icon2 from "../../assets/images/icons/Group 38.svg";
 
 import AddIcon from "../../assets/images/icons/Add.svg";
 import Icon3 from "../../assets/images/icons/Group 37.svg";
-import TaskList from "../Screen/TaskList";
+import BottomSheetScreen from "../Screen/BottomSheetScreen";
+import HomeNavigator from "./HomeNavigator";
 
 const Tab = createBottomTabNavigator();
 
@@ -29,7 +29,7 @@ export default function TabNavigator() {
     >
       <Tab.Screen
         name="Library"
-        component={Home}
+        component={HomeNavigator}
         options={{
           tabBarIcon: ({ focused }) => (
             <View
@@ -60,7 +60,7 @@ export default function TabNavigator() {
       />
       <Tab.Screen
         name="Add"
-        component={TaskList}
+        component={BottomSheetScreen}
         options={{
           tabBarIcon: ({ focused }) => (
             <View

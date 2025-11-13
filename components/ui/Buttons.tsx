@@ -4,6 +4,7 @@ import React, { useRef } from "react";
 import {
   Animated,
   PanResponder,
+  Pressable,
   StyleSheet,
   Text,
   TextStyle,
@@ -231,6 +232,96 @@ export const SlideButton: React.FC<SlideButtonProps> = ({
         {icon}
       </Animated.View>
     </Animated.View>
+  );
+};
+
+interface CustomButtonProps {
+  label: string;
+  onPress: () => void;
+  viewStyle?: ViewStyle;
+  textStyle?: TextStyle;
+}
+
+export const CustomButton: React.FC<CustomButtonProps> = ({
+  label,
+  onPress,
+  viewStyle,
+  textStyle,
+}) => {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={[
+        {
+          width: 68,
+          height: 35,
+          backgroundColor: "#6915E0",
+          borderRadius: 40,
+          padding: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 10,
+          opacity: 1,
+        },
+        viewStyle,
+      ]}
+    >
+      <Text
+        style={[
+          {
+            color: "#fff",
+            fontSize: 14,
+            fontWeight: "600",
+          },
+          textStyle,
+        ]}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
+interface SmallButtonProps {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}
+
+export const SmallButton: React.FC<SmallButtonProps> = ({
+  label,
+  selected,
+  onPress,
+}) => {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        width: 25.35,
+        height: 25.35,
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 50,
+        backgroundColor: selected ? "#9864E1" : "#E3E3E3",
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: "Inter",
+          fontWeight: "500",
+          fontStyle: "normal",
+          fontSize: 12,
+          lineHeight: 12,
+          textAlign: "center",
+          letterSpacing: 0,
+          textTransform: "uppercase",
+          color: selected ? "#FFFFFF" : "#42404E",
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 };
 

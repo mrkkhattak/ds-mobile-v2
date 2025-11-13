@@ -14,3 +14,8 @@ export type AuthStackParamList = {
   PaymentScreen: undefined;
   HereWhatWaitingForYouScreen: undefined;
 };
+
+export type HomeStackParamList = {
+  TaskLibrary: undefined;
+  Home: undefined;
+};

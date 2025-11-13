@@ -4,20 +4,42 @@ import DateLabel from "@/components/ui/DateLabel";
 import { MainHeading, SecondryHeading } from "@/components/ui/Heading";
 import { useAuthStore } from "@/store/authstore";
 
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { FlatList, Image, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Animated,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import CalendarStrip from "react-native-calendar-strip";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  GestureHandlerRootView,
+  Swipeable,
+} from "react-native-gesture-handler";
 import LibrarIcon from "../../assets/images/icons/Group 1.svg";
 import LimeIcon from "../../assets/images/icons/Lime.svg";
 import SlideIcon from "../../assets/images/icons/arrow.svg";
 import {
   getAssignedSpruceTasks,
+  removeAssignedTask,
   SpruceTaskDetails,
 } from "../functions/functions";
+
+import { useNavigation } from "expo-router";
+import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
+import Snackbar from "react-native-snackbar";
+import DeleteIcon from "../../assets/images/icons/Delete task.svg";
+import EditIcon from "../../assets/images/icons/Edit task.svg";
+import { HomeStackParamList } from "../types/navigator_type";
+
+type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Home">;
 const index = () => {
+  const navigation = useNavigation<NavigationProp>();
   const { signOut } = useAuthStore();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["40%", "80%"], []);
@@ -28,19 +50,17 @@ const index = () => {
   const [isToday, setIsToday] = useState<Boolean>(false);
   const [groupData, setGroupData] = useState<any>();
   const today = new Date();
-
-  console.log("groupData", groupData);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+      setLoading(true);
 
       const fetchTasks = async () => {
         try {
           if (user) {
-            console.log("userID====", user.id);
             const result = await getAssignedSpruceTasks(user.id);
-            console.log("result=====>", result);
 
             if (isActive && Array.isArray(result)) {
               const grouped = result.reduce((acc, task) => {
@@ -49,13 +69,13 @@ const index = () => {
                 acc[category].push(task);
                 return acc;
               }, {} as Record<string, SpruceTaskDetails[]>);
-
-              console.log("Grouped Data ====>", grouped);
               setGroupData(grouped);
+              setLoading(false);
             }
           }
         } catch (err) {
           console.log("Error loading tasks:", err);
+          setLoading(false);
         }
       };
 
@@ -67,6 +87,109 @@ const index = () => {
     }, [user])
   );
 
+  const handleDeleteTask = async (taskId: string) => {
+    if (!user) return;
+
+    setLoading(true);
+    const success = await removeAssignedTask(taskId, user.id);
+
+    if (success) {
+      // Remove the deleted task from local grouped state
+      setGroupData((prev: any) => {
+        const updated = { ...prev };
+
+        for (const category in updated) {
+          updated[category] = updated[category].filter(
+            (task: { task_id: string }) => task.task_id !== taskId
+          );
+
+          // Remove empty categories if desired
+          if (updated[category].length === 0) {
+            delete updated[category];
+          }
+        }
+
+        return updated;
+      });
+
+      console.log("Task removed locally:", taskId);
+      Snackbar.show({
+        text: "Task removed successfully!",
+        duration: 2000,
+        backgroundColor: "green",
+      });
+    } else {
+      Snackbar.show({
+        text: "Failed to remove task.",
+        duration: 2000,
+        backgroundColor: "red",
+      });
+    }
+
+    setLoading(false);
+  };
+  const renderLeftActions = (progress: any, dragX: any) => {
+    const scale = dragX.interpolate({
+      inputRange: [0, 100],
+      outputRange: [0, 1],
+      extrapolate: "clamp",
+    });
+
+    return (
+      <Animated.View
+        style={{
+          transform: [{ scale }],
+          justifyContent: "center",
+          alignItems: "flex-start",
+
+          borderRadius: 20,
+          paddingLeft: 20,
+          marginTop: 10,
+        }}
+      >
+        <EditIcon />
+      </Animated.View>
+    );
+  };
+
+  const renderRightActions = (progress: any, dragX: any) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: "clamp",
+    });
+
+    return (
+      <Animated.View
+        style={{
+          transform: [{ scale }],
+          justifyContent: "center",
+          alignItems: "flex-end",
+
+          borderRadius: 20,
+          paddingRight: 20,
+          marginTop: 10,
+        }}
+      >
+        <DeleteIcon />
+      </Animated.View>
+    );
+  };
+  if (loading) {
+    return (
+      <MainLayout>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator color={"#16C5E0"} />
+        </View>
+      </MainLayout>
+    );
+  }
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "grey" }}>
       <MainLayout>
@@ -135,7 +258,7 @@ const index = () => {
             icon={<SlideIcon />}
             onSlideComplete={() => {
               console.log("Slide complete!");
-              bottomSheetRef.current?.expand(); // 👈 opens the bottom sheet
+              navigation.navigate("TaskLibrary");
             }}
             viewStyle={{ marginVertical: 20 }}
             textStyle={{
@@ -181,80 +304,94 @@ const index = () => {
                     </Text>
 
                     {/* Render each task inside the category */}
+
                     <FlatList
                       data={groupData[item]}
-                      keyExtractor={(task) => task.id}
+                      keyExtractor={(task) => task.task_id}
                       scrollEnabled={false}
                       renderItem={({ item: task }) => (
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            backgroundColor: "#F7F6FB",
-                            borderRadius: 20,
-                            padding: 16,
-                            marginTop: 10,
+                        <Swipeable
+                          renderLeftActions={renderLeftActions}
+                          renderRightActions={renderRightActions}
+                          onSwipeableLeftOpen={() =>
+                            console.log("Edit task:", task)
+                          }
+                          onSwipeableRightOpen={() => {
+                            handleDeleteTask(task.task_id);
                           }}
-                          key={task.task_name}
                         >
-                          {/* Left side: icon + name */}
                           <View
                             style={{
                               flexDirection: "row",
                               alignItems: "center",
-                              gap: 10,
+                              justifyContent: "space-between",
+                              backgroundColor: "#F7F6FB",
+                              borderRadius: 20,
+                              padding: 16,
+                              marginTop: 10,
                             }}
                           >
+                            {/* Left side: icon + name */}
                             <View
                               style={{
-                                backgroundColor: "#E6E0F8",
-                                width: 40,
-                                height: 40,
-                                borderRadius: 12,
-                                justifyContent: "center",
+                                flexDirection: "row",
                                 alignItems: "center",
+                                gap: 10,
                               }}
                             >
-                              <Text>🍽️</Text>
+                              <View
+                                style={{
+                                  backgroundColor: "#E6E0F8",
+                                  width: 40,
+                                  height: 40,
+                                  borderRadius: 12,
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Text>🍽️</Text>
+                              </View>
+                              <Text
+                                style={{
+                                  fontSize: 15,
+                                  color: "#000",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                {task.task_name}
+                              </Text>
                             </View>
-                            <Text
+
+                            {/* Right side: effort icons + avatar */}
+                            <View
                               style={{
-                                fontSize: 15,
-                                color: "#000",
-                                fontWeight: "500",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 6,
                               }}
                             >
-                              {task.task_name}
-                            </Text>
+                              {Array.from({
+                                length: Math.min(
+                                  3,
+                                  Math.ceil(task.points / 30)
+                                ),
+                              }).map((_, i) => (
+                                <LimeIcon key={i} />
+                              ))}
+                              <Image
+                                source={{
+                                  uri: "https://randomuser.me/api/portraits/women/44.jpg",
+                                }}
+                                style={{
+                                  width: 34,
+                                  height: 34,
+                                  borderRadius: 17,
+                                  marginLeft: 4,
+                                }}
+                              />
+                            </View>
                           </View>
-
-                          {/* Right side: effort icons + avatar */}
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              gap: 6,
-                            }}
-                          >
-                            {Array.from({
-                              length: Math.min(3, Math.ceil(task.points / 30)),
-                            }).map((_, i) => (
-                              <LimeIcon />
-                            ))}
-                            <Image
-                              source={{
-                                uri: "https://randomuser.me/api/portraits/women/44.jpg",
-                              }}
-                              style={{
-                                width: 34,
-                                height: 34,
-                                borderRadius: 17,
-                                marginLeft: 4,
-                              }}
-                            />
-                          </View>
-                        </View>
+                        </Swipeable>
                       )}
                     />
                   </View>
@@ -299,26 +436,6 @@ const index = () => {
           </View>
         </View>
       </MainLayout>
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={-1} // hidden initially
-        snapPoints={snapPoints}
-        enablePanDownToClose
-      >
-        <BottomSheetView style={{ flex: 1 }}>
-          <Text
-            style={{
-              fontFamily: "inter",
-              fontWeight: "300",
-              fontSize: 22,
-              lineHeight: 26,
-              paddingLeft: 30,
-            }}
-          >
-            Edit Task
-          </Text>
-        </BottomSheetView>
-      </BottomSheet>
     </GestureHandlerRootView>
   );
 };

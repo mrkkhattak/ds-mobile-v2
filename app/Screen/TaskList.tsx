@@ -1,7 +1,8 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { MainHeading, SecondryHeading } from "@/components/ui/Heading";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   StyleSheet,
   Text,
@@ -9,9 +10,13 @@ import {
   View,
 } from "react-native";
 
+import RemoveIcon from "@/assets/images/icons/remove.svg";
 import AddIcon from "@/assets/images/icons/smallAddIcon.svg";
+import HomeIcon from "@/assets/images/icons/Vector (3).svg";
 import { useAuthStore } from "@/store/authstore";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
+import { useCallback } from "react";
 import Snackbar from "react-native-snackbar";
 import GoToIcon from "../../assets/images/icons/Go-To (2).svg";
 import GoToSelected from "../../assets/images/icons/Go-To.svg";
@@ -30,14 +35,21 @@ import {
   SpruceTaskDetails,
 } from "../functions/functions";
 
-import RemoveIcon from "@/assets/images/icons/remove.svg";
+import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
+import { HomeStackParamList } from "../types/navigator_type";
 
+type NavigationProp = NativeStackNavigationProp<
+  HomeStackParamList,
+  "TaskLibrary"
+>;
 const TaskList = () => {
+  const navigation = useNavigation<NavigationProp>();
   const user = useAuthStore((e) => e.user);
   const [selectedTab, setSelectedTab] = useState("Go-To");
   const [selectedSubTab, setSelectedSubTab] = useState("Kitchen");
   const [groupData, setGroupData] = useState<any>({});
   const [myTasks, setMyTasks] = useState<SpruceTaskDetails[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const tabList = [
     {
       label: "Go-To",
@@ -70,32 +82,43 @@ const TaskList = () => {
     "Outdoor",
   ];
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const result = await fetchAndGroupTasks();
-        console.log("GroupTask:", result);
-        if (result) {
-          setGroupData(result);
-        }
-      } catch (error) {
-        console.error("Error fetching grouped tasks:", error);
-      }
-    })();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
 
-  useEffect(() => {
-    (async () => {
-      if (user) {
+      const fetchData = async () => {
         try {
-          const assinedTasks = await getAssignedSpruceTasks(user.id);
-          if (assinedTasks) setMyTasks(assinedTasks);
+          setLoading(true);
+
+          // 1️⃣ Fetch grouped tasks
+          const result = await fetchAndGroupTasks();
+          if (isActive && result) {
+            setGroupData(result);
+          }
+
+          // 2️⃣ Fetch assigned tasks (if user exists)
+          if (user) {
+            const assignedTasks = await getAssignedSpruceTasks(user.id);
+            if (isActive && assignedTasks) {
+              setMyTasks(assignedTasks);
+            }
+          }
+
+          setLoading(false);
         } catch (error) {
-          console.error("Error fetching grouped tasks:", error);
+          console.error("Error fetching grouped or assigned tasks:", error);
+          setLoading(false);
         }
-      }
-    })();
-  }, [user]);
+      };
+
+      fetchData();
+
+      // Cleanup on unmount or when screen loses focus
+      return () => {
+        isActive = false;
+      };
+    }, [user])
+  );
 
   // get the list of tasks for selected subTab
   const currentTasks = groupData[selectedSubTab] || [];
@@ -108,12 +131,40 @@ const TaskList = () => {
     if (aAssigned) return 1; // a is assigned, move down
     return -1; // a is unassigned, stay on top
   });
-  console.log(currentTasks);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator color={"#16C5E0"} />
+        </View>
+      </MainLayout>
+    );
+  }
   return (
     <MainLayout>
       <View style={{ marginTop: 60 }}>
         <View style={{ marginHorizontal: 20 }}>
-          <MainHeading style={{ textAlign: "left" }}>Task Library</MainHeading>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <MainHeading style={{ textAlign: "left" }}>
+              Task Library
+            </MainHeading>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <HomeIcon />
+            </TouchableOpacity>
+          </View>
           <SecondryHeading
             style={{
               textAlign: "left",

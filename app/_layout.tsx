@@ -13,6 +13,7 @@ import {
 import * as Linking from "expo-linking";
 import * as Splash from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/authstore";
 import AuthNavigator from "./navigation/AuthNavigator";
@@ -131,5 +132,9 @@ export default function RootLayout() {
     return <AuthNavigator />;
   }
 
-  return <TabNavigator />;
+  return (
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: "grey" }}>
+      <TabNavigator />
+    </GestureHandlerRootView>
+  );
 }
