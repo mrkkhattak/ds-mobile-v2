@@ -30,6 +30,13 @@ export default function TabNavigator() {
       <Tab.Screen
         name="Library"
         component={HomeNavigator}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            navigation.navigate("Library", {
+              screen: "TaskLibrary",
+            });
+          },
+        })}
         options={{
           tabBarIcon: ({ focused }) => (
             <View

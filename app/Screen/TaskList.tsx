@@ -30,7 +30,7 @@ import RepeatIcon from "../../assets/images/icons/Repeat.svg";
 import {
   AddTaskToSpruce,
   fetchAndGroupTasks,
-  getAssignedSpruceTasks,
+  fetchSpruceTasks,
   removeTaskFromSpruce,
   SpruceTaskDetails,
 } from "../functions/functions";
@@ -98,9 +98,10 @@ const TaskList = () => {
 
           // 2️⃣ Fetch assigned tasks (if user exists)
           if (user) {
-            const assignedTasks = await getAssignedSpruceTasks(user.id);
+            const assignedTasks = await fetchSpruceTasks(user.id);
+            console.log("assignedTasks", assignedTasks);
             if (isActive && assignedTasks) {
-              setMyTasks(assignedTasks);
+              setMyTasks(assignedTasks.data || []);
             }
           }
 
