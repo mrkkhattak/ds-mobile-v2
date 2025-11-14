@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/n
 import Snackbar from "react-native-snackbar";
 import { AddUserTaskToSpruce, createTask } from "../functions/functions";
 import { CreateTaskFormValues } from "../types/types";
+
 type NavigationProp = NativeStackNavigationProp<any, "BottomSheerScreen">;
 
 const BottomSheetScreen = () => {
