@@ -28,10 +28,10 @@ import PackIcon from "../../assets/images/icons/Packs.svg";
 import RepeatSelectedIcon from "../../assets/images/icons/Repeat (1).svg";
 import RepeatIcon from "../../assets/images/icons/Repeat.svg";
 import {
-  assignTaskToUser,
+  AddTaskToSpruce,
   fetchAndGroupTasks,
   getAssignedSpruceTasks,
-  removeAssignedTask,
+  removeTaskFromSpruce,
   SpruceTaskDetails,
 } from "../functions/functions";
 
@@ -322,7 +322,7 @@ const TaskList = () => {
                               {user && (
                                 <TouchableOpacity
                                   onPress={async () => {
-                                    const success = await assignTaskToUser(
+                                    const success = await AddTaskToSpruce(
                                       item.id,
                                       user.id
                                     );
@@ -384,10 +384,10 @@ const TaskList = () => {
                               {user && (
                                 <TouchableOpacity
                                   onPress={async () => {
-                                    const success = await removeAssignedTask(
-                                      item.id,
-                                      user.id
-                                    );
+                                    const success = await removeTaskFromSpruce({
+                                      globalTaskId: item.id,
+                                      userId: user.id,
+                                    });
                                     if (success) {
                                       Snackbar.show({
                                         text: "Task removed successfully!",

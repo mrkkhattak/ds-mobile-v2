@@ -1,91 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
-
-import { CustomButton, SmallButton } from "@/components/ui/Buttons";
-
-import { CustomTextInput } from "@/components/ui/CustomTextInput";
-
+import { schema } from "@/app/Schema/Schema";
+import { CreateTaskFormValues } from "@/app/types/types";
 import StartIcon from "@/assets/images/icons/Group_3.svg";
+import { CustomButton, SmallButton } from "@/components/ui/Buttons";
+import { CustomTextInput } from "@/components/ui/CustomTextInput";
 import ProgressTrackerCard from "@/components/ui/ProgressTrackerCard";
 import { SegmentedControl } from "@/components/ui/SegmentContainer";
 import { yupResolver } from "@hookform/resolvers/yup";
+import React, { useEffect, useState } from "react";
 import { Controller, Resolver, useForm } from "react-hook-form";
+import { StyleSheet, Switch, Text, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import * as yup from "yup";
-/** --- Types --- */
-type WeekRepeat = {
-  day: string[];
-  weekNumber: string;
-};
 
-type MonthRepeat = {
-  dayNumber: number | undefined;
-  day: string;
-  month: string;
-};
+interface CreateTaskFormProps {
+  onSubmit: (formData: CreateTaskFormValues) => void;
+}
 
-export type CreateTaskFormValues = {
-  name: string;
-  room: string;
-  type: string;
-  repeat: boolean;
-  effort: string;
-  repeatEvery?: "DAY" | "WEEK" | "MONTH";
-  days?: string[]; // e.g. ["M","T"]
-  week?: WeekRepeat | null;
-  month?: MonthRepeat | null;
-};
-
-export const schema = yup.object({
-  name: yup.string().required("Name is required"),
-  room: yup.string().nullable(),
-  type: yup.string().oneOf(["BOTH", "ADULT", "CHILD"]).required(),
-  effort: yup.string().required("Effort is required"),
-  repeat: yup.boolean().required(),
-  repeatEvery: yup.string().oneOf(["DAY", "WEEK", "MONTH"]).required(),
-
-  // DAY mode
-  days: yup
-    .array()
-    .of(yup.string())
-    .when(["repeat", "repeatEvery"], {
-      is: (repeat: boolean, repeatEvery: string) =>
-        repeat && repeatEvery === "DAY",
-      then: (schema) =>
-        schema.min(1, "Select at least one day").required("Select days"),
-      otherwise: (schema) => schema.notRequired().strip(),
-    }),
-
-  // WEEK mode
-  week: yup
-    .object({
-      day: yup
-        .array()
-        .of(yup.string())
-        .min(1, "Select at least one day") // <-- require at least one day
-        .required("Select days"), // <-- ensure the field exists
-      weekNumber: yup.string().required("Select week number"),
-    })
-    .when(["repeat", "repeatEvery"], {
-      is: (repeat: boolean, repeatEvery: string) =>
-        repeat && repeatEvery === "WEEK",
-      then: (schema) => schema.required("Week selection required"),
-      otherwise: (schema) => schema.notRequired().strip(),
-    }),
-  month: yup
-    .object({
-      dayNumber: yup.string().required("Select day number").nullable(false),
-      day: yup.string().required("Select day").nullable(false),
-      month: yup.string().required("Select month").nullable(false),
-    })
-    .when(["repeat", "repeatEvery"], {
-      is: (repeat: boolean, repeatEvery: string) =>
-        repeat && repeatEvery === "MONTH",
-      then: (schema) => schema.required("Month selection required"),
-      otherwise: (schema) => schema.notRequired().strip(),
-    }),
-});
-const CreateTaskForm = () => {
+const CreateTaskForm = (props: CreateTaskFormProps) => {
+  const { onSubmit } = props;
   const [open, setOpen] = useState(false);
   const [openWeek, setOpenWeek] = useState(false);
   const [openDayNumber, setOpenDayNumber] = useState(false);
@@ -96,24 +27,6 @@ const CreateTaskForm = () => {
     { label: "Bedroom", value: "bedroom" },
     { label: "Kitchen", value: "kitchen" },
   ]);
-  const [itemsItem, setWeekItems] = useState([
-    { label: "1 Week", value: "oneWeek" },
-    { label: "2 Week", value: "twoWeek" },
-    { label: "3 Week", value: "threeWeek" },
-    { label: "4 Week", value: "fourWeek" },
-    { label: "5 Week", value: "fiveWeek" },
-    { label: "6 Week", value: "sixWeek" },
-  ]);
-  const [itemsDays, setDayItem] = useState([
-    { label: "1", value: "first" },
-    { label: "2", value: "second" },
-    { label: "3", value: "third" },
-    { label: "4", value: "fourth" },
-    { label: "5", value: "fifth" },
-    { label: "6", value: "sixth" },
-    { label: "7", value: "seventh" },
-  ]);
-
   const {
     control,
     handleSubmit,
@@ -134,13 +47,13 @@ const CreateTaskForm = () => {
       month: { dayNumber: undefined, day: undefined, month: undefined },
     },
   });
-  console.log("error", errors);
+
   const daysShort = ["M", "TU", "W", "TH", "F", "S", "SU"];
   const weekNumberItems = [
-    { label: "1", value: "1" },
-    { label: "2", value: "2" },
-    { label: "3", value: "3" },
-    { label: "4", value: "4" },
+    { label: "1 weeks", value: "1" },
+    { label: "2 weeks", value: "2" },
+    { label: "3 weeks", value: "3" },
+    { label: "4 weeks", value: "4" },
   ];
   const dayNumberItems = Array.from({ length: 31 }, (_, i) => ({
     label: String(i + 1),
@@ -155,6 +68,16 @@ const CreateTaskForm = () => {
     { label: "S", value: "saturday" },
     { label: "SU", value: "sunday" },
   ];
+
+  const weekDaysList = [
+    { label: "Monday", value: "monday" },
+    { label: "Tuesday", value: "tuesday" },
+    { label: "Wednesday", value: "wednesday" },
+    { label: "Thursday", value: "thursday" },
+    { label: "Friday", value: "friday" },
+    { label: "Saturday", value: "saturday" },
+    { label: "Sunday", value: "sunday" },
+  ];
   const monthsList = [
     { label: "Every 1 Month", value: "1" },
     { label: "Every 2 Months", value: "2" },
@@ -164,10 +87,8 @@ const CreateTaskForm = () => {
     { label: "Every 12 Months", value: "12" },
   ];
 
-  const onSubmit = (formData: CreateTaskFormValues) => {
-    console.log("formData====>", formData);
-  };
   const repeatEveryField = watch("repeatEvery");
+
   useEffect(() => {
     if (repeatEveryField === "DAY") {
       setValue("week", { day: [], weekNumber: "" });
@@ -750,7 +671,7 @@ const CreateTaskForm = () => {
                                           });
                                         }}
                                         setItems={() => {}}
-                                        placeholder="Select Day"
+                                        placeholder="Day"
                                         dropDownDirection="TOP"
                                         listMode="SCROLLVIEW"
                                         style={{
@@ -759,6 +680,7 @@ const CreateTaskForm = () => {
                                           borderRadius: 10,
                                           height: 40,
                                           paddingHorizontal: 16,
+                                          width: 100,
                                         }}
                                         dropDownContainerStyle={{
                                           borderColor: "#ccc",
@@ -783,14 +705,14 @@ const CreateTaskForm = () => {
                                     <View
                                       style={{
                                         flex: 2,
-                                        marginLeft: 10,
+                                        marginLeft: 40,
                                         zIndex: 3000,
                                       }}
                                     >
                                       <DropDownPicker
                                         open={openWeekDay}
                                         value={monthValue?.day ?? null}
-                                        items={weekDays}
+                                        items={weekDaysList}
                                         setOpen={setOpenWeekDay}
                                         setValue={(callbackOrValue) => {
                                           const newVal =

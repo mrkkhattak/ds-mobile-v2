@@ -25,8 +25,8 @@ import LibrarIcon from "../../assets/images/icons/Group 1.svg";
 import LimeIcon from "../../assets/images/icons/Lime.svg";
 import SlideIcon from "../../assets/images/icons/arrow.svg";
 import {
-  getAssignedSpruceTasks,
-  removeAssignedTask,
+  fetchSpruceTasks,
+  removeTaskFromSpruce,
   SpruceTaskDetails,
 } from "../functions/functions";
 
@@ -60,20 +60,42 @@ const index = () => {
       const fetchTasks = async () => {
         try {
           if (user) {
-            const result = await getAssignedSpruceTasks(user.id);
+            const { data, error } = await fetchSpruceTasks(user.id);
+            console.log("data", data);
+            if (!isActive) return;
 
-            if (isActive && Array.isArray(result)) {
-              const grouped = result.reduce((acc, task) => {
-                const category = task.category || "Uncategorized";
-                if (!acc[category]) acc[category] = [];
-                acc[category].push(task);
+            if (error) {
+              Snackbar.show({
+                text: error,
+                duration: Snackbar.LENGTH_LONG,
+                backgroundColor: "red",
+              });
+              console.log("Error loading tasks:", error);
+              setLoading(false);
+              return;
+            }
+
+            if (data && Array.isArray(data)) {
+              const grouped = data.reduce((acc, task) => {
+                const groupKey =
+                  task.category || task.user_task_room || "Uncategorized";
+                if (!acc[groupKey]) acc[groupKey] = [];
+                acc[groupKey].push(task);
                 return acc;
               }, {} as Record<string, SpruceTaskDetails[]>);
+
               setGroupData(grouped);
-              setLoading(false);
             }
+
+            setLoading(false);
           }
-        } catch (err) {
+        } catch (err: any) {
+          const message = err?.message || "Failed to load tasks";
+          Snackbar.show({
+            text: message,
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "red",
+          });
           console.log("Error loading tasks:", err);
           setLoading(false);
         }
@@ -87,32 +109,49 @@ const index = () => {
     }, [user])
   );
 
-  const handleDeleteTask = async (taskId: string) => {
+  const handleDeleteTask = async (
+    userTaskId?: string,
+    globalTaskId?: string
+  ) => {
     if (!user) return;
+    console.log("globalTaskId", globalTaskId);
+    if (!userTaskId && !globalTaskId) {
+      Snackbar.show({
+        text: "No task selected to delete.",
+        duration: 2000,
+        backgroundColor: "red",
+      });
+      return;
+    }
 
     setLoading(true);
-    const success = await removeAssignedTask(taskId, user.id);
+
+    const success = await removeTaskFromSpruce({
+      userTaskId,
+      globalTaskId,
+      userId: user.id,
+    });
 
     if (success) {
       // Remove the deleted task from local grouped state
-      setGroupData((prev: any) => {
-        const updated = { ...prev };
+      setGroupData((prev: Record<string, SpruceTaskDetails[]>) => {
+        const updated: Record<string, SpruceTaskDetails[]> = {};
 
-        for (const category in updated) {
-          updated[category] = updated[category].filter(
-            (task: { task_id: string }) => task.task_id !== taskId
-          );
+        for (const key in prev) {
+          const filtered = prev[key].filter((task) => {
+            if (userTaskId) return task.user_task_id !== userTaskId;
+            if (globalTaskId) return task.task_id !== globalTaskId;
+            return true;
+          });
 
-          // Remove empty categories if desired
-          if (updated[category].length === 0) {
-            delete updated[category];
+          if (filtered.length > 0) {
+            updated[key] = filtered;
           }
         }
 
         return updated;
       });
 
-      console.log("Task removed locally:", taskId);
       Snackbar.show({
         text: "Task removed successfully!",
         duration: 2000,
@@ -175,6 +214,8 @@ const index = () => {
       </Animated.View>
     );
   };
+
+  console.log(groupData);
   if (loading) {
     return (
       <MainLayout>
@@ -317,7 +358,9 @@ const index = () => {
                             console.log("Edit task:", task)
                           }
                           onSwipeableRightOpen={() => {
-                            handleDeleteTask(task.task_id);
+                            task.user_task_id
+                              ? handleDeleteTask(task.user_task_id)
+                              : handleDeleteTask(undefined, task.task_id);
                           }}
                         >
                           <View
@@ -358,7 +401,9 @@ const index = () => {
                                   fontWeight: "500",
                                 }}
                               >
-                                {task.task_name}
+                                {task.task_name
+                                  ? task.task_name
+                                  : task.user_task_name}
                               </Text>
                             </View>
 

@@ -4,8 +4,14 @@ import { MainHeading, SubtitleText } from "@/components/ui/Heading";
 import { useAuthStore } from "@/store/authstore";
 import { yupResolver } from "@hookform/resolvers/yup";
 import React from "react";
-import { Controller, useForm } from "react-hook-form";
-import { ActivityIndicator, Alert, StatusBar, StyleSheet, View } from "react-native";
+import { Controller, Resolver, useForm } from "react-hook-form";
+import {
+  ActivityIndicator,
+  Alert,
+  StatusBar,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import * as yup from "yup";
@@ -37,7 +43,7 @@ const ForgotPasswordScreen = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as unknown as Resolver<FormValues>,
   });
 
   const onSubmit = async (data: FormValues) => {
