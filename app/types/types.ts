@@ -10,12 +10,13 @@ type MonthRepeat = {
 };
 
 export type CreateTaskFormValues = {
+  id?: string | undefined;
   name: string;
   room: string;
   type: string;
   repeat: boolean;
   effort: string;
-  repeatEvery?: "DAY" | "WEEK" | "MONTH";
+  repeatEvery?: "DAY" | "WEEK" | "MONTH" | string | undefined;
   days?: string[]; // e.g. ["M","T"]
   week?: WeekRepeat | null;
   month?: MonthRepeat | null;

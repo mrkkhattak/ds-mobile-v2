@@ -1,31 +1,15 @@
 import MainLayout from "@/components/layout/MainLayout";
-import { SlideButton } from "@/components/ui/Buttons";
 import DateLabel from "@/components/ui/DateLabel";
-import { MainHeading, SecondryHeading } from "@/components/ui/Heading";
 import { useAuthStore } from "@/store/authstore";
 
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Animated, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
-  ActivityIndicator,
-  Animated,
-  FlatList,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import CalendarStrip from "react-native-calendar-strip";
-import {
-  GestureHandlerRootView,
-  Swipeable,
-} from "react-native-gesture-handler";
-import LibrarIcon from "../../assets/images/icons/Group 1.svg";
-import LimeIcon from "../../assets/images/icons/Lime.svg";
-import SlideIcon from "../../assets/images/icons/arrow.svg";
-import {
+  AddUserTaskToSpruce,
+  createTask,
   deleteSpruceTasksByUserTaskId,
   deleteTaskById,
   fetchSpruceTasks,
@@ -34,12 +18,19 @@ import {
   SpruceTaskDetails,
 } from "../functions/functions";
 
-import EditTaskForm from "@/components/Form/EditTaskFrom";
+import EditBottomSheet from "@/components/BottomSheets/EditBottomSheet";
+import CalenderStripComponet from "@/components/CalenderStrip/CalenderStripComponet";
+import Header from "@/components/Header/Header";
+import HomeTaskList from "@/components/HomeComponents/HomeTaskList";
 import { useNavigation } from "expo-router";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import Snackbar from "react-native-snackbar";
 import DeleteIcon from "../../assets/images/icons/Delete task.svg";
 import EditIcon from "../../assets/images/icons/Edit task.svg";
+import {
+  generateMonthlyRepeatingDates,
+  generateRepeatingDatesUnified,
+} from "../functions/commonFuntions";
 import { HomeStackParamList } from "../types/navigator_type";
 import { CreateTaskFormValues, WeekRepeat } from "../types/types";
 
@@ -58,66 +49,6 @@ const index = () => {
   const today = new Date();
   const [loading, setLoading] = useState<boolean>(false);
   const [task, setTask] = useState<CreateTaskFormValues | undefined>(undefined);
-
-  useFocusEffect(
-    useCallback(() => {
-      let isActive = true;
-      setLoading(true);
-
-      const fetchTasks = async () => {
-        try {
-          if (user) {
-            const { data, error } = await fetchSpruceTasks(
-              user.id,
-              selectedDate.toISOString().split("T")[0]
-            );
-            console.log("data", data);
-            if (!isActive) return;
-
-            if (error) {
-              Snackbar.show({
-                text: error,
-                duration: Snackbar.LENGTH_LONG,
-                backgroundColor: "red",
-              });
-              console.log("Error loading tasks:", error);
-              setLoading(false);
-              return;
-            }
-
-            if (data && Array.isArray(data)) {
-              const grouped = data.reduce((acc, task) => {
-                const groupKey =
-                  task.category || task.user_task_room || "Uncategorized";
-                if (!acc[groupKey]) acc[groupKey] = [];
-                acc[groupKey].push(task);
-                return acc;
-              }, {} as Record<string, SpruceTaskDetails[]>);
-
-              setGroupData(grouped);
-            }
-
-            setLoading(false);
-          }
-        } catch (err: any) {
-          const message = err?.message || "Failed to load tasks";
-          Snackbar.show({
-            text: message,
-            duration: Snackbar.LENGTH_LONG,
-            backgroundColor: "red",
-          });
-          console.log("Error loading tasks:", err);
-          setLoading(false);
-        }
-      };
-
-      fetchTasks();
-
-      return () => {
-        isActive = false;
-      };
-    }, [user, selectedDate])
-  );
 
   const handleDeleteTask = async (id?: string) => {
     if (!user) return;
@@ -237,7 +168,6 @@ const index = () => {
       weekNumber: data?.repeat_weekly[0]?.week_number.toString() || "1",
     };
 
-    console.log("DATA IN FETCH TASK", data);
     setTask({
       id: data?.id,
       name: data?.name ?? "",
@@ -258,27 +188,159 @@ const index = () => {
     // setTask(data);
   };
 
-  const handleUpdateTask = async (
-    taskId: string,
-    data: CreateTaskFormValues
-  ) => {
-    console.log("taskId", taskId);
-    console.log("data", data);
-    const { success, error } = await deleteSpruceTasksByUserTaskId(taskId);
+  const fetchTasks = async () => {
+    try {
+      if (user) {
+        const { data, error } = await fetchSpruceTasks(
+          user.id,
+          selectedDate.toISOString().split("T")[0]
+        );
+
+        if (error) {
+          Snackbar.show({
+            text: error,
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "red",
+          });
+          console.log("Error loading tasks:", error);
+          setLoading(false);
+          return;
+        }
+
+        if (data && Array.isArray(data)) {
+          const grouped = data.reduce((acc, task) => {
+            const groupKey =
+              task.category || task.user_task_room || "Uncategorized";
+            if (!acc[groupKey]) acc[groupKey] = [];
+            acc[groupKey].push(task);
+            return acc;
+          }, {} as Record<string, SpruceTaskDetails[]>);
+
+          setGroupData(grouped);
+        }
+
+        setLoading(false);
+      }
+    } catch (err: any) {
+      const message = err?.message || "Failed to load tasks";
+      Snackbar.show({
+        text: message,
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+      console.log("Error loading tasks:", err);
+      setLoading(false);
+    }
+  };
+  const CreateNewTask = async (formData: CreateTaskFormValues) => {
+    try {
+      setLoading(true);
+
+      let repeatingDates: string[] = [];
+      if (formData.repeatEvery === "DAY") {
+        repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+          days: formData.days,
+        });
+      } else if (formData.repeatEvery === "WEEK") {
+        repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+          weekDays: formData.week?.day,
+          weekInterval: Number(formData.week?.weekNumber),
+        });
+      } else if (formData.repeatEvery === "MONTH") {
+        repeatingDates = generateMonthlyRepeatingDates(
+          Number(formData.month?.month),
+          `${formData.month?.day}`,
+          Number(formData.month?.dayNumber)
+        );
+      }
+
+      const result = await createTask(formData);
+
+      if (result.error) {
+        Snackbar.show({
+          text: result.error,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "red",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const taskId = result.data.id;
+      const userId = user?.id;
+
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      // === Insert into spruce_tasks ===
+      if (formData.repeat && repeatingDates.length > 0) {
+        // Insert each repeating entry with its own scheduled date
+        for (const date of repeatingDates) {
+          await AddUserTaskToSpruce(taskId, userId, date);
+        }
+
+        Snackbar.show({
+          text: `Repeating schedule created (${repeatingDates.length} tasks).`,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "green",
+        });
+      } else {
+        // Single one-time task (use today as scheduled date)
+        const today = new Date().toISOString().split("T")[0];
+        await AddUserTaskToSpruce(taskId, userId, today);
+
+        Snackbar.show({
+          text: "Task Updated successfully!",
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: "green",
+        });
+        fetchTasks();
+      }
+
+      // navigation.navigate("Library");
+    } catch (err: any) {
+      Snackbar.show({
+        text: err.message || "Something went wrong",
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateTask = async (data: CreateTaskFormValues) => {
+    const taskId: string | undefined = task?.id;
+    setLoading(true);
+
+    const { success, error } = await deleteSpruceTasksByUserTaskId(
+      taskId ?? ""
+    );
     if (!success && error) {
       Snackbar.show({ text: error, duration: Snackbar.LENGTH_SHORT });
+      setLoading(false);
     } else {
       Snackbar.show({
         text: "Task deleted successfully",
         duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: "green",
       });
-      const { success, error } = await deleteTaskById(taskId);
+
+      const { success, error } = await deleteTaskById(taskId ?? "");
       if (!success && error) {
-        Snackbar.show({ text: error, duration: Snackbar.LENGTH_SHORT });
+        Snackbar.show({
+          text: error,
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: "red",
+        });
+        setLoading(false);
       } else {
         Snackbar.show({
           text: "Spruce tasks deleted successfully",
           duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: "green",
         });
         setGroupData((prev: Record<string, SpruceTaskDetails[]>) => {
           const updated: Record<string, SpruceTaskDetails[]> = {};
@@ -296,12 +358,25 @@ const index = () => {
 
           return updated;
         });
+        CreateNewTask(data);
       }
     }
     bottomSheetRef.current?.close();
   };
 
-  console.log("GroupData", groupData);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      setLoading(true);
+
+      fetchTasks();
+
+      return () => {
+        isActive = false;
+      };
+    }, [user, selectedDate])
+  );
+
   if (loading) {
     return (
       <MainLayout>
@@ -320,81 +395,13 @@ const index = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "grey" }}>
       <MainLayout>
-        <View style={{}}>
-          <View style={{ marginTop: 60, paddingHorizontal: 40 }}></View>
-          <View style={{}}>
-            <View style={{ marginHorizontal: 20, marginTop: 40 }}>
-              <MainHeading style={{ textAlign: "left" }}>
-                Daily Spruce
-              </MainHeading>
-            </View>
-            <SecondryHeading
-              style={{
-                textAlign: "left",
-                color: "white",
-                fontWeight: "300",
-                fontFamily: "inter",
-                fontSize: 14,
-                marginHorizontal: 20,
-              }}
-            >
-              SMALL STEPS. BIG IMPACT!
-            </SecondryHeading>
-          </View>
-        </View>
-        <View
-          style={{
-            justifyContent: "flex-end",
-            alignItems: "center",
-            gap: 10,
-            flex: 1,
-          }}
-        >
-          <CalendarStrip
-            key={1212}
-            style={styles.calendarStrip}
-            calendarHeaderStyle={styles.calendarHeaderStyle}
-            dateNumberStyle={styles.dateNumberStyle}
-            dateNameStyle={styles.dateNameStyle}
-            highlightDateNumberStyle={styles.highlightDateNumberStyle}
-            highlightDateNameStyle={styles.highlightDateNameStyle}
-            highlightDateContainerStyle={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: 50,
-            }}
-            selectedDate={selectedDate ? selectedDate : today}
-            onDateSelected={(date: any) => {
-              const today = new Date();
-              today.setHours(0, 0, 0, 0); // Reset to midnight for accurate comparison
-              const selected = new Date(date);
-
-              if (selected < today) {
-                setSelectedDate(date);
-                return; // Prevent selecting past dates
-              }
-
-              setSelectedDate(date);
-            }}
-            calendarColor={"#E0CFF3"}
-            iconLeft={require("../../assets/rightArrow.png")} // Left arrow icon
-            iconRight={require("../../assets/Arrow_right.png")} // Right arrow icon
-          />
-
-          <SlideButton
-            label="Slide to start sprucing"
-            icon={<SlideIcon />}
-            onSlideComplete={() => {
-              console.log("Slide complete!");
-              navigation.navigate("TaskLibrary");
-            }}
-            viewStyle={{ marginVertical: 20 }}
-            textStyle={{
-              fontSize: 16,
-              fontWeight: "700",
-              textAlign: "center",
-            }}
-          />
-        </View>
+        <Header label="SMALL STEPS. BIG IMPACT!" />
+        <CalenderStripComponet
+          navigation={navigation}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          today={today}
+        />
         <View
           style={{
             flex: 2,
@@ -404,251 +411,23 @@ const index = () => {
           }}
         >
           <DateLabel selectedDate={selectedDate} />
-          <View
-            style={{
-              paddingHorizontal: 40,
-              marginTop: 20,
-            }}
-          >
-            {groupData ? (
-              <FlatList
-                data={Object.keys(groupData)}
-                keyExtractor={(item) => item}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 180 }}
-                renderItem={({ item }) => (
-                  <View style={{ marginBottom: 20 }}>
-                    {/* Category Title */}
-                    <Text
-                      style={{
-                        color: "#610FE0",
-                        fontWeight: "700",
-                        fontSize: 16,
-                        marginBottom: 10,
-                      }}
-                    >
-                      {item.toUpperCase()}
-                    </Text>
-
-                    {/* Render each task inside the category */}
-
-                    <FlatList
-                      data={groupData[item]}
-                      keyExtractor={(task) => task.id}
-                      scrollEnabled={false}
-                      renderItem={({ item: task }) => (
-                        <Swipeable
-                          renderLeftActions={renderLeftActions}
-                          renderRightActions={renderRightActions}
-                          onSwipeableLeftOpen={() => {
-                            if (task.owner_user_id === task.user_task_user_id) {
-                              fetchTask(task.user_task_id);
-                              //
-                            }
-                          }}
-                          onSwipeableRightOpen={() => {
-                            handleDeleteTask(task.id);
-                          }}
-                        >
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              backgroundColor: "#F7F6FB",
-                              borderRadius: 20,
-                              padding: 16,
-                              marginTop: 10,
-                            }}
-                          >
-                            {/* Left side: icon + name */}
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 10,
-                              }}
-                            >
-                              <View
-                                style={{
-                                  backgroundColor: "#E6E0F8",
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius: 12,
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Text>🍽️</Text>
-                              </View>
-                              <Text
-                                style={{
-                                  fontSize: 15,
-                                  color: "#000",
-                                  fontWeight: "500",
-                                }}
-                              >
-                                {task.task_name
-                                  ? task.task_name
-                                  : task.user_task_name}
-                              </Text>
-                            </View>
-                            {/* Right side: effort icons + avatar */}
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 6,
-                              }}
-                            >
-                              {Array.from({
-                                length: Math.min(
-                                  3,
-                                  Math.ceil(task.points / 30)
-                                ),
-                              }).map((_, i) => (
-                                <LimeIcon key={i} />
-                              ))}
-                              <Image
-                                source={{
-                                  uri: "https://randomuser.me/api/portraits/women/44.jpg",
-                                }}
-                                style={{
-                                  width: 34,
-                                  height: 34,
-                                  borderRadius: 17,
-                                  marginLeft: 4,
-                                }}
-                              />
-                            </View>
-                          </View>
-                        </Swipeable>
-                      )}
-                    />
-                  </View>
-                )}
-              />
-            ) : (
-              <>
-                <MainHeading
-                  style={{
-                    color: "#6915E0",
-                    fontWeight: "700",
-                    fontSize: 20,
-                    lineHeight: 36,
-                    fontFamily: "inter",
-                  }}
-                >
-                  Need a head start?
-                </MainHeading>
-                <SecondryHeading
-                  style={{
-                    fontSize: 16,
-                    lineHeight: 22,
-                    fontWeight: "300",
-                    fontFamily: "inter",
-                  }}
-                >
-                  Open your Task Library to create your list in seconds and
-                  start sprucing without overthinking
-                </SecondryHeading>
-              </>
-            )}
-
-            <View style={{ justifyContent: "center", alignItems: "center" }}>
-              <LibrarIcon />
-            </View>
-            {/* <MainButton
-            onPress={() => {
-              signOut();
-            }}
-            label="LOGOUT"
-          /> */}
-          </View>
+          <HomeTaskList
+            groupData={groupData}
+            renderLeftActions={renderLeftActions}
+            renderRightActions={renderRightActions}
+            fetchTask={fetchTask}
+            handleDeleteTask={handleDeleteTask}
+          />
         </View>
-        <BottomSheet
-          ref={bottomSheetRef}
-          index={-1} // hidden initially
+        <EditBottomSheet
+          bottomSheetRef={bottomSheetRef}
           snapPoints={snapPoints}
-          enablePanDownToClose
-          backgroundStyle={{
-            borderTopLeftRadius: 50,
-            borderTopRightRadius: 50,
-            flex: 1,
-          }}
-          onChange={(index) => {
-            // when index === -1 → bottom sheet is closed
-            console.log(index);
-            if (index === -1) {
-              // console.log("first");
-            }
-          }}
-        >
-          <BottomSheetView style={{ flex: 1 }}>
-            <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 200 }}>
-              <EditTaskForm
-                onSubmit={() => {
-                  handleUpdateTask(task?.id, task);
-                }}
-                defalutValues={task}
-              />
-            </ScrollView>
-          </BottomSheetView>
-        </BottomSheet>
+          task={task}
+          handleUpdateTask={handleUpdateTask}
+        />
       </MainLayout>
     </GestureHandlerRootView>
   );
 };
 
 export default index;
-
-const styles = StyleSheet.create({
-  calendarStrip: {
-    height: 100,
-    paddingTop: 10,
-    paddingBottom: 10,
-    marginBottom: 20,
-    marginHorizontal: 10,
-    width: 380,
-    borderRadius: 30,
-    opacity: 6,
-  },
-  calendarHeaderStyle: {
-    color: "#610FE0",
-    textAlign: "left",
-    marginBottom: 10,
-    marginTop: 10,
-    marginLeft: 30,
-    width: "100%",
-    fontSize: 16,
-  },
-  dateNumberStyle: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    lineHeight: 17,
-  },
-  dateNameStyle: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    lineHeight: 17,
-  },
-  highlightDateNumberStyle: {
-    color: "#610FE0",
-    fontSize: 14,
-    lineHeight: 17,
-  },
-  highlightDateNameStyle: {
-    color: "#610FE0",
-    fontSize: 14,
-    lineHeight: 17,
-  },
-  highlightDateContainerStyle: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 50,
-    fontSize: 16,
-  },
-  disabledDateContainerStyle: {
-    backgroundColor: "red", // Remove background for past dates
-    borderWidth: 0, // Remove any outline
-  },
-});
