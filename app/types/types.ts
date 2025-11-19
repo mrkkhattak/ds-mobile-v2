@@ -21,3 +21,9 @@ export type CreateTaskFormValues = {
   week?: WeekRepeat | null;
   month?: MonthRepeat | null;
 };
+
+export type TablisntType = {
+  label: string;
+  selectedIcon: React.JSX.Element;
+  unselectedIcon: React.JSX.Element;
+};
