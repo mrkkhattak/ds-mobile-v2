@@ -395,7 +395,7 @@ const index = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "grey" }}>
       <MainLayout>
-        <Header label="SMALL STEPS. BIG IMPACT!" />
+        <Header label="SMALL STEPS. BIG IMPACT!" screenName="Daily Spruce" />
         <CalenderStripComponet
           navigation={navigation}
           selectedDate={selectedDate}

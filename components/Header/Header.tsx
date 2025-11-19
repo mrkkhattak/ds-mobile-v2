@@ -4,15 +4,16 @@ import { MainHeading, SecondryHeading } from "../ui/Heading";
 
 interface HeaderProps {
   label: string;
+  screenName: string;
 }
 const Header = (props: HeaderProps) => {
-  const { label } = props;
+  const { label, screenName } = props;
   return (
-    <View style={{}}>
+    <View>
       <View style={{ marginTop: 60, paddingHorizontal: 40 }}></View>
-      <View style={{}}>
+      <View>
         <View style={{ marginHorizontal: 20, marginTop: 40 }}>
-          <MainHeading style={{ textAlign: "left" }}>Daily Spruce</MainHeading>
+          <MainHeading style={{ textAlign: "left" }}>{screenName}</MainHeading>
         </View>
         <SecondryHeading
           style={{

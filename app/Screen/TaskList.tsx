@@ -1,5 +1,4 @@
 import MainLayout from "@/components/layout/MainLayout";
-import { MainHeading, SecondryHeading } from "@/components/ui/Heading";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -12,7 +11,6 @@ import {
 
 import RemoveIcon from "@/assets/images/icons/remove.svg";
 import AddIcon from "@/assets/images/icons/smallAddIcon.svg";
-import HomeIcon from "@/assets/images/icons/Vector (3).svg";
 import { useAuthStore } from "@/store/authstore";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import dayjs from "dayjs";
@@ -35,6 +33,7 @@ import {
   SpruceTaskDetails,
 } from "../functions/functions";
 
+import Header from "@/components/Header/Header";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import { HomeStackParamList } from "../types/navigator_type";
 
@@ -150,38 +149,14 @@ const TaskList = () => {
   }
   return (
     <MainLayout>
-      <View style={{ marginTop: 60 }}>
-        <View style={{ marginHorizontal: 20 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <MainHeading style={{ textAlign: "left" }}>
-              Task Library
-            </MainHeading>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <HomeIcon />
-            </TouchableOpacity>
-          </View>
-          <SecondryHeading
-            style={{
-              textAlign: "left",
-              color: "white",
-              fontWeight: "300",
-              fontFamily: "inter",
-              fontSize: 14,
-              marginTop: 5,
-            }}
-          >
-            SELECT TASKS TO ADD TO TODAY’S SPRUCE
-          </SecondryHeading>
-        </View>
-
+      <View>
+        <Header
+          screenName="Task Library"
+          label="SELECT TASKS TO ADD TO TODAY’S SPRUCE
+"
+        />
         {/* Horizontal Main Tabs */}
-        <View style={{ marginTop: 30 }}>
+        <View style={{ justifyContent: "center", alignItems: "center" }}>
           <FlatList
             data={tabList}
             horizontal
@@ -445,27 +420,34 @@ const TaskList = () => {
 export default TaskList;
 
 const styles = StyleSheet.create({
-  tabContainer: { paddingHorizontal: 7, gap: 2 },
+  tabContainer: {
+    paddingHorizontal: 7,
+    gap: 2,
+  },
   tabButton: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
   },
   tabLabel: { color: "#FFFFFF", fontSize: 12, marginTop: 6, fontWeight: "500" },
   tabLabelActive: { color: "#FFFFFF", fontWeight: "700" },
-  subTabContainer: { paddingHorizontal: 20, gap: 15 },
+  subTabContainer: {
+    paddingHorizontal: 20,
+    gap: 15,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
+    paddingVertical: 2,
+  },
   subTabButton: {
     paddingVertical: 8,
     paddingHorizontal: 18,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.4)",
   },
-  subTabButtonActive: { backgroundColor: "#fff" },
+  subTabButtonActive: {
+    borderBottomWidth: 5,
+    borderColor: "#fff",
+  },
   subTabLabel: { color: "#fff", fontSize: 14, fontWeight: "500" },
-  subTabLabelActive: { color: "#6915E0", fontWeight: "700" },
+  subTabLabelActive: { color: "#fff", fontWeight: "700" },
   taskCard: {
     backgroundColor: "white",
     borderRadius: 20,
