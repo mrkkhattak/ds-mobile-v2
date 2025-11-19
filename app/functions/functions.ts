@@ -54,7 +54,7 @@ export interface SpruceTask {
 
 export interface SpruceTaskDetails {
   // Assignment info
-  assignment_id: string;
+  id: string;
   assigned_at: string | null;
   updated_at: string | null;
   assign_user_id: string | null;
@@ -82,6 +82,7 @@ export interface SpruceTaskDetails {
 
   // User task fields
   user_task_id?: string;
+  user_task_user_id?: string;
   user_task_name?: string;
   user_task_room?: string | null;
   user_task_type?: string | null;
@@ -95,6 +96,44 @@ export interface SpruceTaskDetails {
 type CreateTaskResult = {
   data?: any;
   error?: string;
+};
+
+export type UserTask = {
+  id: string;
+  user_id: string;
+  name: string;
+  room: string | null;
+  type: string;
+  effort: number;
+  repeat: boolean;
+  repeat_every: string;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type TaskRepeatDay = {
+  day: string;
+};
+
+export type TaskRepeatWeek = {
+  week_number: number;
+  day: string;
+};
+
+export type TaskRepeatMonth = {
+  day_number: number;
+  day: string;
+  month_number: number;
+};
+
+export type FullTask = UserTask & {
+  repeat_days: string[];
+  repeat_weekly: TaskRepeatWeek[];
+  repeat_monthly: TaskRepeatMonth[];
+};
+export type TaskResult = {
+  data: FullTask | null;
+  error: string | null;
 };
 export async function getGlobalTasks(): Promise<GlobalTask[]> {
   const { data, error } = await supabase
@@ -136,10 +175,13 @@ export const fetchAndGroupTasks = async () => {
 };
 
 export const fetchSpruceTasks = async (
-  userId: string
+  userId: string,
+  scheduledDate?: string
 ): Promise<{ data?: SpruceTaskDetails[]; error?: string }> => {
   try {
-    const { data: spruceData, error } = await supabase
+    if (!userId) return { error: "Missing userId" };
+
+    let query = supabase
       .from("spruce_tasks")
       .select(
         `
@@ -147,6 +189,9 @@ export const fetchSpruceTasks = async (
         assign_user_id,
         user_id,
         user_task_id,
+        scheduled_date,
+        created_at,
+        updated_at,
         user_task:user_task_id (
           id,
           name,
@@ -155,6 +200,7 @@ export const fetchSpruceTasks = async (
           effort,
           repeat,
           repeat_every,
+          user_id,
           created_at,
           updated_at
         ),
@@ -180,52 +226,61 @@ export const fetchSpruceTasks = async (
       )
       .eq("user_id", userId);
 
+    // Apply date filter if provided
+    if (scheduledDate) {
+      query = query.eq("scheduled_date", scheduledDate);
+    }
+
+    const { data: spruceData, error } = await query.order("scheduled_date", {
+      ascending: true,
+    });
+
     if (error) {
       console.error("Error fetching spruce tasks:", error.message);
       return { error: error.message };
     }
 
-    if (!spruceData) {
-      return { data: [] };
-    }
+    if (!spruceData) return { data: [] };
 
-    // Map to SpruceTaskDetails type
     const result: SpruceTaskDetails[] = spruceData.map((item: any) => ({
-      assignment_id: item.id,
+      id: item.id,
       assigned_at: item.created_at,
       updated_at: item.updated_at,
       assign_user_id: item.assign_user_id,
-      assign_user_email: null, // optional, can be populated separately
+      scheduled_date: item.scheduled_date,
+      assign_user_email: null,
       owner_user_id: item.user_id,
-      owner_user_email: null, // optional, can be populated separately
+      owner_user_email: null,
 
-      task_id: item.global_task?.id || null,
-      task_name: item.global_task?.name || null,
-      description_us: item.global_task?.description_us || null,
-      description_uk: item.global_task?.description_uk || null,
-      description_row: item.global_task?.description_row || null,
-      icon_name: item.global_task?.icon_name || null,
-      child_friendly: item.global_task?.child_friendly || null,
-      estimated_effort: item.global_task?.estimated_effort || null,
-      points: item.global_task?.points || null,
-      room: item.global_task?.room || null,
-      category: item.global_task?.category || null,
-      keywords: item.global_task?.keywords || null,
-      display_names: item.global_task?.display_names || null,
-      unique_completions: item.global_task?.unique_completions || null,
-      total_completions: item.global_task?.total_completions || null,
-      effort_level: item.global_task?.effort_level || null,
+      // Global task
+      task_id: item.global_task?.id ?? null,
+      task_name: item.global_task?.name ?? null,
+      description_us: item.global_task?.description_us ?? null,
+      description_uk: item.global_task?.description_uk ?? null,
+      description_row: item.global_task?.description_row ?? null,
+      icon_name: item.global_task?.icon_name ?? null,
+      child_friendly: item.global_task?.child_friendly ?? null,
+      estimated_effort: item.global_task?.estimated_effort ?? null,
+      points: item.global_task?.points ?? null,
+      room: item.global_task?.room ?? null,
+      category: item.global_task?.category ?? null,
+      keywords: item.global_task?.keywords ?? null,
+      display_names: item.global_task?.display_names ?? null,
+      unique_completions: item.global_task?.unique_completions ?? null,
+      total_completions: item.global_task?.total_completions ?? null,
+      effort_level: item.global_task?.effort_level ?? null,
 
-      // User task fields
-      user_task_id: item.user_task?.id || undefined,
-      user_task_name: item.user_task?.name || undefined,
-      user_task_room: item.user_task?.room || null,
-      user_task_type: item.user_task?.type || null,
-      user_task_effort: item.user_task?.effort || null,
-      user_task_repeat: item.user_task?.repeat || false,
-      user_task_repeat_every: item.user_task?.repeat_every || null,
-      user_task_created_at: item.user_task?.created_at || null,
-      user_task_updated_at: item.user_task?.updated_at || null,
+      // User task
+      user_task_id: item.user_task?.id,
+      user_task_user_id: item.user_task?.user_id,
+      user_task_name: item.user_task?.name,
+      user_task_room: item.user_task?.room ?? null,
+      user_task_type: item.user_task?.type ?? null,
+      user_task_effort: item.user_task?.effort ?? null,
+      user_task_repeat: item.user_task?.repeat ?? false,
+      user_task_repeat_every: item.user_task?.repeat_every ?? null,
+      user_task_created_at: item.user_task?.created_at ?? null,
+      user_task_updated_at: item.user_task?.updated_at ?? null,
     }));
 
     return { data: result };
@@ -237,13 +292,15 @@ export const fetchSpruceTasks = async (
 
 export const AddTaskToSpruce = async (
   global_task_id: string,
-  user_id: string
+  user_id: string,
+  scheduledDate: string
 ): Promise<boolean> => {
   try {
     const { data, error } = await supabase.from("spruce_tasks").insert([
       {
         global_task_id,
         user_id,
+        scheduled_date: scheduledDate,
       },
     ]);
 
@@ -260,7 +317,7 @@ export const AddTaskToSpruce = async (
   }
 };
 
-export const removeTaskFromSpruce = async ({
+export const removeSpecificTaskFromSpruce = async ({
   globalTaskId,
   userTaskId,
   userId,
@@ -281,6 +338,37 @@ export const removeTaskFromSpruce = async ({
     if (userTaskId) query = query.eq("user_task_id", userTaskId);
 
     const { error } = await query;
+
+    if (error) {
+      console.error("Error removing task:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err: any) {
+    console.error("Unexpected error removing task:", err.message || err);
+    return false;
+  }
+};
+
+export const removeTaskFromSpruce = async ({
+  id,
+  userId,
+}: {
+  id?: string;
+  userId: string;
+}): Promise<boolean> => {
+  try {
+    if (!id) {
+      console.error("Please provide the task ID to delete.");
+      return false;
+    }
+
+    const { error } = await supabase
+      .from("spruce_tasks")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId); // extra safety so users can't delete others' tasks
 
     if (error) {
       console.error("Error removing task:", error.message);
@@ -377,13 +465,15 @@ export const createTask = async (
 
 export const AddUserTaskToSpruce = async (
   userTaskId: string,
-  userId: string
+  userId: string,
+  scheduledDate: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const { data, error } = await supabase.from("spruce_tasks").insert([
       {
         user_task_id: userTaskId,
         user_id: userId,
+        scheduled_date: scheduledDate, // ⬅️ new field
       },
     ]);
 
@@ -395,10 +485,129 @@ export const AddUserTaskToSpruce = async (
     console.log("User task added to spruce successfully:", data);
     return { success: true };
   } catch (err: any) {
-    console.error(
-      "Unexpected error adding user task to spruce:",
-      err.message || err
-    );
+    console.error("Unexpected error adding user task to spruce:", err.message);
     return { success: false, error: err.message || "Unknown error" };
+  }
+};
+
+export async function getTaskById(taskId: string): Promise<TaskResult> {
+  if (!taskId) {
+    return { data: null, error: "Task ID is required" };
+  }
+
+  try {
+    // Fetch main task
+    const { data: task, error: taskError } = await supabase
+      .from("user_task")
+      .select("*")
+      .eq("id", taskId)
+      .single();
+
+    if (taskError) return { data: null, error: taskError.message };
+    if (!task) return { data: null, error: "Task not found" };
+
+    // Fetch related records
+    const [repeatDaysResult, repeatWeeksResult, repeatMonthsResult] =
+      await Promise.all([
+        supabase.from("task_repeat_days").select("day").eq("task_id", taskId),
+        supabase
+          .from("task_repeat_weeks")
+          .select("week_number, day")
+          .eq("task_id", taskId),
+        supabase
+          .from("task_repeat_months")
+          .select("day_number, day, month_number")
+          .eq("task_id", taskId),
+      ]);
+
+    // Cast results safely
+    const repeatDays = repeatDaysResult.data as TaskRepeatDay[] | null;
+    const repeatWeeks = repeatWeeksResult.data as TaskRepeatWeek[] | null;
+    const repeatMonths = repeatMonthsResult.data as TaskRepeatMonth[] | null;
+
+    // Optional: check errors
+    if (
+      repeatDaysResult.error ||
+      repeatWeeksResult.error ||
+      repeatMonthsResult.error
+    ) {
+      return {
+        data: null,
+        error:
+          repeatDaysResult.error?.message ??
+          repeatWeeksResult.error?.message ??
+          repeatMonthsResult.error?.message ??
+          "Something went wrong",
+      };
+    }
+
+    const fullTask: FullTask = {
+      ...task,
+      repeat_days: repeatDays?.map((d) => d.day) || [],
+      repeat_weekly: repeatWeeks || [],
+      repeat_monthly: repeatMonths || [],
+    };
+
+    return { data: fullTask, error: null };
+  } catch (err: any) {
+    return { data: null, error: err.message || "Something went wrong" };
+  }
+}
+
+export const deleteTaskById = async (
+  taskId: string
+): Promise<{ success: boolean; error: string | null }> => {
+  try {
+    // Delete task
+    const { error: taskError } = await supabase
+      .from("user_task")
+      .delete()
+      .eq("id", taskId);
+
+    if (taskError) {
+      return { success: false, error: taskError.message };
+    }
+
+    // Optional: delete related entries in repeat tables
+    const { error: daysError } = await supabase
+      .from("task_repeat_days")
+      .delete()
+      .eq("task_id", taskId);
+
+    const { error: weeksError } = await supabase
+      .from("task_repeat_weeks")
+      .delete()
+      .eq("task_id", taskId);
+
+    const { error: monthsError } = await supabase
+      .from("task_repeat_months")
+      .delete()
+      .eq("task_id", taskId);
+
+    const allErrors =
+      daysError?.message || weeksError?.message || monthsError?.message;
+
+    return { success: !allErrors, error: allErrors ?? null };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Something went wrong" };
+  }
+};
+
+export const deleteSpruceTasksByUserTaskId = async (
+  taskId: string
+): Promise<{ success: boolean; error: string | null }> => {
+  try {
+    const { error } = await supabase
+      .from("spruce_tasks")
+      .delete()
+      .eq("user_task_id", taskId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, error: null };
+  } catch (err: any) {
+    return { success: false, error: err.message ?? "Something went wrong" };
   }
 };

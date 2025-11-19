@@ -4,7 +4,7 @@ import DateLabel from "@/components/ui/DateLabel";
 import { MainHeading, SecondryHeading } from "@/components/ui/Heading";
 import { useAuthStore } from "@/store/authstore";
 
-import BottomSheet from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -12,6 +12,7 @@ import {
   Animated,
   FlatList,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -25,17 +26,22 @@ import LibrarIcon from "../../assets/images/icons/Group 1.svg";
 import LimeIcon from "../../assets/images/icons/Lime.svg";
 import SlideIcon from "../../assets/images/icons/arrow.svg";
 import {
+  deleteSpruceTasksByUserTaskId,
+  deleteTaskById,
   fetchSpruceTasks,
+  getTaskById,
   removeTaskFromSpruce,
   SpruceTaskDetails,
 } from "../functions/functions";
 
+import EditTaskForm from "@/components/Form/EditTaskFrom";
 import { useNavigation } from "expo-router";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import Snackbar from "react-native-snackbar";
 import DeleteIcon from "../../assets/images/icons/Delete task.svg";
 import EditIcon from "../../assets/images/icons/Edit task.svg";
 import { HomeStackParamList } from "../types/navigator_type";
+import { CreateTaskFormValues, WeekRepeat } from "../types/types";
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Home">;
 const index = () => {
@@ -51,6 +57,7 @@ const index = () => {
   const [groupData, setGroupData] = useState<any>();
   const today = new Date();
   const [loading, setLoading] = useState<boolean>(false);
+  const [task, setTask] = useState<CreateTaskFormValues | undefined>(undefined);
 
   useFocusEffect(
     useCallback(() => {
@@ -60,7 +67,10 @@ const index = () => {
       const fetchTasks = async () => {
         try {
           if (user) {
-            const { data, error } = await fetchSpruceTasks(user.id);
+            const { data, error } = await fetchSpruceTasks(
+              user.id,
+              selectedDate.toISOString().split("T")[0]
+            );
             console.log("data", data);
             if (!isActive) return;
 
@@ -106,16 +116,13 @@ const index = () => {
       return () => {
         isActive = false;
       };
-    }, [user])
+    }, [user, selectedDate])
   );
 
-  const handleDeleteTask = async (
-    userTaskId?: string,
-    globalTaskId?: string
-  ) => {
+  const handleDeleteTask = async (id?: string) => {
     if (!user) return;
-    console.log("globalTaskId", globalTaskId);
-    if (!userTaskId && !globalTaskId) {
+
+    if (!id) {
       Snackbar.show({
         text: "No task selected to delete.",
         duration: 2000,
@@ -127,8 +134,7 @@ const index = () => {
     setLoading(true);
 
     const success = await removeTaskFromSpruce({
-      userTaskId,
-      globalTaskId,
+      id,
       userId: user.id,
     });
 
@@ -139,8 +145,7 @@ const index = () => {
 
         for (const key in prev) {
           const filtered = prev[key].filter((task) => {
-            if (userTaskId) return task.user_task_id !== userTaskId;
-            if (globalTaskId) return task.task_id !== globalTaskId;
+            if (id) return task.id !== id;
             return true;
           });
 
@@ -215,7 +220,88 @@ const index = () => {
     );
   };
 
-  console.log(groupData);
+  const fetchTask = async (taskId: string) => {
+    const { data, error } = await getTaskById(taskId);
+
+    if (error) {
+      Snackbar.show({
+        text: error,
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+      return;
+    }
+
+    const weekRepeat: WeekRepeat = {
+      day: data?.repeat_weekly.map((w) => w.day) ?? [],
+      weekNumber: data?.repeat_weekly[0]?.week_number.toString() || "1",
+    };
+
+    console.log("DATA IN FETCH TASK", data);
+    setTask({
+      id: data?.id,
+      name: data?.name ?? "",
+      room: data?.room ?? "",
+      type: data?.type ?? "",
+      repeat: data?.repeat ?? false,
+      effort: `${data?.effort}`,
+      repeatEvery: data?.repeat_every ?? "DAY",
+      days: data?.repeat_days ?? [],
+      week: weekRepeat, // use the transformed object
+      month: {
+        dayNumber: data?.repeat_monthly[0]?.day_number,
+        day: data?.repeat_monthly[0]?.day || "",
+        month: `${data?.repeat_monthly[0]?.month_number}`,
+      },
+    });
+    bottomSheetRef.current?.expand();
+    // setTask(data);
+  };
+
+  const handleUpdateTask = async (
+    taskId: string,
+    data: CreateTaskFormValues
+  ) => {
+    console.log("taskId", taskId);
+    console.log("data", data);
+    const { success, error } = await deleteSpruceTasksByUserTaskId(taskId);
+    if (!success && error) {
+      Snackbar.show({ text: error, duration: Snackbar.LENGTH_SHORT });
+    } else {
+      Snackbar.show({
+        text: "Task deleted successfully",
+        duration: Snackbar.LENGTH_SHORT,
+      });
+      const { success, error } = await deleteTaskById(taskId);
+      if (!success && error) {
+        Snackbar.show({ text: error, duration: Snackbar.LENGTH_SHORT });
+      } else {
+        Snackbar.show({
+          text: "Spruce tasks deleted successfully",
+          duration: Snackbar.LENGTH_SHORT,
+        });
+        setGroupData((prev: Record<string, SpruceTaskDetails[]>) => {
+          const updated: Record<string, SpruceTaskDetails[]> = {};
+
+          for (const key in prev) {
+            const filtered = prev[key].filter((task) => {
+              if (task) return task.user_task_id !== taskId;
+              return true;
+            });
+
+            if (filtered.length > 0) {
+              updated[key] = filtered;
+            }
+          }
+
+          return updated;
+        });
+      }
+    }
+    bottomSheetRef.current?.close();
+  };
+
+  console.log("GroupData", groupData);
   if (loading) {
     return (
       <MainLayout>
@@ -348,19 +434,20 @@ const index = () => {
 
                     <FlatList
                       data={groupData[item]}
-                      keyExtractor={(task) => task.task_id}
+                      keyExtractor={(task) => task.id}
                       scrollEnabled={false}
                       renderItem={({ item: task }) => (
                         <Swipeable
                           renderLeftActions={renderLeftActions}
                           renderRightActions={renderRightActions}
-                          onSwipeableLeftOpen={() =>
-                            console.log("Edit task:", task)
-                          }
+                          onSwipeableLeftOpen={() => {
+                            if (task.owner_user_id === task.user_task_user_id) {
+                              fetchTask(task.user_task_id);
+                              //
+                            }
+                          }}
                           onSwipeableRightOpen={() => {
-                            task.user_task_id
-                              ? handleDeleteTask(task.user_task_id)
-                              : handleDeleteTask(undefined, task.task_id);
+                            handleDeleteTask(task.id);
                           }}
                         >
                           <View
@@ -406,7 +493,6 @@ const index = () => {
                                   : task.user_task_name}
                               </Text>
                             </View>
-
                             {/* Right side: effort icons + avatar */}
                             <View
                               style={{
@@ -480,6 +566,35 @@ const index = () => {
           /> */}
           </View>
         </View>
+        <BottomSheet
+          ref={bottomSheetRef}
+          index={-1} // hidden initially
+          snapPoints={snapPoints}
+          enablePanDownToClose
+          backgroundStyle={{
+            borderTopLeftRadius: 50,
+            borderTopRightRadius: 50,
+            flex: 1,
+          }}
+          onChange={(index) => {
+            // when index === -1 → bottom sheet is closed
+            console.log(index);
+            if (index === -1) {
+              // console.log("first");
+            }
+          }}
+        >
+          <BottomSheetView style={{ flex: 1 }}>
+            <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 200 }}>
+              <EditTaskForm
+                onSubmit={() => {
+                  handleUpdateTask(task?.id, task);
+                }}
+                defalutValues={task}
+              />
+            </ScrollView>
+          </BottomSheetView>
+        </BottomSheet>
       </MainLayout>
     </GestureHandlerRootView>
   );

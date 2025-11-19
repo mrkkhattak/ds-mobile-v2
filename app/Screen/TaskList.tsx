@@ -31,7 +31,7 @@ import {
   AddTaskToSpruce,
   fetchAndGroupTasks,
   fetchSpruceTasks,
-  removeTaskFromSpruce,
+  removeSpecificTaskFromSpruce,
   SpruceTaskDetails,
 } from "../functions/functions";
 
@@ -323,9 +323,14 @@ const TaskList = () => {
                               {user && (
                                 <TouchableOpacity
                                   onPress={async () => {
+                                    const today = new Date()
+                                      .toISOString()
+                                      .split("T")[0];
+
                                     const success = await AddTaskToSpruce(
                                       item.id,
-                                      user.id
+                                      user.id,
+                                      today
                                     );
                                     if (success) {
                                       Snackbar.show({
@@ -335,7 +340,7 @@ const TaskList = () => {
                                       });
                                       // Optionally update myTasks locally
                                       const newTask: SpruceTaskDetails = {
-                                        assignment_id: "", // you can update from returned data if needed
+                                        id: "", // you can update from returned data if needed
                                         assigned_at: new Date().toISOString(),
                                         updated_at: new Date().toISOString(),
                                         assign_user_id: user.id,
@@ -385,10 +390,11 @@ const TaskList = () => {
                               {user && (
                                 <TouchableOpacity
                                   onPress={async () => {
-                                    const success = await removeTaskFromSpruce({
-                                      globalTaskId: item.id,
-                                      userId: user.id,
-                                    });
+                                    const success =
+                                      await removeSpecificTaskFromSpruce({
+                                        globalTaskId: item.id,
+                                        userId: user.id,
+                                      });
                                     if (success) {
                                       Snackbar.show({
                                         text: "Task removed successfully!",

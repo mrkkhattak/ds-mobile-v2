@@ -14,10 +14,11 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 
 interface CreateTaskFormProps {
   onSubmit: (formData: CreateTaskFormValues) => void;
+  defalutValues?: CreateTaskFormValues;
 }
 
-const CreateTaskForm = (props: CreateTaskFormProps) => {
-  const { onSubmit } = props;
+const EditTaskForm = (props: CreateTaskFormProps) => {
+  const { onSubmit, defalutValues } = props;
   const [open, setOpen] = useState(false);
   const [openWeek, setOpenWeek] = useState(false);
   const [openDayNumber, setOpenDayNumber] = useState(false);
@@ -33,19 +34,24 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<CreateTaskFormValues>({
     resolver: yupResolver(schema) as unknown as Resolver<CreateTaskFormValues>,
     defaultValues: {
-      name: "",
-      room: "Living Room",
-      type: "BOTH",
-      effort: "",
-      repeat: false,
-      repeatEvery: "DAY",
-      days: [],
-      week: { day: [], weekNumber: "" },
-      month: { dayNumber: undefined, day: undefined, month: undefined },
+      name: defalutValues?.name ?? "",
+      room: defalutValues?.room || "",
+      type: defalutValues?.type,
+      effort: defalutValues?.effort || "0",
+      repeat: defalutValues?.repeat || false,
+      repeatEvery: defalutValues?.repeatEvery || "DAY",
+      days: defalutValues?.days || [],
+      week: defalutValues?.week || { day: [], weekNumber: "" },
+      month: defalutValues?.month || {
+        dayNumber: undefined,
+        day: "",
+        month: "",
+      },
     },
   });
 
@@ -102,6 +108,25 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
       setValue("week", { day: [], weekNumber: "" });
     }
   }, [repeatEveryField]);
+
+  useEffect(() => {
+    reset({
+      name: defalutValues?.name ?? "",
+      room: defalutValues?.room || "",
+      type: defalutValues?.type,
+      effort: defalutValues?.effort || "0",
+      repeat: defalutValues?.repeat || false,
+      repeatEvery: defalutValues?.repeatEvery || "DAY",
+      days: defalutValues?.days || [],
+      week: defalutValues?.week || { day: [], weekNumber: "" },
+      month: defalutValues?.month || {
+        dayNumber: undefined,
+        day: "",
+        month: "",
+      },
+    });
+  }, [defalutValues]);
+
   return (
     <>
       <KeyboardAwareScrollView
@@ -883,7 +908,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
   );
 };
 
-export default CreateTaskForm;
+export default EditTaskForm;
 
 const styles = StyleSheet.create({
   label: {

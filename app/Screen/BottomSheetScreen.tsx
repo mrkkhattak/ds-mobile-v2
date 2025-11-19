@@ -8,6 +8,10 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import Snackbar from "react-native-snackbar";
+import {
+  generateMonthlyRepeatingDates,
+  generateRepeatingDatesUnified,
+} from "../functions/commonFuntions";
 import { AddUserTaskToSpruce, createTask } from "../functions/functions";
 import { CreateTaskFormValues } from "../types/types";
 
@@ -38,46 +42,83 @@ const BottomSheetScreen = () => {
   console.log("loading", loading);
 
   const onSubmit = async (formData: CreateTaskFormValues) => {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    // 1️⃣ Create the main task
-    const result = await createTask(formData);
+      let repeatingDates: string[] = [];
+      if (formData.repeatEvery === "DAY") {
+        repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+          days: formData.days,
+        });
+      } else if (formData.repeatEvery === "WEEK") {
+        repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+          weekDays: formData.week?.day,
+          weekInterval: Number(formData.week?.weekNumber),
+        });
+      } else if (formData.repeatEvery === "MONTH") {
+        repeatingDates = generateMonthlyRepeatingDates(
+          Number(formData.month?.month),
+          `${formData.month?.day}`,
+          Number(formData.month?.dayNumber)
+        );
+      }
 
-    if (result.error) {
-      Snackbar.show({
-        text: result.error,
-        duration: Snackbar.LENGTH_LONG,
-        backgroundColor: "red",
-      });
-      console.log(result.error);
-      setLoading(false);
-      return;
-    }
+      console.log("repeatingDates", repeatingDates);
 
-    // 2️⃣ If task created, add to spruce_tasks
-    const taskId = result.data.id; // user_task id
-    const userId = user?.id;
-    console.log("taskId", taskId);
-    if (userId) {
-      const spruceResult = await AddUserTaskToSpruce(taskId, userId);
-      if (!spruceResult.success) {
+      const result = await createTask(formData);
+
+      if (result.error) {
         Snackbar.show({
-          text: spruceResult.error || "Failed to add task to spruce",
+          text: result.error,
           duration: Snackbar.LENGTH_LONG,
           backgroundColor: "red",
         });
-        console.log(spruceResult.error);
-      } else {
+        setLoading(false);
+        return;
+      }
+
+      const taskId = result.data.id;
+      const userId = user?.id;
+
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      // === Insert into spruce_tasks ===
+      if (formData.repeat && repeatingDates.length > 0) {
+        // Insert each repeating entry with its own scheduled date
+        for (const date of repeatingDates) {
+          await AddUserTaskToSpruce(taskId, userId, date);
+        }
+
         Snackbar.show({
-          text: "Task added to spruce successfully!",
+          text: `Repeating schedule created (${repeatingDates.length} tasks).`,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "green",
+        });
+      } else {
+        // Single one-time task (use today as scheduled date)
+        const today = new Date().toISOString().split("T")[0];
+        await AddUserTaskToSpruce(taskId, userId, today);
+
+        Snackbar.show({
+          text: "Task created successfully!",
           duration: Snackbar.LENGTH_SHORT,
           backgroundColor: "green",
         });
       }
-    }
 
-    setLoading(false);
-    navigation.navigate("Library");
+      navigation.navigate("Library");
+    } catch (err: any) {
+      Snackbar.show({
+        text: err.message || "Something went wrong",
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {

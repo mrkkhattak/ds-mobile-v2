@@ -1,4 +1,4 @@
-type WeekRepeat = {
+export type WeekRepeat = {
   day: string[];
   weekNumber: string;
 };
