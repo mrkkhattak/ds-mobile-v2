@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useRef } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
-import LibrarIcon from "../../assets/images/icons/Group 1.svg";
 import { MainHeading, SecondryHeading } from "../ui/Heading";
 
 import Snackbar from "react-native-snackbar";
@@ -15,6 +14,7 @@ interface HomeTaskListProps {
   handleDeleteTask: (taskId: string) => void;
 }
 const HomeTaskList = (props: HomeTaskListProps) => {
+  const swipeableRef = useRef<Swipeable>(null);
   const {
     groupData,
     renderLeftActions,
@@ -72,16 +72,19 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                         if (task.owner_user_id === task.user_task_user_id) {
                           fetchTask(task.user_task_id);
                           //
+                          swipeableRef.current?.close();
                         } else {
                           Snackbar.show({
                             text: "You can only edit your own tasks.",
                             duration: Snackbar.LENGTH_LONG,
                             backgroundColor: "red",
                           });
+                          swipeableRef.current?.close();
                         }
                       }}
                       onSwipeableRightOpen={() => {
                         handleDeleteTask(task.id);
+                        swipeableRef.current?.close();
                       }}
                     >
                       <View
@@ -182,12 +185,15 @@ const HomeTaskList = (props: HomeTaskListProps) => {
             Open your Task Library to create your list in seconds and start
             sprucing without overthinking
           </SecondryHeading>
+          <View style={{ justifyContent: "center", alignItems: "center" }}>
+            <Image
+              source={require("../../assets/images/btn.png")}
+              resizeMode="contain"
+              style={{ height: 220, width: "100%" }}
+            />
+          </View>
         </>
       )}
-
-      <View style={{ justifyContent: "center", alignItems: "center" }}>
-        <LibrarIcon />
-      </View>
     </View>
   );
 };

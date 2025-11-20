@@ -162,7 +162,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
               paddingLeft: 30,
             }}
           >
-            New Task
+            Edit Task
           </Text>
           <View>
             <CustomButton label="Save" onPress={handleSubmit(onSubmit)} />

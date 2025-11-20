@@ -169,21 +169,12 @@ const BottomSheetScreen = () => {
           autoPlay
           loop
           style={{ width: 400, height: 400 }}
-        />{" "}
+        />
       </View>
     );
   }
   return (
     <MainLayout>
-      {/* <View style={{ flex: 1 }}>
-        <Header
-          label="SMALL STEPS. BIG IMPACT!"
-          screenName="Daily Spruce"
-          icon={<MenuIcon />}
-          navigation={() => {}}
-        />
-        
-      </View> */}
       <TouchableOpacity
         style={{ flex: 1 }}
         onPress={() => {
@@ -220,7 +211,7 @@ const BottomSheetScreen = () => {
         backgroundStyle={{
           borderTopLeftRadius: 50,
           borderTopRightRadius: 50,
-          flex: 2,
+          flex: 2.5,
         }}
         backdropComponent={(props) => (
           <BottomSheetBackdrop

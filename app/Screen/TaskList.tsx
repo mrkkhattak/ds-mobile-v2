@@ -1,17 +1,13 @@
 import MainLayout from "@/components/layout/MainLayout";
 import React, { useState } from "react";
-import { View } from "react-native";
+import { Image, View } from "react-native";
 
 import { useAuthStore } from "@/store/authstore";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
 import GoToIcon from "../../assets/images/icons/Go-To (2).svg";
-import GoToSelected from "../../assets/images/icons/Go-To.svg";
-import IdeaSelectedIcon from "../../assets/images/icons/Ideas (1).svg";
 import IdeaIcon from "../../assets/images/icons/Ideas.svg";
-import PackSelectedIcon from "../../assets/images/icons/Packs (1).svg";
 import PackIcon from "../../assets/images/icons/Packs.svg";
-import RepeatSelectedIcon from "../../assets/images/icons/Repeat (1).svg";
 import RepeatIcon from "../../assets/images/icons/Repeat.svg";
 import {
   fetchAndGroupTasks,
@@ -42,22 +38,47 @@ const TaskList = () => {
   const tabList: TablisntType[] = [
     {
       label: "Go-To",
-      selectedIcon: <GoToSelected />,
+      selectedIcon: (
+        <Image
+          source={require("../../assets/images/Go-To.png")}
+          resizeMode="contain"
+          style={{ width: 90, height: 90 }}
+        />
+      ),
       unselectedIcon: <GoToIcon />,
     },
+
     {
       label: "Repeat",
-      selectedIcon: <RepeatSelectedIcon />,
+      selectedIcon: (
+        <Image
+          source={require("../../assets/images/Selected_Repeat.png")}
+          resizeMode="contain"
+          style={{ width: 90, height: 90 }}
+        />
+      ),
       unselectedIcon: <RepeatIcon />,
     },
     {
       label: "Ideas",
-      selectedIcon: <IdeaSelectedIcon />,
+      selectedIcon: (
+        <Image
+          source={require("../../assets/images/Selected_Ideas.png")}
+          resizeMode="contain"
+          style={{ width: 90, height: 90 }}
+        />
+      ),
       unselectedIcon: <IdeaIcon />,
     },
     {
       label: "Packs",
-      selectedIcon: <PackSelectedIcon />,
+      selectedIcon: (
+        <Image
+          source={require("../../assets/images/Selected_Packs.png")}
+          resizeMode="contain"
+          style={{ width: 90, height: 90 }}
+        />
+      ),
       unselectedIcon: <PackIcon />,
     },
   ];
