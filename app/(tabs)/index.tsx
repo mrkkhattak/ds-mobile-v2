@@ -27,6 +27,8 @@ import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/n
 import Snackbar from "react-native-snackbar";
 import DeleteIcon from "../../assets/images/icons/Delete task.svg";
 import EditIcon from "../../assets/images/icons/Edit task.svg";
+import MenuIcon from "../../assets/images/icons/Vector (4).svg";
+
 import {
   generateMonthlyRepeatingDates,
   generateRepeatingDatesUnified,
@@ -395,7 +397,12 @@ const index = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "grey" }}>
       <MainLayout>
-        <Header label="SMALL STEPS. BIG IMPACT!" screenName="Daily Spruce" />
+        <Header
+          label="SMALL STEPS. BIG IMPACT!"
+          screenName="Daily Spruce"
+          icon={<MenuIcon />}
+          navigation={() => {}}
+        />
         <CalenderStripComponet
           navigation={navigation}
           selectedDate={selectedDate}
@@ -405,7 +412,7 @@ const index = () => {
         <View
           style={{
             flex: 2,
-            backgroundColor: "white",
+            backgroundColor: "#F7F6FB",
             borderTopRightRadius: 40,
             borderTopLeftRadius: 40,
           }}

@@ -9,7 +9,7 @@ import { useTaskStore } from "@/store/taskStore";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigation } from "expo-router";
 import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, Resolver, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   Alert,
@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import * as yup from "yup";
@@ -74,7 +75,7 @@ const SignupScreen = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: {
       email: "",
       password: "",
@@ -145,115 +146,129 @@ const SignupScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          gap: 20,
-          marginTop: 40,
-        }}
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flex: 1 }}
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
       >
-        <MainHeading style={{ color: "#342868" }}>
-          Create your Daily Spruce account
-        </MainHeading>
-
-        {/* Email */}
-        <Controller
-          control={control}
-          name="email"
-          render={({ field: { onChange, value } }) => (
-            <CustomInput
-              placeholder="Your email"
-              value={value}
-              onChangeText={onChange}
-              icon={<PencilIcon />}
-              secureTextEntry={false}
-            />
-          )}
+        <StatusBar
+          barStyle="light-content"
+          translucent
+          backgroundColor="transparent"
         />
-        {errors.email && (
-          <Text style={styles.errorText}>{errors.email.message}</Text>
-        )}
 
-        {/* Password */}
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, value } }) => (
-            <CustomInput
-              placeholder="Password"
-              value={value}
-              onChangeText={onChange}
-              icon={
-                <TouchableOpacity
-                  onPress={() => setSecurePassword(!securePassword)}
-                >
-                  <EyeIcon />
-                </TouchableOpacity>
-              }
-              secureTextEntry={securePassword}
-            />
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            gap: 20,
+            marginTop: 40,
+          }}
+        >
+          <MainHeading style={{ color: "#342868" }}>
+            Create your Daily Spruce account
+          </MainHeading>
+
+          {/* Email */}
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, value } }) => (
+              <CustomInput
+                placeholder="Your email"
+                value={value}
+                onChangeText={onChange}
+                icon={<PencilIcon />}
+                secureTextEntry={false}
+              />
+            )}
+          />
+          {errors.email && (
+            <Text style={styles.errorText}>{errors.email.message}</Text>
           )}
-        />
-        {errors.password && (
-          <Text style={styles.errorText}>{errors.password.message}</Text>
-        )}
 
-        {/* Confirm Password */}
-        <Controller
-          control={control}
-          name="confirmPassword"
-          render={({ field: { onChange, value } }) => (
-            <CustomInput
-              placeholder="Confirm Password"
-              value={value}
-              onChangeText={onChange}
-              icon={
-                <TouchableOpacity
-                  onPress={() => setSecureConfirm(!secureConfirm)}
-                >
-                  <EyeIcon />
-                </TouchableOpacity>
-              }
-              secureTextEntry={secureConfirm}
-            />
+          {/* Password */}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, value } }) => (
+              <CustomInput
+                placeholder="Password"
+                value={value}
+                onChangeText={onChange}
+                icon={
+                  <TouchableOpacity
+                    onPress={() => setSecurePassword(!securePassword)}
+                  >
+                    <EyeIcon />
+                  </TouchableOpacity>
+                }
+                secureTextEntry={securePassword}
+              />
+            )}
+          />
+          {errors.password && (
+            <Text style={styles.errorText}>{errors.password.message}</Text>
           )}
-        />
-        {errors.confirmPassword && (
-          <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
-        )}
-      </View>
 
-      <View
-        style={{ flex: 1, justifyContent: "flex-end", alignItems: "center" }}
-      >
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#8C50FB" />
-        ) : (
-          <>
-            <SecondaryButton
-              label="Next"
-              onPress={handleSubmit(onSubmit)}
-              textStyle={{ color: "#FFFFFF" }}
-              buttonStyle={{ backgroundColor: "#8C50FB" }}
-            />
-            <SecondaryButton
-              label="Back"
-              onPress={() => {
-                navigation.goBack();
-              }}
-              textStyle={{ color: "#34276C" }}
-              buttonStyle={{ backgroundColor: "#FFFFFF", marginTop: 10 }}
-            />
-          </>
-        )}
-      </View>
+          {/* Confirm Password */}
+          <Controller
+            control={control}
+            name="confirmPassword"
+            render={({ field: { onChange, value } }) => (
+              <CustomInput
+                placeholder="Confirm Password"
+                value={value}
+                onChangeText={onChange}
+                icon={
+                  <TouchableOpacity
+                    onPress={() => setSecureConfirm(!secureConfirm)}
+                  >
+                    <EyeIcon />
+                  </TouchableOpacity>
+                }
+                secureTextEntry={secureConfirm}
+              />
+            )}
+          />
+          {errors.confirmPassword && (
+            <Text style={styles.errorText}>
+              {errors.confirmPassword.message}
+            </Text>
+          )}
+        </View>
+
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#8C50FB" />
+          ) : (
+            <>
+              <SecondaryButton
+                label="Next"
+                onPress={handleSubmit(onSubmit)}
+                textStyle={{ color: "#FFFFFF" }}
+                buttonStyle={{ backgroundColor: "#8C50FB" }}
+              />
+              <SecondaryButton
+                label="Back"
+                onPress={() => {
+                  navigation.goBack();
+                }}
+                textStyle={{ color: "#34276C" }}
+                buttonStyle={{ backgroundColor: "#FFFFFF", marginTop: 10 }}
+              />
+            </>
+          )}
+        </View>
+      </KeyboardAwareScrollView>
 
       <SubtitleText
         style={{

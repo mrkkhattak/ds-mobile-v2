@@ -62,10 +62,15 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
     { label: "3 weeks", value: "3" },
     { label: "4 weeks", value: "4" },
   ];
-  const dayNumberItems = Array.from({ length: 7 }, (_, i) => ({
-    label: String(i + 1),
-    value: i + 1,
-  }));
+  const dayNumberItems = [
+    { label: "First", value: 1 },
+    { label: "Second", value: 2 },
+    { label: "Third", value: 3 },
+    { label: "Fourth", value: 4 },
+    { label: "Fifth", value: 5 },
+    { label: "Sixth", value: 6 },
+    { label: "Seventh", value: 7 },
+  ];
   const weekDays = [
     { label: "M", value: "monday" },
     { label: "TU", value: "tuesday" },
@@ -163,7 +168,12 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
             <CustomButton label="Save" onPress={handleSubmit(onSubmit)} />
           </View>
         </View>
-        <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
+        <View
+          style={{
+            paddingHorizontal: 20,
+            marginTop: 16,
+          }}
+        >
           {/* Row 1: Name + Input */}
           <View
             style={{
@@ -181,7 +191,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                 width: 80, // fixed width to align with other labels
               }}
             >
-              Name
+              NAME
             </Text>
 
             <View
@@ -207,9 +217,10 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                         borderColor: error ? "red" : "#ccc",
                         backgroundColor: "#fff",
                         flex: 1,
-                        height: 39,
+                        height: 49,
                         borderRadius: 10,
                         paddingHorizontal: 16,
+                        paddingBottom: 15,
                       }}
                       inputStyle={{
                         fontSize: 16,
@@ -241,7 +252,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
               flexDirection: "row",
               alignItems: "center",
               marginBottom: 16,
-              zIndex: 100, // for dropdown
+              zIndex: 100,
             }}
           >
             <Text
@@ -295,7 +306,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                         zIndex: 1000,
                       }}
                       textStyle={{
-                        fontSize: 16,
+                        fontSize: 12,
                         color: "#333",
                         fontFamily: "Inter",
                       }}
@@ -634,7 +645,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                                           borderRadius: 10,
                                         }}
                                         textStyle={{
-                                          fontSize: 16,
+                                          fontSize: 12,
                                           fontWeight: "semibold",
                                           color: "#9864E1",
                                           fontFamily: "Inter",
@@ -722,7 +733,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                                             borderRadius: 10,
                                             height: 40,
                                             paddingHorizontal: 16,
-                                            width: 100,
+                                            width: 115,
                                           }}
                                           dropDownContainerStyle={{
                                             borderColor: "#ccc",
@@ -730,10 +741,10 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                                             borderRadius: 10,
                                             position: "absolute",
                                             bottom: 45,
-                                            width: "100%",
+                                            width: 110,
                                           }}
                                           textStyle={{
-                                            fontSize: 16,
+                                            fontSize: 12,
                                             fontWeight: "600",
                                             color: "#9864E1",
                                             fontFamily: "Inter",
@@ -779,6 +790,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                                             borderRadius: 10,
                                             height: 40,
                                             paddingHorizontal: 16,
+                                            marginHorizontal: 10,
                                           }}
                                           dropDownContainerStyle={{
                                             borderColor: "#ccc",
@@ -789,7 +801,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                                             width: "100%",
                                           }}
                                           textStyle={{
-                                            fontSize: 16,
+                                            fontSize: 12,
                                             fontWeight: "600",
                                             color: "#9864E1",
                                             fontFamily: "Inter",
@@ -842,7 +854,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                                           width: "100%",
                                         }}
                                         textStyle={{
-                                          fontSize: 16,
+                                          fontSize: 12,
                                           fontWeight: "600",
                                           color: "#9864E1",
                                           fontFamily: "Inter",

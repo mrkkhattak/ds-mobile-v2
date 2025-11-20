@@ -6,10 +6,10 @@ interface HeaderProps {
   label: string;
   screenName: string;
   icon?: React.JSX.Element;
-  navigationToHome?: () => void;
+  navigation?: () => void;
 }
 const Header = (props: HeaderProps) => {
-  const { label, screenName, icon, navigationToHome } = props;
+  const { label, screenName, icon, navigation } = props;
   return (
     <View>
       <View style={{ marginTop: 60, paddingHorizontal: 40 }}></View>
@@ -25,9 +25,7 @@ const Header = (props: HeaderProps) => {
         >
           <MainHeading style={{ textAlign: "left" }}>{screenName}</MainHeading>
           {icon && (
-            <TouchableOpacity onPress={navigationToHome}>
-              {icon}
-            </TouchableOpacity>
+            <TouchableOpacity onPress={navigation}>{icon}</TouchableOpacity>
           )}
         </View>
         <SecondryHeading

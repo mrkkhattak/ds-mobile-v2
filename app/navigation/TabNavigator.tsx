@@ -5,6 +5,7 @@ import { Text, View } from "react-native";
 import Settings from "../(tabs)/explore";
 import Icon2 from "../../assets/images/icons/Group 38.svg";
 
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import AddIcon from "../../assets/images/icons/Add.svg";
 import Icon3 from "../../assets/images/icons/Group 37.svg";
 import BottomSheetScreen from "../Screen/BottomSheetScreen";
@@ -12,6 +13,40 @@ import HomeNavigator from "./HomeNavigator";
 
 const Tab = createBottomTabNavigator();
 
+const shouldHideTabBar = (route: any) => {
+  const hiddenRoutes = [
+    "updateEmail",
+    "otpVerification",
+    "genderScreen",
+    "ageScreen",
+    "weightAndHeightScreen",
+    "fitnessLevelScreen",
+    "fitnessGoalScreen",
+    "equimentsScreen",
+    "privacyPolicy",
+    "updatePasswordScreen",
+    "deleteAccountScreen",
+    "addMembersToGroup",
+    "creategroupscreeen",
+    "chatlist",
+    "chatProfileNavigator",
+    "locationScreen",
+    "watchVideo",
+    "imageView",
+    "groupChatList",
+    "timeClockScreen",
+    "paymentScreen",
+    "paymentCardScreen",
+    "userGymlocationScreen",
+    "userWorkoutlocationScreen",
+    "profileLocationScreen",
+  ];
+
+  // Get the active route name for nested navigators
+  const activeRoute: any = getFocusedRouteNameFromRoute(route);
+  console.log("activeRoute", activeRoute);
+  return hiddenRoutes.includes(activeRoute);
+};
 export default function TabNavigator() {
   return (
     <Tab.Navigator
@@ -94,6 +129,9 @@ export default function TabNavigator() {
               </Text>
             </View>
           ),
+          tabBarStyle: {
+            display: "none",
+          },
         }}
       />
       <Tab.Screen

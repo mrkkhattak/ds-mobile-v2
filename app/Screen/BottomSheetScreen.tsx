@@ -1,29 +1,66 @@
 import CreateTaskForm from "@/components/Form/CreateTaskForm";
+import Header from "@/components/Header/Header";
 import MainLayout from "@/components/layout/MainLayout";
 import { useAuthStore } from "@/store/authstore";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import Snackbar from "react-native-snackbar";
+import MenuIcon from "../../assets/images/icons/Vector (4).svg";
 import {
   generateMonthlyRepeatingDates,
   generateRepeatingDatesUnified,
 } from "../functions/commonFuntions";
 import { AddUserTaskToSpruce, createTask } from "../functions/functions";
 import { CreateTaskFormValues } from "../types/types";
-
 type NavigationProp = NativeStackNavigationProp<any, "BottomSheerScreen">;
 
 const BottomSheetScreen = () => {
   const user = useAuthStore((s) => s.user);
-
+  const visible = true;
   const navigation = useNavigation<NavigationProp>();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["40%", "80%"], []);
+  const snapPoints = useMemo(() => ["20%"], []);
   const [loading, setLoading] = useState<Boolean>(true);
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(50);
+
+  useEffect(() => {
+    opacity.value = withTiming(visible ? 1 : 0, { duration: 250 });
+    translateY.value = withTiming(visible ? 0 : 50, { duration: 250 });
+  }, [visible]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+    pointerEvents: visible ? "auto" : "none",
+  }));
+  const [selectedDate, setSelectedDate] = useState<Date | undefined | any>(
+    new Date()
+  );
+  const today = new Date();
 
   useFocusEffect(
     useCallback(() => {
@@ -136,6 +173,22 @@ const BottomSheetScreen = () => {
   }
   return (
     <MainLayout>
+      <TouchableOpacity
+        style={{ flex: 1 }}
+        onPress={() => {
+          navigation.navigate("Library", {
+            screen: "Home",
+          });
+        }}
+      >
+        <Header
+          label="SMALL STEPS. BIG IMPACT!"
+          screenName="Daily Spruce"
+          icon={<MenuIcon />}
+          navigation={() => {}}
+        />
+      </TouchableOpacity>
+
       <BottomSheet
         ref={bottomSheetRef}
         index={1} // hidden initially
@@ -150,11 +203,25 @@ const BottomSheetScreen = () => {
         backgroundStyle={{
           borderTopLeftRadius: 50,
           borderTopRightRadius: 50,
-          flex: 1,
+          flex: 2,
         }}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            appearsOnIndex={0}
+            opacity={0.7}
+            disappearsOnIndex={-1}
+            pressBehavior="close"
+            onPress={() => {
+              navigation.navigate("Library", {
+                screen: "Home",
+              });
+            }}
+          />
+        )}
       >
         <BottomSheetView style={{ flex: 1 }}>
-          <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 200 }}>
+          <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 100 }}>
             <CreateTaskForm onSubmit={onSubmit} />
           </ScrollView>
         </BottomSheetView>

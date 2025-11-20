@@ -29,7 +29,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
         marginTop: 20,
       }}
     >
-      {groupData ? (
+      {groupData && Object.keys(groupData).length > 0 ? (
         <FlatList
           data={Object.keys(groupData)}
           keyExtractor={(item) => item}
@@ -53,96 +53,106 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                 data={groupData[item]}
                 keyExtractor={(task) => task.id}
                 scrollEnabled={false}
+                style={{
+                  borderRadius: 30,
+                  backgroundColor: "#FFFFFF",
+                }}
                 renderItem={({ item: task }) => (
-                  <Swipeable
-                    renderLeftActions={renderLeftActions}
-                    renderRightActions={renderRightActions}
-                    onSwipeableLeftOpen={() => {
-                      if (task.owner_user_id === task.user_task_user_id) {
-                        fetchTask(task.user_task_id);
-                        //
-                      } else {
-                        Snackbar.show({
-                          text: "You can only edit your own tasks.",
-                          duration: Snackbar.LENGTH_LONG,
-                          backgroundColor: "red",
-                        });
-                      }
-                    }}
-                    onSwipeableRightOpen={() => {
-                      handleDeleteTask(task.id);
+                  <View
+                    style={{
+                      borderBottomWidth: 2,
+                      borderColor: "#AAAAAA26",
+                      borderRadius: 60,
                     }}
                   >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        backgroundColor: "#F7F6FB",
-                        borderRadius: 20,
-                        padding: 16,
-                        marginTop: 10,
+                    <Swipeable
+                      renderLeftActions={renderLeftActions}
+                      renderRightActions={renderRightActions}
+                      onSwipeableLeftOpen={() => {
+                        if (task.owner_user_id === task.user_task_user_id) {
+                          fetchTask(task.user_task_id);
+                          //
+                        } else {
+                          Snackbar.show({
+                            text: "You can only edit your own tasks.",
+                            duration: Snackbar.LENGTH_LONG,
+                            backgroundColor: "red",
+                          });
+                        }
+                      }}
+                      onSwipeableRightOpen={() => {
+                        handleDeleteTask(task.id);
                       }}
                     >
-                      {/* Left side: icon + name */}
                       <View
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
-                          gap: 10,
+                          justifyContent: "space-between",
+
+                          padding: 16,
                         }}
                       >
+                        {/* Left side: icon + name */}
                         <View
                           style={{
-                            backgroundColor: "#E6E0F8",
-                            width: 40,
-                            height: 40,
-                            borderRadius: 12,
-                            justifyContent: "center",
+                            flexDirection: "row",
                             alignItems: "center",
+                            gap: 10,
                           }}
                         >
-                          <Text>🍽️</Text>
+                          <View
+                            style={{
+                              backgroundColor: "#E6E0F8",
+                              width: 40,
+                              height: 40,
+                              borderRadius: 12,
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Text>🍽️</Text>
+                          </View>
+                          <Text
+                            style={{
+                              fontSize: 15,
+                              color: "#000",
+                              fontWeight: "500",
+                            }}
+                          >
+                            {task.task_name
+                              ? task.task_name
+                              : task.user_task_name}
+                          </Text>
                         </View>
-                        <Text
+                        {/* Right side: effort icons + avatar */}
+                        <View
                           style={{
-                            fontSize: 15,
-                            color: "#000",
-                            fontWeight: "500",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 6,
                           }}
                         >
-                          {task.task_name
-                            ? task.task_name
-                            : task.user_task_name}
-                        </Text>
+                          {Array.from({
+                            length: Math.min(3, Math.ceil(task.points / 30)),
+                          }).map((_, i) => (
+                            <LimeIcon key={i} />
+                          ))}
+                          <Image
+                            source={{
+                              uri: "https://randomuser.me/api/portraits/women/44.jpg",
+                            }}
+                            style={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: 17,
+                              marginLeft: 4,
+                            }}
+                          />
+                        </View>
                       </View>
-                      {/* Right side: effort icons + avatar */}
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 6,
-                        }}
-                      >
-                        {Array.from({
-                          length: Math.min(3, Math.ceil(task.points / 30)),
-                        }).map((_, i) => (
-                          <LimeIcon key={i} />
-                        ))}
-                        <Image
-                          source={{
-                            uri: "https://randomuser.me/api/portraits/women/44.jpg",
-                          }}
-                          style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 17,
-                            marginLeft: 4,
-                          }}
-                        />
-                      </View>
-                    </View>
-                  </Swipeable>
+                    </Swipeable>
+                  </View>
                 )}
               />
             </View>

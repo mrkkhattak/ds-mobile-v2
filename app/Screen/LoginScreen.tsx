@@ -1,6 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import React from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, Resolver, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   Alert,
@@ -24,6 +24,7 @@ import PencilIcon from "../../assets/images/icons/pencil.svg";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 
 import { useNavigation } from "expo-router";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { AuthStackParamList } from "../types/navigator_type";
 
 type NavigationProp = NativeStackNavigationProp<
@@ -54,7 +55,7 @@ const LoginScreen = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: {
       email: "",
       password: "",
@@ -87,91 +88,99 @@ const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          gap: 20,
-          marginTop: 40,
-        }}
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flex: 1 }}
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
       >
-        <MainHeading style={{ color: "#342868" }}>
-          Welcome Back to Daily Spruce
-        </MainHeading>
-
-        {/* Email */}
-        <Controller
-          control={control}
-          name="email"
-          render={({ field: { onChange, value } }) => (
-            <CustomInput
-              placeholder="Your email"
-              value={value}
-              onChangeText={onChange}
-              icon={<PencilIcon />}
-              secureTextEntry={false}
-            />
-          )}
+        <StatusBar
+          barStyle="light-content"
+          translucent
+          backgroundColor="transparent"
         />
-        {errors.email && (
-          <Text style={styles.errorText}>{errors.email.message}</Text>
-        )}
 
-        {/* Password */}
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, value } }) => (
-            <CustomInput
-              placeholder="Password"
-              value={value}
-              onChangeText={onChange}
-              icon={
-                <TouchableOpacity
-                  onPress={() => setSecurePassword(!securePassword)}
-                >
-                  <EyeIcon />
-                </TouchableOpacity>
-              }
-              secureTextEntry={securePassword}
-            />
-          )}
-        />
-        {errors.password && (
-          <Text style={styles.errorText}>{errors.password.message}</Text>
-        )}
-
-        {/* Forgot Password */}
-        <TouchableOpacity
-          style={{ alignSelf: "flex-end", marginRight: 40 }}
-          onPress={() => naviagation.navigate("ForgotPasswordScreen")}
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            gap: 20,
+            marginTop: 40,
+          }}
         >
-          <Text style={{ color: "#342868", fontSize: 14, fontWeight: "500" }}>
-            Forgot Password?
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <MainHeading style={{ color: "#342868" }}>
+            Welcome Back to Daily Spruce
+          </MainHeading>
 
-      <View
-        style={{ flex: 1, justifyContent: "flex-end", alignItems: "center" }}
-      >
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#8C50FB" />
-        ) : (
-          <SecondaryButton
-            label="Login"
-            onPress={handleSubmit(onSubmit)}
-            textStyle={{ color: "#FFFFFF" }}
-            buttonStyle={{ backgroundColor: "#8C50FB" }}
+          {/* Email */}
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, value } }) => (
+              <CustomInput
+                placeholder="Your email"
+                value={value}
+                onChangeText={onChange}
+                icon={<PencilIcon />}
+                secureTextEntry={false}
+              />
+            )}
           />
-        )}
-      </View>
+          {errors.email && (
+            <Text style={styles.errorText}>{errors.email.message}</Text>
+          )}
+
+          {/* Password */}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, value } }) => (
+              <CustomInput
+                placeholder="Password"
+                value={value}
+                onChangeText={onChange}
+                icon={
+                  <TouchableOpacity
+                    onPress={() => setSecurePassword(!securePassword)}
+                  >
+                    <EyeIcon />
+                  </TouchableOpacity>
+                }
+                secureTextEntry={securePassword}
+              />
+            )}
+          />
+          {errors.password && (
+            <Text style={styles.errorText}>{errors.password.message}</Text>
+          )}
+
+          {/* Forgot Password */}
+          <TouchableOpacity
+            style={{ alignSelf: "flex-end", marginRight: 40 }}
+            onPress={() => naviagation.navigate("ForgotPasswordScreen")}
+          >
+            <Text style={{ color: "#342868", fontSize: 14, fontWeight: "500" }}>
+              Forgot Password?
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={{ flex: 1, justifyContent: "flex-end", alignItems: "center" }}
+        >
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#8C50FB" />
+          ) : (
+            <SecondaryButton
+              label="Login"
+              onPress={handleSubmit(onSubmit)}
+              textStyle={{ color: "#FFFFFF" }}
+              buttonStyle={{ backgroundColor: "#8C50FB" }}
+            />
+          )}
+        </View>
+      </KeyboardAwareScrollView>
 
       <TouchableOpacity
         onPress={() => {

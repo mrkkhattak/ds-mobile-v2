@@ -144,7 +144,7 @@ const TaskList = () => {
           screenName="Task Library"
           label="SELECT TASKS TO ADD TO TODAY’S SPRUCE
 "
-          navigationToHome={navigationToHome}
+          navigation={navigationToHome}
           icon={<HomeIcon />}
         />
         {/* Horizontal Main Tabs */}

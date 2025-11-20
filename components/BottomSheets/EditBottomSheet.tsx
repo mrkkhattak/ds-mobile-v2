@@ -1,5 +1,8 @@
 import { CreateTaskFormValues } from "@/app/types/types";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
@@ -16,22 +19,25 @@ const EditBottomSheet = (props: EditBottomSheetProps) => {
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={-1} // hidden initially
+      index={-1}
       snapPoints={snapPoints}
       enablePanDownToClose
       backgroundStyle={{
         borderTopLeftRadius: 50,
         borderTopRightRadius: 50,
-        flex: 1,
       }}
-      onChange={(index) => {
-        // when index === -1 → bottom sheet is closed
-        if (index === -1) {
-        }
-      }}
+      backdropComponent={(props) => (
+        <BottomSheetBackdrop
+          {...props}
+          opacity={0.7}
+          appearsOnIndex={0}
+          disappearsOnIndex={-1}
+          pressBehavior="close" // 👈 THIS enables closing on outside tap
+        />
+      )}
     >
       <BottomSheetView style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 200 }}>
+        <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 100 }}>
           <EditTaskForm onSubmit={handleUpdateTask} defalutValues={task} />
         </ScrollView>
       </BottomSheetView>
