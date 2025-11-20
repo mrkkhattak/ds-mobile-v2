@@ -1,6 +1,6 @@
 import MainLayout from "@/components/layout/MainLayout";
 import React, { useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 
 import { useAuthStore } from "@/store/authstore";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -22,6 +22,7 @@ import {
 import Header from "@/components/Header/Header";
 import TaskSubList from "@/components/TaskListComponents/TaskSubList";
 import TaskTypeTabing from "@/components/TaskListComponents/TaskTypeTabing";
+import LottieView from "lottie-react-native";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import HomeIcon from "../../assets/images/icons/Vector (3).svg";
 import { HomeStackParamList } from "../types/navigator_type";
@@ -132,7 +133,12 @@ const TaskList = () => {
             alignItems: "center",
           }}
         >
-          <ActivityIndicator color={"#16C5E0"} />
+          <LottieView
+            source={require("../../assets/animations/3001-Broom-animation.json")}
+            autoPlay
+            loop
+            style={{ width: 400, height: 400 }}
+          />
         </View>
       </MainLayout>
     );

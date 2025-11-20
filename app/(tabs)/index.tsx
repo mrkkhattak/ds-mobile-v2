@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/authstore";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, View } from "react-native";
+import { Animated, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   AddUserTaskToSpruce,
@@ -29,6 +29,7 @@ import DeleteIcon from "../../assets/images/icons/Delete task.svg";
 import EditIcon from "../../assets/images/icons/Edit task.svg";
 import MenuIcon from "../../assets/images/icons/Vector (4).svg";
 
+import LottieView from "lottie-react-native";
 import {
   generateMonthlyRepeatingDates,
   generateRepeatingDatesUnified,
@@ -389,7 +390,12 @@ const index = () => {
             alignItems: "center",
           }}
         >
-          <ActivityIndicator color={"#16C5E0"} />
+          <LottieView
+            source={require("../../assets/animations/3001-Broom-animation.json")}
+            autoPlay
+            loop
+            style={{ width: 400, height: 400 }}
+          />
         </View>
       </MainLayout>
     );
@@ -397,21 +403,23 @@ const index = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "grey" }}>
       <MainLayout>
-        <Header
-          label="SMALL STEPS. BIG IMPACT!"
-          screenName="Daily Spruce"
-          icon={<MenuIcon />}
-          navigation={() => {}}
-        />
-        <CalenderStripComponet
-          navigation={navigation}
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-          today={today}
-        />
+        <View style={{ flex: 1 }}>
+          <Header
+            label="SMALL STEPS. BIG IMPACT!"
+            screenName="Daily Spruce"
+            icon={<MenuIcon />}
+            navigation={() => {}}
+          />
+          <CalenderStripComponet
+            navigation={navigation}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            today={today}
+          />
+        </View>
         <View
           style={{
-            flex: 2,
+            flex: 2.5,
             backgroundColor: "#F7F6FB",
             borderTopRightRadius: 40,
             borderTopLeftRadius: 40,

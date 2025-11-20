@@ -18,7 +18,6 @@ const CalenderStripComponet = (props: CalenderStripComponetProps) => {
         justifyContent: "flex-end",
         alignItems: "center",
         gap: 10,
-        flex: 1,
       }}
     >
       <CalendarStrip
@@ -57,7 +56,7 @@ const CalenderStripComponet = (props: CalenderStripComponetProps) => {
         onSlideComplete={() => {
           navigation.navigate("TaskLibrary");
         }}
-        viewStyle={{ marginVertical: 20 }}
+        width={370}
         textStyle={{
           fontSize: 16,
           fontWeight: "700",
@@ -72,14 +71,11 @@ export default CalenderStripComponet;
 
 const styles = StyleSheet.create({
   calendarStrip: {
-    height: 100,
-    paddingTop: 10,
-    paddingBottom: 10,
-    marginBottom: 20,
-    marginHorizontal: 10,
-    width: 380,
-    borderRadius: 30,
-    opacity: 6,
+    height: 60,
+    width: 370,
+    borderRadius: 20,
+
+    backgroundColor: "rgba(224, 207, 243, 0.5)",
   },
   calendarHeaderStyle: {
     color: "#610FE0",
@@ -89,11 +85,13 @@ const styles = StyleSheet.create({
     marginLeft: 30,
     width: "100%",
     fontSize: 16,
+    display: "none",
   },
   dateNumberStyle: {
     color: "#FFFFFF",
     fontSize: 14,
     lineHeight: 17,
+    // display: "none",
   },
   dateNameStyle: {
     color: "#FFFFFF",
@@ -104,6 +102,7 @@ const styles = StyleSheet.create({
     color: "#610FE0",
     fontSize: 14,
     lineHeight: 17,
+    // display: "none",
   },
   highlightDateNameStyle: {
     color: "#610FE0",

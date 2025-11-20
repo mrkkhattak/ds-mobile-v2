@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import LottieView from "lottie-react-native";
 import React from "react";
 import {
   Dimensions,
@@ -8,7 +9,6 @@ import {
   View,
 } from "react-native";
 import Svg, { Rect } from "react-native-svg";
-
 const { width, height } = Dimensions.get("window");
 
 const SpalshScreen = () => {
@@ -20,7 +20,14 @@ const SpalshScreen = () => {
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={styles.topSection}
-      ></LinearGradient>
+      >
+        <LottieView
+          source={require("../../assets/animations/3001-Broom-animation.json")}
+          autoPlay
+          loop
+          style={{ width: 450, height: 500 }}
+        />
+      </LinearGradient>
 
       {/* Bottom White Section */}
       <View style={styles.bottomSection}>
@@ -84,6 +91,8 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 40,
     overflow: "hidden",
     position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
   },
   brushPatternOverlay: {
     position: "absolute",

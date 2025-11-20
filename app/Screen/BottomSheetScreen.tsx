@@ -1,3 +1,4 @@
+import CalenderStripComponet from "@/components/CalenderStrip/CalenderStripComponet";
 import CreateTaskForm from "@/components/Form/CreateTaskForm";
 import Header from "@/components/Header/Header";
 import MainLayout from "@/components/layout/MainLayout";
@@ -7,6 +8,7 @@ import BottomSheet, {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import LottieView from "lottie-react-native";
 import React, {
   useCallback,
   useEffect,
@@ -14,12 +16,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import {
   useAnimatedStyle,
@@ -167,12 +164,26 @@ const BottomSheetScreen = () => {
           alignItems: "center",
         }}
       >
-        <ActivityIndicator color={"#16C5E0"} />
+        <LottieView
+          source={require("../../assets/animations/3001-Broom-animation.json")}
+          autoPlay
+          loop
+          style={{ width: 400, height: 400 }}
+        />{" "}
       </View>
     );
   }
   return (
     <MainLayout>
+      {/* <View style={{ flex: 1 }}>
+        <Header
+          label="SMALL STEPS. BIG IMPACT!"
+          screenName="Daily Spruce"
+          icon={<MenuIcon />}
+          navigation={() => {}}
+        />
+        
+      </View> */}
       <TouchableOpacity
         style={{ flex: 1 }}
         onPress={() => {
@@ -186,6 +197,12 @@ const BottomSheetScreen = () => {
           screenName="Daily Spruce"
           icon={<MenuIcon />}
           navigation={() => {}}
+        />
+        <CalenderStripComponet
+          navigation={navigation}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          today={today}
         />
       </TouchableOpacity>
 

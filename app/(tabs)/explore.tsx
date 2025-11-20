@@ -1,59 +1,40 @@
+import CalenderStripComponet from "@/components/CalenderStrip/CalenderStripComponet";
+import Header from "@/components/Header/Header";
 import MainLayout from "@/components/layout/MainLayout";
 import { MainButton } from "@/components/ui/Buttons";
-import { MainHeading, SecondryHeading } from "@/components/ui/Heading";
+import { MainHeading } from "@/components/ui/Heading";
 import { useAuthStore } from "@/store/authstore";
-import React from "react";
+import { useNavigation } from "@react-navigation/native";
+import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import StreakIcon from "../../assets/images/icons/Streak.svg";
+import MenuIcon from "../../assets/images/icons/Vector (4).svg";
 
 const explore = () => {
   const { signOut } = useAuthStore();
-
+  const navigation = useNavigation<any>();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined | any>(
+    new Date()
+  );
+  const today = new Date();
   return (
     <MainLayout>
-      <View style={{ flexGrow: 1 }}>
-        <View style={{ marginTop: 60, paddingHorizontal: 40 }}></View>
-        <View
-          style={{
-            flex: 1,
-          }}
-        >
-          <View style={{ marginHorizontal: 20, marginTop: 40 }}>
-            <MainHeading style={{ textAlign: "left" }}>
-              Daily Spruce
-            </MainHeading>
-          </View>
-          <SecondryHeading
-            style={{
-              textAlign: "left",
-              color: "white",
-              fontWeight: "300",
-              fontFamily: "inter",
-              fontSize: 14,
-              marginHorizontal: 20,
-            }}
-          >
-            SMALL STEPS. BIG IMPACT!
-          </SecondryHeading>
-          <View
-            style={{
-              justifyContent: "flex-end",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <StreakIcon />
-            <MainButton
-              onPress={() => {}}
-              label="Slide to start sprucing"
-              style={{ width: "90%", marginBottom: 10 }}
-            />
-          </View>
-        </View>
+      <View style={{ flex: 1 }}>
+        <Header
+          label="SMALL STEPS. BIG IMPACT!"
+          screenName="Daily Spruce"
+          icon={<MenuIcon />}
+          navigation={() => {}}
+        />
+        <CalenderStripComponet
+          navigation={navigation}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          today={today}
+        />
       </View>
       <View
         style={{
-          flex: 2,
+          flex: 2.5,
           backgroundColor: "white",
           borderTopRightRadius: 40,
           borderTopLeftRadius: 40,

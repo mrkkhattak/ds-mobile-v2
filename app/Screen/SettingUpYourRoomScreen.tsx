@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 
 import { useNavigation } from "expo-router";
+import LottieView from "lottie-react-native";
 import { AuthStackParamList } from "../types/navigator_type";
 
 type NavigationProp = NativeStackNavigationProp<
@@ -30,22 +31,18 @@ const SettingUpYourRoomScreen = () => {
         }}
       >
         <View style={{ flex: 2 }}>
-          <View style={styles.progressRow}>
-            {/* <GradientProgressBar
-              progress={progress}
-              width={Platform.OS === "ios" ? 300 : 285}
-            />
-            <Text style={styles.progressText}>
-              {Math.round(progress * 100)}%
-            </Text> */}
-          </View>
-
           {/* Headings */}
           <View style={{ marginTop: 32 }}>
             <MainHeading>Setting up your Daily Spruce...</MainHeading>
           </View>
         </View>
         <View style={{ flex: 1, alignItems: "center" }}>
+          <LottieView
+            source={require("../../assets/animations/3001-Broom-animation.json")}
+            autoPlay
+            loop
+            style={{ width: 500, height: 500 }}
+          />
           <SecondryHeading style={{ color: "#FFFFFF" }}>
             Creating your home...
           </SecondryHeading>

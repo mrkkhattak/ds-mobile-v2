@@ -12,12 +12,12 @@ const Header = (props: HeaderProps) => {
   const { label, screenName, icon, navigation } = props;
   return (
     <View>
-      <View style={{ marginTop: 60, paddingHorizontal: 40 }}></View>
+      <View style={{ marginTop: 20, paddingHorizontal: 40 }}></View>
       <View>
         <View
           style={{
             marginHorizontal: 20,
-            marginTop: 40,
+            marginTop: 10,
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
