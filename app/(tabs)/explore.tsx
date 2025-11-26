@@ -35,31 +35,35 @@ const explore = () => {
       <View
         style={{
           flex: 2.5,
-          backgroundColor: "white",
+          backgroundColor: "#F7F6FB",
           borderTopRightRadius: 40,
           borderTopLeftRadius: 40,
-          justifyContent: "center",
-          alignItems: "center",
+          marginTop: 40,
         }}
       >
-        <MainHeading
-          style={{
-            color: "black",
-            fontWeight: "700",
-            fontSize: 40,
-            lineHeight: 66,
-            fontFamily: "inter",
-          }}
+        <View
+          style={{ justifyContent: "center", alignItems: "center", flex: 1 }}
         >
-          Coming Soon ....
-        </MainHeading>
-        <MainButton
-          onPress={() => {
-            signOut();
-          }}
-          label="Logout"
-          style={{ width: "90%", marginTop: 30 }}
-        />
+          <MainHeading
+            style={{
+              color: "black",
+              fontWeight: "700",
+              fontSize: 40,
+              lineHeight: 66,
+              fontFamily: "inter",
+            }}
+          >
+            Coming Soon ....
+          </MainHeading>
+          <MainButton
+            onPress={() => {
+              signOut();
+            }}
+            label="Logout"
+            style={{ width: "90%", marginTop: 30 }}
+          />
+        </View>
+
         {/* <TouchableOpacity
           onPress={() => {
             signOut();

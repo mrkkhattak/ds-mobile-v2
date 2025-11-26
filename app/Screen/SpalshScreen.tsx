@@ -9,9 +9,10 @@ import {
   View,
 } from "react-native";
 import Svg, { Rect } from "react-native-svg";
+
 const { width, height } = Dimensions.get("window");
 
-const SpalshScreen = () => {
+const SplashScreen = () => {
   return (
     <View style={styles.container}>
       {/* Top Section with Purple Gradient */}
@@ -21,12 +22,16 @@ const SpalshScreen = () => {
         end={{ x: 0.8, y: 1 }}
         style={styles.topSection}
       >
-        <LottieView
-          source={require("../../assets/animations/3001-Broom-animation.json")}
-          autoPlay
-          loop
-          style={{ width: 450, height: 500 }}
-        />
+        <View style={styles.lottieContainer}>
+          <LottieView
+            source={require("../../assets/animations/assuta.loader.json")}
+            autoPlay
+            loop
+            style={styles.lottie}
+            resizeMode="contain"
+            hardwareAccelerationAndroid={true}
+          />
+        </View>
       </LinearGradient>
 
       {/* Bottom White Section */}
@@ -77,7 +82,7 @@ const SpalshScreen = () => {
   );
 };
 
-export default SpalshScreen;
+export default SplashScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -85,43 +90,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   topSection: {
-    height: "50%",
+    height: height * 0.5,
     width: "100%",
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     overflow: "hidden",
-    position: "relative",
     justifyContent: "center",
     alignItems: "center",
   },
-  brushPatternOverlay: {
-    position: "absolute",
-    top: -100,
-    right: -100,
-    transform: [{ rotate: "25deg" }],
-    opacity: 0.2,
+  lottieContainer: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  brushPattern: {
-    opacity: 0.3,
-  },
-  starContainer: {
-    position: "absolute",
-    top: 100,
-    left: width / 2 - 35,
-    zIndex: 10,
-  },
-  brushContainer: {
-    position: "absolute",
-    top: 60,
-    right: -30,
-    transform: [{ rotate: "25deg" }],
-    zIndex: 5,
-  },
-  limeContainer: {
-    position: "absolute",
-    bottom: -30,
-    left: width / 2 - 60,
-    zIndex: 10,
+  lottie: {
+    width: width * 0.9, // scale to 90% of screen width
+    height: "100%",
   },
   bottomSection: {
     flex: 1,

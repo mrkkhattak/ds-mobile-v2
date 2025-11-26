@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import CalendarStrip from "react-native-calendar-strip";
 import { SlideButton } from "../ui/Buttons";
 
@@ -22,7 +22,11 @@ const CalenderStripComponet = (props: CalenderStripComponetProps) => {
     >
       <CalendarStrip
         key={1212}
-        style={styles.calendarStrip}
+        style={[
+          Platform.OS === "android"
+            ? { ...styles.calendarStrip, width: 340 }
+            : styles.calendarStrip,
+        ]}
         calendarHeaderStyle={styles.calendarHeaderStyle}
         dateNumberStyle={styles.dateNumberStyle}
         dateNameStyle={styles.dateNameStyle}
@@ -56,7 +60,7 @@ const CalenderStripComponet = (props: CalenderStripComponetProps) => {
         onSlideComplete={() => {
           navigation.navigate("TaskLibrary");
         }}
-        width={370}
+        width={Platform.OS === "android" ? 340 : 370}
         textStyle={{
           fontSize: 16,
           fontWeight: "700",

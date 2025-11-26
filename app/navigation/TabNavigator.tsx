@@ -14,43 +14,26 @@ import HomeNavigator from "./HomeNavigator";
 const Tab = createBottomTabNavigator();
 
 const shouldHideTabBar = (route: any) => {
-  const hiddenRoutes = [
-    "updateEmail",
-    "otpVerification",
-    "genderScreen",
-    "ageScreen",
-    "weightAndHeightScreen",
-    "fitnessLevelScreen",
-    "fitnessGoalScreen",
-    "equimentsScreen",
-    "privacyPolicy",
-    "updatePasswordScreen",
-    "deleteAccountScreen",
-    "addMembersToGroup",
-    "creategroupscreeen",
-    "chatlist",
-    "chatProfileNavigator",
-    "locationScreen",
-    "watchVideo",
-    "imageView",
-    "groupChatList",
-    "timeClockScreen",
-    "paymentScreen",
-    "paymentCardScreen",
-    "userGymlocationScreen",
-    "userWorkoutlocationScreen",
-    "profileLocationScreen",
+  const hiddenRoutes: any[] = [
+    "ProfileScreen",
+    "CreateHouseholdScreen",
+    "Settings",
+    "MainMenu",
+    "InviteUserScreen",
+    "ResetPasswordScreen",
   ];
 
   // Get the active route name for nested navigators
   const activeRoute: any = getFocusedRouteNameFromRoute(route);
   console.log("activeRoute", activeRoute);
-  return hiddenRoutes.includes(activeRoute);
+  const result = hiddenRoutes.includes(activeRoute);
+  console.log(result);
+  return result;
 };
 export default function TabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
           backgroundColor: "transparent",
@@ -58,9 +41,10 @@ export default function TabNavigator() {
           elevation: 0,
           borderTopWidth: 0,
           marginBottom: 20,
+          display: shouldHideTabBar(route) === true ? "none" : "flex",
         },
-        tabBarShowLabel: false, // we'll use a custom label below
-      }}
+        tabBarShowLabel: false, // we'll use a custom label
+      })}
     >
       <Tab.Screen
         name="Library"
@@ -99,6 +83,40 @@ export default function TabNavigator() {
             </View>
           ),
         }}
+        // options={({ route }) => {
+        //   console.log(route);
+        //   return {
+        //     tabBarIcon: ({ focused }) => (
+        //       <View
+        //         style={{
+        //           alignItems: "center",
+
+        //           width: 200,
+        //         }}
+        //       >
+        //         <Icon3
+        //           width={100}
+        //           height={60}
+        //           fill={focused ? "#4A00E0" : "#AAA"}
+        //         />
+        //         <Text
+        //           style={{
+        //             color: focused ? "#4A00E0" : "#AAA",
+        //             fontSize: 15,
+        //             marginTop: 4,
+        //             fontWeight: "600",
+        //           }}
+        //         >
+        //           Library
+        //         </Text>
+        //       </View>
+        //     ),
+        //     tabBarStyle: {
+        //       display: shouldHideTabBar(route) ? "none" : "flex", // Dynamically hide or show
+        //       backgroundColor: "#F7F6FB",
+        //     },
+        //   };
+        // }}
       />
       <Tab.Screen
         name="Add"

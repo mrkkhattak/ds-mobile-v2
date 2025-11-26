@@ -4,7 +4,13 @@ import { useAuthStore } from "@/store/authstore";
 
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useFocusEffect } from "@react-navigation/native";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Animated, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
@@ -14,6 +20,7 @@ import {
   deleteTaskById,
   fetchSpruceTasks,
   getTaskById,
+  getUserProfile,
   removeTaskFromSpruce,
   SpruceTaskDetails,
 } from "../functions/functions";
@@ -29,7 +36,7 @@ import DeleteIcon from "../../assets/images/icons/Delete task.svg";
 import EditIcon from "../../assets/images/icons/Edit task.svg";
 import MenuIcon from "../../assets/images/icons/Vector (4).svg";
 
-import LottieView from "lottie-react-native";
+import { ActivityIndicator } from "react-native-paper";
 import {
   generateMonthlyRepeatingDates,
   generateRepeatingDatesUnified,
@@ -41,6 +48,7 @@ type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Home">;
 const index = () => {
   const navigation = useNavigation<NavigationProp>();
   const { signOut } = useAuthStore();
+
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["40%", "80%"], []);
   const user = useAuthStore((s) => s.user);
@@ -380,6 +388,45 @@ const index = () => {
     }, [user, selectedDate])
   );
 
+  useEffect(() => {
+    const checkProfile = async () => {
+      if (!user) return signOut();
+
+      const { data: profile, error } = await getUserProfile(user.id);
+
+      if (error) {
+        console.log(error);
+        Snackbar.show({
+          text: error.message,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "red",
+        });
+        return;
+      }
+
+      if (!profile) {
+        navigation.navigate("ProfileScreen");
+      } else if (!profile.household_id) {
+        navigation.navigate("CreateHouseholdScreen");
+      }
+    };
+
+    const checkFirstLogin = async () => {
+      console.log("firstLogin");
+      setTimeout(() => {
+        navigation.navigate("ResetPasswordScreen");
+      }, 2000);
+    };
+
+    if (user) {
+      if (user.user_metadata.firstLogin === true) {
+        checkFirstLogin();
+      } else {
+        checkProfile();
+      }
+    }
+  }, []);
+
   if (loading) {
     return (
       <MainLayout>
@@ -390,12 +437,7 @@ const index = () => {
             alignItems: "center",
           }}
         >
-          <LottieView
-            source={require("../../assets/animations/3001-Broom-animation.json")}
-            autoPlay
-            loop
-            style={{ width: 400, height: 400 }}
-          />
+          <ActivityIndicator size="large" color="#8C50FB" />
         </View>
       </MainLayout>
     );
@@ -408,7 +450,9 @@ const index = () => {
             label="SMALL STEPS. BIG IMPACT!"
             screenName="Daily Spruce"
             icon={<MenuIcon />}
-            navigation={() => {}}
+            navigation={() => {
+              navigation.navigate("MainMenu");
+            }}
           />
           <CalenderStripComponet
             navigation={navigation}
@@ -423,6 +467,7 @@ const index = () => {
             backgroundColor: "#F7F6FB",
             borderTopRightRadius: 40,
             borderTopLeftRadius: 40,
+            marginTop: 40,
           }}
         >
           <DateLabel selectedDate={selectedDate} />

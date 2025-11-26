@@ -1,6 +1,6 @@
 import MainLayout from "@/components/layout/MainLayout";
 import React, { useState } from "react";
-import { Image, View } from "react-native";
+import { ActivityIndicator, Image, View } from "react-native";
 
 import { useAuthStore } from "@/store/authstore";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -15,10 +15,10 @@ import {
   SpruceTaskDetails,
 } from "../functions/functions";
 
+import TaskAccordionWithFlatList from "@/components/collapsibleComponent/TaskAccordionWithFlatList";
 import Header from "@/components/Header/Header";
 import TaskSubList from "@/components/TaskListComponents/TaskSubList";
 import TaskTypeTabing from "@/components/TaskListComponents/TaskTypeTabing";
-import LottieView from "lottie-react-native";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import HomeIcon from "../../assets/images/icons/Vector (3).svg";
 import { HomeStackParamList } from "../types/navigator_type";
@@ -35,6 +35,7 @@ const TaskList = () => {
   const [groupData, setGroupData] = useState<any>({});
   const [myTasks, setMyTasks] = useState<SpruceTaskDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [collapsed, setCollapsed] = useState(true);
   const tabList: TablisntType[] = [
     {
       label: "Go-To",
@@ -86,7 +87,7 @@ const TaskList = () => {
   const subTabList = [
     "Kitchen",
     "Bedroom",
-    "LivingRoom",
+    "Living Room",
     "BathRoom",
     "General Cleaning",
     "Outdoor",
@@ -115,15 +116,22 @@ const TaskList = () => {
           setLoading(true);
 
           // 1️⃣ Fetch grouped tasks
-          const result = await fetchAndGroupTasks();
+
+          const result = await fetchAndGroupTasks(
+            selectedTab === "Go-To"
+              ? "goto"
+              : selectedTab === "Repeat"
+              ? "repeat"
+              : selectedTab === "Ideas"
+              ? "idea"
+              : "pack"
+          );
           if (isActive && result) {
             setGroupData(result);
           }
-
           // 2️⃣ Fetch assigned tasks (if user exists)
           if (user) {
             const assignedTasks = await fetchSpruceTasks(user.id);
-            console.log("assignedTasks", assignedTasks);
             if (isActive && assignedTasks) {
               setMyTasks(assignedTasks.data || []);
             }
@@ -141,7 +149,7 @@ const TaskList = () => {
       return () => {
         isActive = false;
       };
-    }, [user])
+    }, [user, selectedTab])
   );
 
   if (loading) {
@@ -154,12 +162,7 @@ const TaskList = () => {
             alignItems: "center",
           }}
         >
-          <LottieView
-            source={require("../../assets/animations/3001-Broom-animation.json")}
-            autoPlay
-            loop
-            style={{ width: 400, height: 400 }}
-          />
+          <ActivityIndicator size="large" color="#8C50FB" />
         </View>
       </MainLayout>
     );
@@ -174,7 +177,6 @@ const TaskList = () => {
           navigation={navigationToHome}
           icon={<HomeIcon />}
         />
-        {/* Horizontal Main Tabs */}
         <TaskTypeTabing
           tabList={tabList}
           selectedTab={selectedTab}
@@ -190,6 +192,15 @@ const TaskList = () => {
             sortedTasks={sortedTasks}
             user={user}
             setMyTasks={setMyTasks}
+          />
+        )}
+        {selectedTab === "Repeat" && (
+          <TaskAccordionWithFlatList
+            groupData={groupData}
+            myTasks={myTasks}
+            setMyTasks={setMyTasks}
+            user={user}
+            setLoading={setLoading}
           />
         )}
       </View>

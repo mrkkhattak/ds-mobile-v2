@@ -48,3 +48,15 @@ export const schema = yup.object({
       otherwise: (schema) => schema.notRequired().strip(),
     }),
 });
+
+export const ProfileSchema = yup.object({
+  firstName: yup
+    .string()
+    .required("First name is required")
+    .matches(/^[A-Za-z]+$/, "First name can only contain letters"),
+  lastName: yup
+    .string()
+    .required("Last name is required")
+    .matches(/^[A-Za-z]+$/, "Last name can only contain letters"),
+  gender: yup.string().required("Please select a gender"),
+});

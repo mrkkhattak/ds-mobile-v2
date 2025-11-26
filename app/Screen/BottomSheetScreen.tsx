@@ -8,7 +8,6 @@ import BottomSheet, {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import LottieView from "lottie-react-native";
 import React, {
   useCallback,
   useEffect,
@@ -16,7 +15,12 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import {
   useAnimatedStyle,
@@ -119,20 +123,16 @@ const BottomSheetScreen = () => {
         return;
       }
 
-      // === Insert into spruce_tasks ===
       if (formData.repeat && repeatingDates.length > 0) {
-        // Insert each repeating entry with its own scheduled date
         for (const date of repeatingDates) {
           await AddUserTaskToSpruce(taskId, userId, date);
         }
-
         Snackbar.show({
           text: `Repeating schedule created (${repeatingDates.length} tasks).`,
           duration: Snackbar.LENGTH_LONG,
           backgroundColor: "green",
         });
       } else {
-        // Single one-time task (use today as scheduled date)
         const today = new Date().toISOString().split("T")[0];
         await AddUserTaskToSpruce(taskId, userId, today);
 
@@ -164,12 +164,7 @@ const BottomSheetScreen = () => {
           alignItems: "center",
         }}
       >
-        <LottieView
-          source={require("../../assets/animations/3001-Broom-animation.json")}
-          autoPlay
-          loop
-          style={{ width: 400, height: 400 }}
-        />
+        <ActivityIndicator size="large" color="#8C50FB" />
       </View>
     );
   }

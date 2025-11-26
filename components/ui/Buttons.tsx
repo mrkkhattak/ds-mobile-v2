@@ -5,10 +5,12 @@ import {
   Animated,
   PanResponder,
   Pressable,
+  StyleProp,
   StyleSheet,
   Text,
   TextStyle,
   TouchableOpacity,
+  View,
   ViewStyle,
 } from "react-native";
 
@@ -322,6 +324,68 @@ export const SmallButton: React.FC<SmallButtonProps> = ({
         {label}
       </Text>
     </Pressable>
+  );
+};
+
+type Props = {
+  label: string;
+  onPress: () => void;
+  icon?: React.ReactNode;
+  containerStyle?: StyleProp<ViewStyle>;
+  labelStyle?: StyleProp<TextStyle>;
+};
+
+export const TransparetButton: React.FC<Props> = ({
+  label,
+  onPress,
+  icon,
+  containerStyle,
+  labelStyle,
+}) => {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[
+        {
+          width: 118,
+          height: 27,
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: "rgba(152, 100, 225, 1)",
+          paddingVertical: 6,
+          paddingHorizontal: 16,
+          justifyContent: "center",
+        },
+        containerStyle,
+      ]}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          columnGap: 4,
+        }}
+      >
+        {icon && <View>{icon}</View>}
+
+        <Text
+          style={[
+            {
+              fontFamily: "Inter",
+              fontWeight: "700",
+              fontSize: 12,
+              lineHeight: 12,
+              textAlign: "center",
+              color: "rgba(152, 100, 225, 1)",
+            },
+            labelStyle,
+          ]}
+        >
+          {label}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 };
 

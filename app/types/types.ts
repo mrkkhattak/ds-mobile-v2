@@ -27,3 +27,9 @@ export type TablisntType = {
   selectedIcon: React.JSX.Element;
   unselectedIcon: React.JSX.Element;
 };
+
+export type UpdateProfileFormValues = {
+  firstName: string;
+  lastName: string;
+  gender: string;
+};

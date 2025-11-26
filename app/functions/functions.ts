@@ -149,18 +149,75 @@ export async function getGlobalTasks(): Promise<GlobalTask[]> {
   return data || [];
 }
 
-export const fetchAndGroupTasks = async () => {
-  const { data, error } = await supabase
+export type Profile = {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  gender: string;
+  created_at: string;
+  updated_at: string;
+};
+
+// export const fetchAndGroupTasks = async () => {
+//   const { data, error } = await supabase
+//     .from("global_tasks")
+//     .select(
+//       `
+//       *,
+//       task_repeat_days(*),
+//       task_repeat_weeks(*),
+//       task_repeat_months(*)
+//     `
+//     )
+//     .order("category", { ascending: true });
+
+//   if (error) {
+//     console.error("Error fetching tasks:", error);
+//     return {};
+//   }
+
+//   // Group tasks by category
+//   const groupedTasks: Record<string, any[]> = {};
+
+//   data.forEach((task) => {
+//     const category = task.category || "Uncategorized";
+//     if (!groupedTasks[category]) {
+//       groupedTasks[category] = [];
+//     }
+//     groupedTasks[category].push(task);
+//   });
+
+//   console.log("groupedTasks", groupedTasks);
+//   return groupedTasks;
+// };
+
+export const fetchAndGroupTasks = async (taskType?: string) => {
+  let query = supabase
     .from("global_tasks")
-    .select("*")
+    .select(
+      `
+      *,
+      task_repeat_days(*),
+      task_repeat_weeks(*),
+      task_repeat_months(*)
+    `
+    )
     .order("category", { ascending: true });
+
+  // Only filter by type if provided
+  if (taskType) {
+    query = query.eq("type", taskType);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching tasks:", error);
     return {};
   }
 
-  // Group tasks by category
+  // Group by category
   const groupedTasks: Record<string, any[]> = {};
 
   data.forEach((task) => {
@@ -609,5 +666,75 @@ export const deleteSpruceTasksByUserTaskId = async (
     return { success: true, error: null };
   } catch (err: any) {
     return { success: false, error: err.message ?? "Something went wrong" };
+  }
+};
+
+export const getUserProfile = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    return { data, error }; // return both for snackbar handling
+  } catch (err: any) {
+    return { data: null, error: { message: err.message } };
+  }
+};
+
+export const createUserProfile = async (
+  userId: string,
+  firstName: string,
+  lastName: string,
+  gender: string,
+  household_id?: string
+): Promise<{ data: Profile | null; error: any }> => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .insert({
+        user_id: userId,
+        first_name: firstName,
+        last_name: lastName,
+        gender,
+        household_id: household_id,
+      })
+      .select()
+      .maybeSingle();
+
+    return { data, error };
+  } catch (err: any) {
+    return { data: null, error: { message: err.message } };
+  }
+};
+
+export const updateUserProfile = async (
+  userId: string,
+  updates: {
+    firstName?: string;
+    lastName?: string;
+    gender?: string;
+    household_id?: string;
+    [key: string]: any; // allows future fields
+  }
+): Promise<{ data: Profile | null; error: any }> => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({
+        first_name: updates.firstName,
+        last_name: updates.lastName,
+        gender: updates.gender,
+        household_id: updates.household_id,
+        ...updates, // spread any other fields if needed
+      })
+      .eq("user_id", userId)
+      .select()
+      .maybeSingle();
+
+    return { data, error };
+  } catch (err: any) {
+    return { data: null, error: { message: err.message } };
   }
 };

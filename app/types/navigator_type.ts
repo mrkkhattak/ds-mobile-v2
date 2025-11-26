@@ -18,4 +18,10 @@ export type AuthStackParamList = {
 export type HomeStackParamList = {
   TaskLibrary: undefined;
   Home: undefined;
+  ProfileScreen: undefined;
+  CreateHouseholdScreen: undefined;
+  MainMenu: undefined;
+  Settings: undefined;
+  InviteUserScreen: undefined;
+  ResetPasswordScreen: undefined;
 };
