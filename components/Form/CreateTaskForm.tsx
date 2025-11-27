@@ -205,7 +205,6 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
                         height: 49,
                         borderRadius: 10,
                         paddingHorizontal: 16,
-                        paddingBottom: 15,
                       }}
                       inputStyle={{
                         fontSize: 16,
@@ -355,7 +354,9 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
                         width: "100%",
                         borderColor: error ? "red" : "#ccc",
                       }}
-                      textStyle={{ fontSize: 12, paddingBottom: 15 }}
+                      textStyle={{
+                        fontSize: 12,
+                      }}
                     />
 
                     {error && (
@@ -474,11 +475,10 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
                                 )
                               }
                               containerStyle={{
-                                height: 39,
                                 width: "100%",
                                 marginVertical: 10,
                               }}
-                              textStyle={{ fontSize: 12, paddingBottom: 15 }}
+                              textStyle={{ fontSize: 12 }}
                             />
 
                             {/* === DAY Mode === */}
@@ -718,7 +718,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
                                             borderRadius: 10,
                                             height: 40,
                                             paddingHorizontal: 16,
-                                            width: 115,
+                                            width: 100,
                                           }}
                                           dropDownContainerStyle={{
                                             borderColor: "#ccc",
@@ -917,7 +917,9 @@ const styles = StyleSheet.create({
   },
   repeatBox: {
     flex: 1,
-    backgroundColor: "white",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+
     borderRadius: 10,
     borderWidth: 0.2,
     borderColor: "#42404E",

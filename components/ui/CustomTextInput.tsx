@@ -58,9 +58,7 @@ export const CustomTextInput: React.FC<CustomTextInputProps> = ({
           height: 39,
           borderRadius: 10,
           borderWidth: 1,
-          paddingTop: 12,
-          paddingBottom: 12,
-          paddingLeft: 16,
+
           opacity: 1,
         },
         containerStyle,

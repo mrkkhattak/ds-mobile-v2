@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef } from "react";
 import {
   PanResponder,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -63,7 +64,12 @@ const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
   const rows = [1, 3, 6];
   return (
     <View style={styles.screenContainer}>
-      <View style={styles.cardContainer}>
+      <View
+        style={[
+          styles.cardContainer,
+          Platform.OS === "android" && { width: 240 },
+        ]}
+      >
         <View style={styles.topSection}>
           {rows.map((count, rowIndex) => (
             <View
@@ -128,14 +134,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
-    borderWidth: 0.2,
-    borderColor: "#42404E",
+    borderWidth: 1,
+    borderColor: "#ccc",
     backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 3.84,
+    // elevation: 5,
     justifyContent: "space-between",
   },
   topSection: {

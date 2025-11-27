@@ -21,7 +21,7 @@ import {
   fetchSpruceTasksByHouseHoldId,
   getTaskById,
   getUserProfile,
-  removeUserTasksById,
+  removeTaskFromSpruce,
   SpruceTaskDetails,
 } from "../functions/functions";
 
@@ -77,7 +77,7 @@ const index = () => {
 
     setLoading(true);
 
-    const success = await removeUserTasksById(id);
+    const success = await removeTaskFromSpruce({ id });
 
     if (success) {
       // Remove the deleted task from local grouped state
@@ -86,7 +86,7 @@ const index = () => {
 
         for (const key in prev) {
           const filtered = prev[key].filter((task) => {
-            if (id) return task.user_task_id !== id;
+            if (id) return task.id !== id;
             return true;
           });
 

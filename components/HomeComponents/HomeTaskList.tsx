@@ -11,7 +11,7 @@ interface HomeTaskListProps {
   renderLeftActions: (progress: any, dragX: any) => React.ReactNode;
   renderRightActions: (progress: any, dragX: any) => React.ReactNode;
   fetchTask: (taskId: string) => void;
-  handleDeleteTask: (userTaskId: string) => void;
+  handleDeleteTask: (taskId: string) => void;
 }
 const HomeTaskList = (props: HomeTaskListProps) => {
   const swipeableRef = useRef<Swipeable>(null);
@@ -84,7 +84,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                       }}
                       onSwipeableRightOpen={() => {
                         console.log("task", task);
-                        handleDeleteTask(task.user_task_id);
+                        handleDeleteTask(task.id);
                         swipeableRef.current?.close();
                       }}
                     >

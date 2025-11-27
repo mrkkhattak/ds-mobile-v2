@@ -58,7 +58,6 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
               justifyContent: "center",
               alignItems: "center",
               marginHorizontal: 2,
-              paddingVertical: 12,
             }}
           >
             <Text
@@ -67,6 +66,7 @@ export const SegmentedControl: React.FC<SegmentedControlProps> = ({
                 fontWeight: "500",
                 fontSize: 12,
                 lineHeight: 14,
+
                 textAlign: "center",
                 textTransform: "uppercase",
                 color: isSelected ? "#FFFFFF" : "#A09FA6",

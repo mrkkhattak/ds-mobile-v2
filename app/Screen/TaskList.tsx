@@ -91,7 +91,7 @@ const TaskList = () => {
     "Kitchen",
     "Bedroom",
     "Living Room",
-    "BathRoom",
+    "Bathroom",
     "General Cleaning",
     "Outdoor",
   ];
