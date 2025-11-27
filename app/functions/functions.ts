@@ -350,7 +350,8 @@ export const fetchSpruceTasks = async (
 export const AddTaskToSpruce = async (
   global_task_id: string,
   user_id: string,
-  scheduledDate: string
+  scheduledDate: string,
+  household_id: string
 ): Promise<boolean> => {
   try {
     const { data, error } = await supabase.from("spruce_tasks").insert([
@@ -358,6 +359,7 @@ export const AddTaskToSpruce = async (
         global_task_id,
         user_id,
         scheduled_date: scheduledDate,
+        household_id: household_id,
       },
     ]);
 
@@ -410,10 +412,8 @@ export const removeSpecificTaskFromSpruce = async ({
 
 export const removeTaskFromSpruce = async ({
   id,
-  userId,
 }: {
   id?: string;
-  userId: string;
 }): Promise<boolean> => {
   try {
     if (!id) {
@@ -421,11 +421,8 @@ export const removeTaskFromSpruce = async ({
       return false;
     }
 
-    const { error } = await supabase
-      .from("spruce_tasks")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", userId); // extra safety so users can't delete others' tasks
+    const { error } = await supabase.from("spruce_tasks").delete().eq("id", id);
+    // extra safety so users can't delete others' tasks
 
     if (error) {
       console.error("Error removing task:", error.message);
@@ -523,14 +520,16 @@ export const createTask = async (
 export const AddUserTaskToSpruce = async (
   userTaskId: string,
   userId: string,
-  scheduledDate: string
+  scheduledDate: string,
+  household_id: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const { data, error } = await supabase.from("spruce_tasks").insert([
       {
         user_task_id: userTaskId,
         user_id: userId,
-        scheduled_date: scheduledDate, // ⬅️ new field
+        scheduled_date: scheduledDate,
+        household_id: household_id, // ⬅️ new field
       },
     ]);
 
@@ -688,7 +687,8 @@ export const createUserProfile = async (
   firstName: string,
   lastName: string,
   gender: string,
-  household_id?: string
+  household_id?: string,
+  familyRole?: string
 ): Promise<{ data: Profile | null; error: any }> => {
   try {
     const { data, error } = await supabase
@@ -699,6 +699,7 @@ export const createUserProfile = async (
         last_name: lastName,
         gender,
         household_id: household_id,
+        family_role: familyRole,
       })
       .select()
       .maybeSingle();
@@ -736,5 +737,192 @@ export const updateUserProfile = async (
     return { data, error };
   } catch (err: any) {
     return { data: null, error: { message: err.message } };
+  }
+};
+
+export const getProfilesByHousehold = async (householdId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("household_id", householdId);
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (err: any) {
+    return { data: null, error: err.message ?? "Unexpected error occurred" };
+  }
+};
+
+export const fetchSpruceTasksByHouseHoldId = async (
+  household_id: string,
+  scheduledDate?: string
+): Promise<{ data?: SpruceTaskDetails[]; error?: string }> => {
+  try {
+    if (!household_id) return { error: "Missing houseHold Id" };
+
+    let query = supabase
+      .from("spruce_tasks")
+      .select(
+        `
+        id,
+        assign_user_id,
+        user_id,
+        user_task_id,
+        scheduled_date,
+        created_at,
+        updated_at,
+        user_task:user_task_id (
+          id,
+          name,
+          room,
+          type,
+          effort,
+          repeat,
+          repeat_every,
+          user_id,
+          created_at,
+          updated_at
+        ),
+        global_task:global_task_id (
+          id,
+          name,
+          description_us,
+          description_uk,
+          description_row,
+          icon_name,
+          child_friendly,
+          estimated_effort,
+          points,
+          room,
+          category,
+          keywords,
+          display_names,
+          unique_completions,
+          total_completions,
+          effort_level
+        )
+      `
+      )
+      .eq("household_id", household_id);
+
+    // Apply date filter if provided
+    if (scheduledDate) {
+      query = query.eq("scheduled_date", scheduledDate);
+    }
+
+    const { data: spruceData, error } = await query.order("scheduled_date", {
+      ascending: true,
+    });
+
+    if (error) {
+      console.error("Error fetching spruce tasks:", error.message);
+      return { error: error.message };
+    }
+
+    if (!spruceData) return { data: [] };
+
+    const result: SpruceTaskDetails[] = spruceData.map((item: any) => ({
+      id: item.id,
+      assigned_at: item.created_at,
+      updated_at: item.updated_at,
+      assign_user_id: item.assign_user_id,
+      scheduled_date: item.scheduled_date,
+      assign_user_email: null,
+      owner_user_id: item.user_id,
+      owner_user_email: null,
+
+      // Global task
+      task_id: item.global_task?.id ?? null,
+      task_name: item.global_task?.name ?? null,
+      description_us: item.global_task?.description_us ?? null,
+      description_uk: item.global_task?.description_uk ?? null,
+      description_row: item.global_task?.description_row ?? null,
+      icon_name: item.global_task?.icon_name ?? null,
+      child_friendly: item.global_task?.child_friendly ?? null,
+      estimated_effort: item.global_task?.estimated_effort ?? null,
+      points: item.global_task?.points ?? null,
+      room: item.global_task?.room ?? null,
+      category: item.global_task?.category ?? null,
+      keywords: item.global_task?.keywords ?? null,
+      display_names: item.global_task?.display_names ?? null,
+      unique_completions: item.global_task?.unique_completions ?? null,
+      total_completions: item.global_task?.total_completions ?? null,
+      effort_level: item.global_task?.effort_level ?? null,
+
+      // User task
+      user_task_id: item.user_task?.id,
+      user_task_user_id: item.user_task?.user_id,
+      user_task_name: item.user_task?.name,
+      user_task_room: item.user_task?.room ?? null,
+      user_task_type: item.user_task?.type ?? null,
+      user_task_effort: item.user_task?.effort ?? null,
+      user_task_repeat: item.user_task?.repeat ?? false,
+      user_task_repeat_every: item.user_task?.repeat_every ?? null,
+      user_task_created_at: item.user_task?.created_at ?? null,
+      user_task_updated_at: item.user_task?.updated_at ?? null,
+    }));
+
+    return { data: result };
+  } catch (err: any) {
+    console.error("Unexpected error fetching spruce tasks:", err);
+    return { error: err.message || "Unknown error occurred" };
+  }
+};
+
+export const removeTasksByGlobalId = async (
+  globalTaskId: string
+): Promise<boolean> => {
+  try {
+    if (!globalTaskId) {
+      console.error("globalTaskId must be provided.");
+      return false;
+    }
+
+    console.log(globalTaskId, "globalTaskId");
+    const { error } = await supabase
+      .from("spruce_tasks")
+      .delete()
+      .eq("global_task_id", globalTaskId);
+
+    if (error) {
+      console.error("Error removing tasks:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err: any) {
+    console.error("Unexpected error removing tasks:", err.message || err);
+    return false;
+  }
+};
+
+export const removeUserTasksById = async (
+  userTaskId: string
+): Promise<boolean> => {
+  try {
+    if (!userTaskId) {
+      console.error("userTaskId must be provided.");
+      return false;
+    }
+
+    console.log(userTaskId, "userTaskId");
+    const { error } = await supabase
+      .from("spruce_tasks")
+      .delete()
+      .eq("user_task_id", userTaskId);
+
+    if (error) {
+      console.error("Error removing tasks:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (err: any) {
+    console.error("Unexpected error removing tasks:", err.message || err);
+    return false;
   }
 };

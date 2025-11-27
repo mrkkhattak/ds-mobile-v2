@@ -7,7 +7,7 @@ import Snackbar from "react-native-snackbar";
 
 import {
   AddTaskToSpruce,
-  removeSpecificTaskFromSpruce,
+  removeTasksByGlobalId,
   SpruceTaskDetails,
 } from "@/app/functions/functions";
 import AddIcon from "@/assets/images/icons/smallAddIcon.svg";
@@ -18,6 +18,7 @@ import {
   generateMonthlyRepeatingDates,
   generateRepeatingDatesUnified,
 } from "@/app/functions/commonFuntions";
+import { UserProfile } from "@/app/types/types";
 import { ScrollView } from "react-native-gesture-handler";
 import LimeIcon from "../../assets/images/icons/Lime.svg";
 interface RepeatDay {
@@ -58,6 +59,7 @@ interface Props {
   setMyTasks: React.Dispatch<React.SetStateAction<SpruceTaskDetails[]>>;
   user: { id: string; email?: string } | null;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  profile: UserProfile;
 }
 
 const TaskAccordionWithFlatList: React.FC<Props> = ({
@@ -66,6 +68,7 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
   setMyTasks,
   user,
   setLoading,
+  profile,
 }) => {
   const [activeSections, setActiveSections] = useState<number[]>([]);
 
@@ -192,7 +195,12 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
                           // 2️⃣ Execute the tasks
                           setLoading(true);
                           for (const date of repeatingDates) {
-                            await AddTaskToSpruce(item.id, user.id, date);
+                            await AddTaskToSpruce(
+                              item.id,
+                              user.id,
+                              date,
+                              profile?.household_id
+                            );
                           }
                           Snackbar.show({
                             text: `Repeating schedule created (${repeatingDates.length} tasks).`,
@@ -223,10 +231,7 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
                   {user && (
                     <TouchableOpacity
                       onPress={async () => {
-                        const success = await removeSpecificTaskFromSpruce({
-                          globalTaskId: item.id,
-                          userId: user.id,
-                        });
+                        const success = await removeTasksByGlobalId(item.id);
                         if (success) {
                           Snackbar.show({
                             text: "Task removed successfully!",

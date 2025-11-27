@@ -3,6 +3,7 @@ import CreateTaskForm from "@/components/Form/CreateTaskForm";
 import Header from "@/components/Header/Header";
 import MainLayout from "@/components/layout/MainLayout";
 import { useAuthStore } from "@/store/authstore";
+import { useUserProfileStore } from "@/store/userProfileStore";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
@@ -41,6 +42,8 @@ type NavigationProp = NativeStackNavigationProp<any, "BottomSheerScreen">;
 const BottomSheetScreen = () => {
   const user = useAuthStore((s) => s.user);
   const visible = true;
+  const { profile, setProfile, updateProfile } = useUserProfileStore();
+
   const navigation = useNavigation<NavigationProp>();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["20%"], []);
@@ -79,7 +82,10 @@ const BottomSheetScreen = () => {
 
   console.log("loading", loading);
 
-  const onSubmit = async (formData: CreateTaskFormValues) => {
+  const onSubmit = async (
+    formData: CreateTaskFormValues,
+    household_id: string
+  ) => {
     try {
       setLoading(true);
 
@@ -125,7 +131,7 @@ const BottomSheetScreen = () => {
 
       if (formData.repeat && repeatingDates.length > 0) {
         for (const date of repeatingDates) {
-          await AddUserTaskToSpruce(taskId, userId, date);
+          await AddUserTaskToSpruce(taskId, userId, date, household_id);
         }
         Snackbar.show({
           text: `Repeating schedule created (${repeatingDates.length} tasks).`,
@@ -134,7 +140,7 @@ const BottomSheetScreen = () => {
         });
       } else {
         const today = new Date().toISOString().split("T")[0];
-        await AddUserTaskToSpruce(taskId, userId, today);
+        await AddUserTaskToSpruce(taskId, userId, today, household_id);
 
         Snackbar.show({
           text: "Task created successfully!",
@@ -225,7 +231,9 @@ const BottomSheetScreen = () => {
       >
         <BottomSheetView style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 100 }}>
-            <CreateTaskForm onSubmit={onSubmit} />
+            {profile && (
+              <CreateTaskForm onSubmit={onSubmit} profile={profile} />
+            )}
           </ScrollView>
         </BottomSheetView>
       </BottomSheet>

@@ -1,4 +1,4 @@
-import { CreateTaskFormValues } from "@/app/types/types";
+import { CreateTaskFormValues, UserProfile } from "@/app/types/types";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
@@ -12,10 +12,11 @@ interface EditBottomSheetProps {
   bottomSheetRef: React.RefObject<BottomSheetMethods | null>;
   snapPoints: string[];
   task: any;
-  handleUpdateTask: (data: CreateTaskFormValues) => void;
+  handleUpdateTask: (data: CreateTaskFormValues, household_id: string) => void;
+  profile: UserProfile;
 }
 const EditBottomSheet = (props: EditBottomSheetProps) => {
-  const { bottomSheetRef, snapPoints, task, handleUpdateTask } = props;
+  const { bottomSheetRef, snapPoints, task, handleUpdateTask, profile } = props;
   return (
     <BottomSheet
       ref={bottomSheetRef}
@@ -38,7 +39,13 @@ const EditBottomSheet = (props: EditBottomSheetProps) => {
     >
       <BottomSheetView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 100 }}>
-          <EditTaskForm onSubmit={handleUpdateTask} defalutValues={task} />
+          {profile && (
+            <EditTaskForm
+              onSubmit={handleUpdateTask}
+              defalutValues={task}
+              profile={profile}
+            />
+          )}
         </ScrollView>
       </BottomSheetView>
     </BottomSheet>

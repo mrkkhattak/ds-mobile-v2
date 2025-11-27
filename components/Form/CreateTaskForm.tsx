@@ -1,5 +1,5 @@
 import { schema } from "@/app/Schema/Schema";
-import { CreateTaskFormValues } from "@/app/types/types";
+import { CreateTaskFormValues, UserProfile } from "@/app/types/types";
 import StartIcon from "@/assets/images/icons/Group_3.svg";
 import { CustomButton, SmallButton } from "@/components/ui/Buttons";
 import { CustomTextInput } from "@/components/ui/CustomTextInput";
@@ -13,11 +13,12 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 interface CreateTaskFormProps {
-  onSubmit: (formData: CreateTaskFormValues) => void;
+  onSubmit: (formData: CreateTaskFormValues, household_id: string) => void;
+  profile: UserProfile;
 }
 
 const CreateTaskForm = (props: CreateTaskFormProps) => {
-  const { onSubmit } = props;
+  const { onSubmit, profile } = props;
   const [open, setOpen] = useState(false);
   const [openWeek, setOpenWeek] = useState(false);
   const [openDayNumber, setOpenDayNumber] = useState(false);
@@ -144,7 +145,12 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
             New Task
           </Text>
           <View>
-            <CustomButton label="Save" onPress={handleSubmit(onSubmit)} />
+            <CustomButton
+              label="Save"
+              onPress={handleSubmit((data) => {
+                onSubmit(data, profile.household_id);
+              })}
+            />
           </View>
         </View>
         <View

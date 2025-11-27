@@ -18,6 +18,7 @@ import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/authstore";
 import AuthNavigator from "./navigation/AuthNavigator";
 import SpalshScreen from "./Screen/SpalshScreen";
+import TabNavigator from "./navigation/TabNavigator";
 
 // Keep the splash screen visible while fonts load
 Splash.preventAutoHideAsync();
@@ -133,7 +134,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "grey" }}>
-      <SpalshScreen />
+      <TabNavigator/>
     </GestureHandlerRootView>
   );
 }

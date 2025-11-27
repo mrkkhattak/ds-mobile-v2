@@ -13,14 +13,17 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import MainLayout from "@/components/layout/MainLayout";
-import { SecondaryButton } from "@/components/ui/Buttons";
+import { SecondaryButton, TertiaryButton } from "@/components/ui/Buttons";
 import { CustomInput } from "@/components/ui/CustomTextInput";
 import { MainHeading, SubtitleText } from "@/components/ui/Heading";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authstore";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import Snackbar from "react-native-snackbar";
 import * as yup from "yup";
 import { getUserProfile } from "../functions/functions";
+import { HomeStackParamList } from "../types/navigator_type";
 
 // ✅ Validation Schema
 const InviteSchema = yup.object({
@@ -34,12 +37,16 @@ const InviteSchema = yup.object({
     .matches(/^[A-Za-z]+$/, "Only letters allowed")
     .required("Last name is required"),
   gender: yup.string().required("Gender is required"),
+  familyRole: yup.string().required("Role is required"),
 });
 
 export type InviteFormValues = yup.InferType<typeof InviteSchema>;
+type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Home">;
 
 const InviteUserScreen = () => {
   const user = useAuthStore((s) => s.user);
+
+  const navigation = useNavigation<NavigationProp>();
 
   const [isLoading, setIsLoading] = useState(false);
   const [genderOpen, setGenderOpen] = useState(false);
@@ -48,6 +55,16 @@ const InviteUserScreen = () => {
     { label: "Male", value: "male" },
     { label: "Female", value: "female" },
     { label: "Other", value: "other" },
+  ]);
+  const [roleOpen, setRoleOpen] = useState(false);
+  const [roleValue, setRoleValue] = useState<string | null>(null);
+  const [roleItems, setRoleItems] = useState<ItemType<string>[]>([
+    { label: "Father", value: "father" },
+    { label: "Mother", value: "mother" },
+    { label: "Child", value: "child" },
+    { label: "Admin", value: "admin" },
+    { label: "Guest", value: "guest" },
+    { label: "Brother", value: "brother" },
   ]);
   const [houseHoldId, setHouseHoldId] = useState<string | undefined>(undefined);
 
@@ -76,6 +93,7 @@ const InviteUserScreen = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         gender: data.gender,
+        familyRole: data.familyRole,
         houseHoldId, // make sure this variable is defined in your component
         redirectTo: __DEV__
           ? "exp://192.168.100.24:8081/--/Screen/ConfirmEmail"
@@ -102,6 +120,7 @@ const InviteUserScreen = () => {
         duration: Snackbar.LENGTH_LONG,
         backgroundColor: "green",
       });
+      navigation.navigate("Settings");
     } catch (err: any) {
       Snackbar.show({
         text: err.message || "Something went wrong",
@@ -237,11 +256,42 @@ const InviteUserScreen = () => {
                   marginTop: 10,
                 }}
                 textStyle={{ color: "#342868" }}
+                zIndex={3000}
               />
             )}
           />
           {errors.gender && (
             <Text style={styles.errorText}>{errors.gender.message}</Text>
+          )}
+
+          <Controller
+            control={control}
+            name="familyRole"
+            render={({ field: { onChange } }) => (
+              <DropDownPicker
+                open={roleOpen}
+                value={roleValue}
+                items={roleItems}
+                setOpen={setRoleOpen}
+                setValue={(val: any) => {
+                  const v = val() as string;
+                  setRoleValue(v);
+                  onChange(v);
+                }}
+                setItems={setRoleItems}
+                placeholder="Select Role"
+                style={{
+                  width: 330,
+                  borderColor: "#342868",
+                  marginTop: 10,
+                }}
+                textStyle={{ color: "#342868" }}
+                zIndex={1000}
+              />
+            )}
+          />
+          {errors.familyRole && (
+            <Text style={styles.errorText}>{errors.familyRole.message}</Text>
           )}
         </View>
 
@@ -256,12 +306,26 @@ const InviteUserScreen = () => {
           {isLoading ? (
             <ActivityIndicator size="large" color="#8C50FB" />
           ) : (
-            <SecondaryButton
-              label="Send Invite"
-              onPress={handleSubmit(onSubmit)}
-              textStyle={{ color: "#FFFFFF" }}
-              buttonStyle={{ backgroundColor: "#8C50FB", width: 300 }}
-            />
+            <>
+              <SecondaryButton
+                label="Send Invite"
+                onPress={handleSubmit(onSubmit)}
+                textStyle={{ color: "#FFFFFF" }}
+                buttonStyle={{ backgroundColor: "#8C50FB", width: 300 }}
+              />
+              <TertiaryButton
+                label="Back"
+                onPress={() => navigation.goBack()}
+                textStyle={{ color: "#8C50FB" }}
+                buttonStyle={{
+                  backgroundColor: "transparent",
+                  width: 300,
+                  borderWidth: 1,
+                  borderColor: "#8C50FB",
+                  marginTop: 10,
+                }}
+              />
+            </>
           )}
         </View>
       </KeyboardAwareScrollView>

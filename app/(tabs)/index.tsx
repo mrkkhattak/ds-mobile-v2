@@ -18,10 +18,10 @@ import {
   createTask,
   deleteSpruceTasksByUserTaskId,
   deleteTaskById,
-  fetchSpruceTasks,
+  fetchSpruceTasksByHouseHoldId,
   getTaskById,
   getUserProfile,
-  removeTaskFromSpruce,
+  removeUserTasksById,
   SpruceTaskDetails,
 } from "../functions/functions";
 
@@ -36,6 +36,7 @@ import DeleteIcon from "../../assets/images/icons/Delete task.svg";
 import EditIcon from "../../assets/images/icons/Edit task.svg";
 import MenuIcon from "../../assets/images/icons/Vector (4).svg";
 
+import { useUserProfileStore } from "@/store/userProfileStore";
 import { ActivityIndicator } from "react-native-paper";
 import {
   generateMonthlyRepeatingDates,
@@ -48,6 +49,7 @@ type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Home">;
 const index = () => {
   const navigation = useNavigation<NavigationProp>();
   const { signOut } = useAuthStore();
+  const { profile, setProfile, updateProfile } = useUserProfileStore();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["40%", "80%"], []);
@@ -75,10 +77,7 @@ const index = () => {
 
     setLoading(true);
 
-    const success = await removeTaskFromSpruce({
-      id,
-      userId: user.id,
-    });
+    const success = await removeUserTasksById(id);
 
     if (success) {
       // Remove the deleted task from local grouped state
@@ -87,7 +86,7 @@ const index = () => {
 
         for (const key in prev) {
           const filtered = prev[key].filter((task) => {
-            if (id) return task.id !== id;
+            if (id) return task.user_task_id !== id;
             return true;
           });
 
@@ -201,9 +200,9 @@ const index = () => {
 
   const fetchTasks = async () => {
     try {
-      if (user) {
-        const { data, error } = await fetchSpruceTasks(
-          user.id,
+      if (user && profile) {
+        const { data, error } = await fetchSpruceTasksByHouseHoldId(
+          profile?.household_id,
           selectedDate.toISOString().split("T")[0]
         );
 
@@ -243,7 +242,10 @@ const index = () => {
       setLoading(false);
     }
   };
-  const CreateNewTask = async (formData: CreateTaskFormValues) => {
+  const CreateNewTask = async (
+    formData: CreateTaskFormValues,
+    household_id: string
+  ) => {
     try {
       setLoading(true);
 
@@ -289,7 +291,7 @@ const index = () => {
       if (formData.repeat && repeatingDates.length > 0) {
         // Insert each repeating entry with its own scheduled date
         for (const date of repeatingDates) {
-          await AddUserTaskToSpruce(taskId, userId, date);
+          await AddUserTaskToSpruce(taskId, userId, date, household_id);
         }
 
         Snackbar.show({
@@ -300,7 +302,7 @@ const index = () => {
       } else {
         // Single one-time task (use today as scheduled date)
         const today = new Date().toISOString().split("T")[0];
-        await AddUserTaskToSpruce(taskId, userId, today);
+        await AddUserTaskToSpruce(taskId, userId, today, household_id);
 
         Snackbar.show({
           text: "Task Updated successfully!",
@@ -322,7 +324,10 @@ const index = () => {
     }
   };
 
-  const handleUpdateTask = async (data: CreateTaskFormValues) => {
+  const handleUpdateTask = async (
+    data: CreateTaskFormValues,
+    household_id: string
+  ) => {
     const taskId: string | undefined = task?.id;
     setLoading(true);
 
@@ -369,7 +374,7 @@ const index = () => {
 
           return updated;
         });
-        CreateNewTask(data);
+        CreateNewTask(data, household_id);
       }
     }
     bottomSheetRef.current?.close();
@@ -385,7 +390,7 @@ const index = () => {
       return () => {
         isActive = false;
       };
-    }, [user, selectedDate])
+    }, [user, selectedDate, profile])
   );
 
   useEffect(() => {
@@ -409,6 +414,7 @@ const index = () => {
       } else if (!profile.household_id) {
         navigation.navigate("CreateHouseholdScreen");
       }
+      setProfile(profile);
     };
 
     const checkFirstLogin = async () => {
@@ -479,12 +485,15 @@ const index = () => {
             handleDeleteTask={handleDeleteTask}
           />
         </View>
-        <EditBottomSheet
-          bottomSheetRef={bottomSheetRef}
-          snapPoints={snapPoints}
-          task={task}
-          handleUpdateTask={handleUpdateTask}
-        />
+        {profile && (
+          <EditBottomSheet
+            bottomSheetRef={bottomSheetRef}
+            snapPoints={snapPoints}
+            task={task}
+            profile={profile}
+            handleUpdateTask={handleUpdateTask}
+          />
+        )}
       </MainLayout>
     </GestureHandlerRootView>
   );

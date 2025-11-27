@@ -86,13 +86,15 @@ const CreateNewPasswordScreen = () => {
 
   const updateMyProfile = async () => {
     if (!user) return signOut;
-    const { firstName, lastName, gender, houseHoldId } = user.user_metadata;
+    const { firstName, lastName, gender, houseHoldId, familyRole } =
+      user.user_metadata;
     const { data, error: profileError } = await createUserProfile(
       user.id,
       firstName,
       lastName,
       gender,
-      houseHoldId
+      houseHoldId,
+      familyRole
     );
     if (profileError)
       Alert.alert("Error", profileError || "Failed to update password");

@@ -10,28 +10,38 @@ const HouseHoldContainer = (props: HouseHoldProps) => {
   return (
     <View
       style={{
-        backgroundColor: "rgba(255, 255, 255, 1)",
-        width: 200,
+        backgroundColor: "white",
         borderTopLeftRadius: 30,
         borderBottomLeftRadius: 30,
+        marginLeft: 5,
+        paddingHorizontal: 5,
+        paddingVertical: 5,
+
+        // fills parent width
       }}
     >
       <View
         style={{
-          marginLeft: 10,
           flexDirection: "row",
           alignItems: "center",
-          paddingVertical: 10,
         }}
       >
-        <Avatar.Text size={44} label="MA" />
+        <Avatar.Text
+          size={24}
+          label={name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()}
+        />
         <View style={{ marginLeft: 10 }}>
           <Text
             style={{
               fontFamily: "inter",
               fontWeight: "500",
-              fontSize: 14,
+              fontSize: 12,
               lineHeight: 18,
+              maxWidth: 100,
             }}
           >
             {name}

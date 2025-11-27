@@ -93,7 +93,7 @@ const CreateHouseholdScreen: React.FC = () => {
       // 3️⃣ Update user's profile with household_id
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ household_id: household.id })
+        .update({ household_id: household.id, family_role: "admin" })
         .eq("id", profile.id);
 
       if (updateError) {

@@ -1,6 +1,6 @@
 import {
   AddTaskToSpruce,
-  removeSpecificTaskFromSpruce,
+  removeTasksByGlobalId,
   SpruceTaskDetails,
 } from "@/app/functions/functions";
 import RemoveIcon from "@/assets/images/icons/remove.svg";
@@ -15,6 +15,7 @@ import {
 
 import AddIcon from "@/assets/images/icons/smallAddIcon.svg";
 
+import { UserProfile } from "@/app/types/types";
 import { User } from "@supabase/auth-js";
 import dayjs from "dayjs";
 import Snackbar from "react-native-snackbar";
@@ -29,6 +30,7 @@ interface TaskSubListProps {
   sortedTasks: any[];
   user: User | null;
   setMyTasks: React.Dispatch<React.SetStateAction<SpruceTaskDetails[]>>;
+  profile: UserProfile;
 }
 const TaskSubList = (props: TaskSubListProps) => {
   const {
@@ -40,6 +42,7 @@ const TaskSubList = (props: TaskSubListProps) => {
     sortedTasks,
     user,
     setMyTasks,
+    profile,
   } = props;
   return (
     <View style={{ marginTop: 30 }}>
@@ -156,7 +159,8 @@ const TaskSubList = (props: TaskSubListProps) => {
                               const success = await AddTaskToSpruce(
                                 item.id,
                                 user.id,
-                                today
+                                today,
+                                profile.household_id
                               );
                               if (success) {
                                 Snackbar.show({
@@ -216,11 +220,9 @@ const TaskSubList = (props: TaskSubListProps) => {
                         {user && (
                           <TouchableOpacity
                             onPress={async () => {
-                              const success =
-                                await removeSpecificTaskFromSpruce({
-                                  globalTaskId: item.id,
-                                  userId: user.id,
-                                });
+                              const success = await removeTasksByGlobalId(
+                                item.id
+                              );
                               if (success) {
                                 Snackbar.show({
                                   text: "Task removed successfully!",

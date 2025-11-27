@@ -11,7 +11,7 @@ import PackIcon from "../../assets/images/icons/Packs.svg";
 import RepeatIcon from "../../assets/images/icons/Repeat.svg";
 import {
   fetchAndGroupTasks,
-  fetchSpruceTasks,
+  fetchSpruceTasksByHouseHoldId,
   SpruceTaskDetails,
 } from "../functions/functions";
 
@@ -19,6 +19,7 @@ import TaskAccordionWithFlatList from "@/components/collapsibleComponent/TaskAcc
 import Header from "@/components/Header/Header";
 import TaskSubList from "@/components/TaskListComponents/TaskSubList";
 import TaskTypeTabing from "@/components/TaskListComponents/TaskTypeTabing";
+import { useUserProfileStore } from "@/store/userProfileStore";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import HomeIcon from "../../assets/images/icons/Vector (3).svg";
 import { HomeStackParamList } from "../types/navigator_type";
@@ -30,6 +31,8 @@ type NavigationProp = NativeStackNavigationProp<
 const TaskList = () => {
   const navigation = useNavigation<NavigationProp>();
   const user = useAuthStore((e) => e.user);
+  const { profile, setProfile, updateProfile } = useUserProfileStore();
+
   const [selectedTab, setSelectedTab] = useState("Go-To");
   const [selectedSubTab, setSelectedSubTab] = useState("Kitchen");
   const [groupData, setGroupData] = useState<any>({});
@@ -106,17 +109,16 @@ const TaskList = () => {
   const navigationToHome = () => {
     navigation.navigate("Home");
   };
-
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
+      let interval: NodeJS.Timeout;
 
       const fetchData = async () => {
         try {
-          setLoading(true);
+          // setLoading(true);
 
           // 1️⃣ Fetch grouped tasks
-
           const result = await fetchAndGroupTasks(
             selectedTab === "Go-To"
               ? "goto"
@@ -126,32 +128,40 @@ const TaskList = () => {
               ? "idea"
               : "pack"
           );
+
           if (isActive && result) {
             setGroupData(result);
           }
-          // 2️⃣ Fetch assigned tasks (if user exists)
-          if (user) {
-            const assignedTasks = await fetchSpruceTasks(user.id);
+
+          // 2️⃣ Fetch assigned tasks
+          if (user && profile) {
+            const assignedTasks = await fetchSpruceTasksByHouseHoldId(
+              profile?.household_id
+            );
             if (isActive && assignedTasks) {
               setMyTasks(assignedTasks.data || []);
             }
           }
 
-          setLoading(false);
+          if (isActive) setLoading(false);
         } catch (error) {
           console.error("Error fetching grouped or assigned tasks:", error);
-          setLoading(false);
+          if (isActive) setLoading(false);
         }
       };
 
+      // Initial fetch
       fetchData();
+
+      // Poll every 5 seconds
+      interval = setInterval(fetchData, 5000);
 
       return () => {
         isActive = false;
+        clearInterval(interval); // stop polling on unmount
       };
-    }, [user, selectedTab])
+    }, [user, selectedTab, profile])
   );
-
   if (loading) {
     return (
       <MainLayout>
@@ -182,7 +192,7 @@ const TaskList = () => {
           selectedTab={selectedTab}
           setSelectedTab={setSelectedTab}
         />
-        {selectedTab === "Go-To" && (
+        {selectedTab === "Go-To" && profile && (
           <TaskSubList
             selectedSubTab={selectedSubTab}
             setSelectedSubTab={setSelectedSubTab}
@@ -192,15 +202,17 @@ const TaskList = () => {
             sortedTasks={sortedTasks}
             user={user}
             setMyTasks={setMyTasks}
+            profile={profile}
           />
         )}
-        {selectedTab === "Repeat" && (
+        {selectedTab === "Repeat" && profile && (
           <TaskAccordionWithFlatList
             groupData={groupData}
             myTasks={myTasks}
             setMyTasks={setMyTasks}
             user={user}
             setLoading={setLoading}
+            profile={profile}
           />
         )}
       </View>
