@@ -47,7 +47,7 @@ export default function AuthNavigator() {
     // optional loading screen
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#8C50FB" />
       </View>
     );
   }

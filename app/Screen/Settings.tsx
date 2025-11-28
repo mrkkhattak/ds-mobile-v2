@@ -1,7 +1,7 @@
 import Header from "@/components/Header/Header";
 import HouseHoldContainer from "@/components/HouseHoldComponets/HouseHoldContainer";
 import MainLayout from "@/components/layout/MainLayout";
-import { CustomButton } from "@/components/ui/Buttons";
+import { CustomButton, TransparetButton } from "@/components/ui/Buttons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import {
@@ -181,6 +181,30 @@ const Settings = () => {
                   />
                 </View>
               ))}
+            </View>
+          </View>
+        </View>
+        <View>
+          <View
+            style={{
+              flexDirection: "row",
+              marginTop: 10,
+            }}
+          >
+            {/* Heading */}
+            <View style={{ flex: 1 }}></View>
+
+            {/* Cards */}
+            <View
+              style={{
+                flex: 1,
+                // spacing from edges
+              }}
+            >
+              <TransparetButton
+                label={"Add Member"}
+                onPress={() => navigation.navigate("InviteUserScreen")}
+              />
             </View>
           </View>
         </View>

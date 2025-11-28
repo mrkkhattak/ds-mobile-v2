@@ -6,7 +6,7 @@ export const schema = yup.object({
   effort: yup.string().required("Effort is required"),
   repeat: yup.boolean().required(),
   repeatEvery: yup.string().oneOf(["DAY", "WEEK", "MONTH"]).required(),
-
+  assign: yup.string(),
   // DAY mode
   days: yup
     .array()

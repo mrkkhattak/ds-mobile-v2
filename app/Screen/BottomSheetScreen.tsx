@@ -131,7 +131,13 @@ const BottomSheetScreen = () => {
 
       if (formData.repeat && repeatingDates.length > 0) {
         for (const date of repeatingDates) {
-          await AddUserTaskToSpruce(taskId, userId, date, household_id);
+          await AddUserTaskToSpruce(
+            taskId,
+            userId,
+            date,
+            household_id,
+            formData.assign
+          );
         }
         Snackbar.show({
           text: `Repeating schedule created (${repeatingDates.length} tasks).`,
@@ -140,7 +146,13 @@ const BottomSheetScreen = () => {
         });
       } else {
         const today = new Date().toISOString().split("T")[0];
-        await AddUserTaskToSpruce(taskId, userId, today, household_id);
+        await AddUserTaskToSpruce(
+          taskId,
+          userId,
+          today,
+          household_id,
+          formData.assign
+        );
 
         Snackbar.show({
           text: "Task created successfully!",

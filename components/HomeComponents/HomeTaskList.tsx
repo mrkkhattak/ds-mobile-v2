@@ -1,10 +1,24 @@
 import React, { useRef } from "react";
-import { FlatList, Image, StyleSheet, Text, View } from "react-native";
-import { Swipeable } from "react-native-gesture-handler";
+import {
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { ScrollView, Swipeable } from "react-native-gesture-handler";
 import { MainHeading, SecondryHeading } from "../ui/Heading";
 
+import { Member } from "@/app/types/types";
+import { useUserProfileStore } from "@/store/userProfileStore";
+import { Avatar } from "react-native-paper";
 import Snackbar from "react-native-snackbar";
 import LimeIcon from "../../assets/images/icons/Lime.svg";
+import { SecondaryButton } from "../ui/Buttons";
+import Memberlist from "./Memberlist";
 
 interface HomeTaskListProps {
   groupData: Record<string, any[]>;
@@ -12,16 +26,34 @@ interface HomeTaskListProps {
   renderRightActions: (progress: any, dragX: any) => React.ReactNode;
   fetchTask: (taskId: string) => void;
   handleDeleteTask: (taskId: string) => void;
+  setSelectedMember: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedMember: string | null;
+  members: Member[];
+  handleAssingTaskToUser: (taskId: string, userId: string) => Promise<void>;
+  setTaskId: React.Dispatch<React.SetStateAction<string | undefined>>;
+  taskId: string | undefined;
+  setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
+  openModal: boolean;
 }
 const HomeTaskList = (props: HomeTaskListProps) => {
-  const swipeableRef = useRef<Swipeable>(null);
   const {
     groupData,
     renderLeftActions,
     renderRightActions,
     fetchTask,
     handleDeleteTask,
+    members,
+    selectedMember,
+    setSelectedMember,
+    handleAssingTaskToUser,
+    setTaskId,
+    taskId,
+    setOpenModal,
+    openModal,
   } = props;
+  const swipeableRef = useRef<Swipeable>(null);
+  const { profile, setProfile, updateProfile } = useUserProfileStore();
+
   return (
     <View
       style={{
@@ -57,107 +89,142 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                   borderRadius: 30,
                   backgroundColor: "#FFFFFF",
                 }}
-                renderItem={({ item: task }) => (
-                  <View
-                    style={{
-                      borderBottomWidth: 2,
-                      borderColor: "#AAAAAA26",
-                      borderRadius: 60,
-                    }}
-                  >
-                    <Swipeable
-                      renderLeftActions={renderLeftActions}
-                      renderRightActions={renderRightActions}
-                      onSwipeableLeftOpen={() => {
-                        if (task.owner_user_id === task.user_task_user_id) {
-                          fetchTask(task.user_task_id);
-                          //
-                          swipeableRef.current?.close();
-                        } else {
-                          Snackbar.show({
-                            text: "You can only edit your own tasks.",
-                            duration: Snackbar.LENGTH_LONG,
-                            backgroundColor: "red",
-                          });
-                          swipeableRef.current?.close();
-                        }
-                      }}
-                      onSwipeableRightOpen={() => {
-                        console.log("task", task);
-                        handleDeleteTask(task.id);
-                        swipeableRef.current?.close();
+                renderItem={({ item: task }) => {
+                  const selectedMemberObj = members.find(
+                    (member) => member.user_id === task.assign_user_id
+                  );
+                  const name = `${selectedMemberObj?.first_name} ${selectedMemberObj?.last_name}`;
+                  console.log("selectedMemberObj", selectedMemberObj);
+
+                  return (
+                    <View
+                      style={{
+                        borderBottomWidth: 2,
+                        borderColor: "#AAAAAA26",
+                        borderRadius: 60,
                       }}
                     >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-
-                          padding: 16,
+                      <Swipeable
+                        renderLeftActions={renderLeftActions}
+                        renderRightActions={renderRightActions}
+                        onSwipeableLeftOpen={() => {
+                          if (task.owner_user_id === task.user_task_user_id) {
+                            fetchTask(task.user_task_id);
+                            //
+                            swipeableRef.current?.close();
+                          } else {
+                            Snackbar.show({
+                              text: "You can only edit your own tasks.",
+                              duration: Snackbar.LENGTH_LONG,
+                              backgroundColor: "red",
+                            });
+                            swipeableRef.current?.close();
+                          }
+                        }}
+                        onSwipeableRightOpen={() => {
+                          console.log("task", task);
+                          handleDeleteTask(task.id);
+                          swipeableRef.current?.close();
                         }}
                       >
-                        {/* Left side: icon + name */}
                         <View
                           style={{
                             flexDirection: "row",
                             alignItems: "center",
-                            gap: 10,
+                            justifyContent: "space-between",
+
+                            padding: 16,
                           }}
                         >
+                          {/* Left side: icon + name */}
                           <View
                             style={{
-                              backgroundColor: "#E6E0F8",
-                              width: 40,
-                              height: 40,
-                              borderRadius: 12,
-                              justifyContent: "center",
+                              flexDirection: "row",
                               alignItems: "center",
+                              gap: 10,
                             }}
                           >
-                            <Text>🍽️</Text>
+                            <View
+                              style={{
+                                backgroundColor: "#E6E0F8",
+                                width: 40,
+                                height: 40,
+                                borderRadius: 12,
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Text>🍽️</Text>
+                            </View>
+                            <Text
+                              style={{
+                                fontSize: 15,
+                                color: "#000",
+                                fontWeight: "500",
+                              }}
+                            >
+                              {task.task_name
+                                ? task.task_name
+                                : task.user_task_name}
+                            </Text>
                           </View>
-                          <Text
+                          {/* Right side: effort icons + avatar */}
+                          <View
                             style={{
-                              fontSize: 15,
-                              color: "#000",
-                              fontWeight: "500",
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: 6,
                             }}
                           >
-                            {task.task_name
-                              ? task.task_name
-                              : task.user_task_name}
-                          </Text>
+                            {Array.from({
+                              length: Math.min(3, Math.ceil(task.points / 30)),
+                            }).map((_, i) => (
+                              <LimeIcon key={i} />
+                            ))}
+
+                            {selectedMemberObj ? (
+                              <TouchableOpacity
+                                onPress={() => {
+                                  setOpenModal(true);
+                                  setTaskId(task.id);
+                                }}
+                              >
+                                <Avatar.Text
+                                  size={44}
+                                  label={name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()}
+                                  style={{
+                                    backgroundColor: "#6915E0",
+                                  }}
+                                />
+                              </TouchableOpacity>
+                            ) : (
+                              <TouchableOpacity
+                                onPress={() => {
+                                  setOpenModal(true);
+                                  setTaskId(task.id);
+                                }}
+                              >
+                                <Image
+                                  source={require("../../assets/images/addUser.png")}
+                                  style={{
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: 17,
+                                    marginLeft: 4,
+                                  }}
+                                />
+                              </TouchableOpacity>
+                            )}
+                          </View>
                         </View>
-                        {/* Right side: effort icons + avatar */}
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          {Array.from({
-                            length: Math.min(3, Math.ceil(task.points / 30)),
-                          }).map((_, i) => (
-                            <LimeIcon key={i} />
-                          ))}
-                          <Image
-                            source={{
-                              uri: "https://randomuser.me/api/portraits/women/44.jpg",
-                            }}
-                            style={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: 17,
-                              marginLeft: 4,
-                            }}
-                          />
-                        </View>
-                      </View>
-                    </Swipeable>
-                  </View>
-                )}
+                      </Swipeable>
+                    </View>
+                  );
+                }}
               />
             </View>
           )}
@@ -195,6 +262,67 @@ const HomeTaskList = (props: HomeTaskListProps) => {
           </View>
         </>
       )}
+
+      <Modal
+        visible={openModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOpenModal(false)}
+      >
+        {/* Background press closes modal */}
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          onPress={() => setOpenModal(false)}
+        >
+          {/* Inner area should NOT close modal */}
+          <Pressable
+            style={{
+              width: "80%",
+              backgroundColor: "#F7F6FB",
+              padding: 20,
+              borderRadius: 12,
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 16 }}>
+              Add User
+            </Text>
+            <ScrollView style={{ paddingBottom: 20, maxHeight: 200 }}>
+              {members?.map((member: Member) => {
+                const selected = selectedMember === member.user_id;
+                const name = `${member.first_name} ${member.last_name}`;
+                const role = member.family_role;
+                return (
+                  <Memberlist
+                    member={member}
+                    setSelectedMember={setSelectedMember}
+                    selected={selected}
+                    name={name}
+                    role={role}
+                  />
+                );
+              })}
+            </ScrollView>
+            {taskId && selectedMember && (
+              <SecondaryButton
+                label={"Add User"}
+                onPress={() => handleAssingTaskToUser(taskId, selectedMember)}
+                buttonStyle={{
+                  backgroundColor: "#6915E0",
+                  paddingVertical: 12,
+                  borderRadius: 10,
+                  width: "100%",
+                }}
+              />
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 };

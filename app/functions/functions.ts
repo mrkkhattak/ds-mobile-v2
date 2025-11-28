@@ -521,7 +521,8 @@ export const AddUserTaskToSpruce = async (
   userTaskId: string,
   userId: string,
   scheduledDate: string,
-  household_id: string
+  household_id: string,
+  assign_user_id?: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const { data, error } = await supabase.from("spruce_tasks").insert([
@@ -529,7 +530,8 @@ export const AddUserTaskToSpruce = async (
         user_task_id: userTaskId,
         user_id: userId,
         scheduled_date: scheduledDate,
-        household_id: household_id, // ⬅️ new field
+        household_id: household_id,
+        assign_user_id: assign_user_id, // ⬅️ new field
       },
     ]);
 
@@ -926,3 +928,22 @@ export const removeUserTasksById = async (
     return false;
   }
 };
+
+export async function assignUserToTask(taskId: string, userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("spruce_tasks")
+      .update({ assign_user_id: userId, updated_at: new Date().toISOString() })
+      .eq("id", taskId)
+      .select("*")
+      .single(); // ensures single row is returned
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    return { success: true, data, error: null };
+  } catch (err) {
+    return { success: false, data: null, error: (err as Error).message };
+  }
+}

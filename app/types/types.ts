@@ -20,6 +20,7 @@ export type CreateTaskFormValues = {
   days?: string[]; // e.g. ["M","T"]
   week?: WeekRepeat | null;
   month?: MonthRepeat | null;
+  assign?: string;
 };
 
 export type TablisntType = {

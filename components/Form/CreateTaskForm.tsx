@@ -1,16 +1,35 @@
+import { getProfilesByHousehold } from "@/app/functions/functions";
 import { schema } from "@/app/Schema/Schema";
-import { CreateTaskFormValues, UserProfile } from "@/app/types/types";
+import { CreateTaskFormValues, Member, UserProfile } from "@/app/types/types";
 import StartIcon from "@/assets/images/icons/Group_3.svg";
-import { CustomButton, SmallButton } from "@/components/ui/Buttons";
+import {
+  CustomButton,
+  SecondaryButton,
+  SmallButton,
+} from "@/components/ui/Buttons";
 import { CustomTextInput } from "@/components/ui/CustomTextInput";
 import ProgressTrackerCard from "@/components/ui/ProgressTrackerCard";
 import { SegmentedControl } from "@/components/ui/SegmentContainer";
 import { yupResolver } from "@hookform/resolvers/yup";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from "react";
 import { Controller, Resolver, useForm } from "react-hook-form";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import {
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { Avatar } from "react-native-paper";
+import Snackbar from "react-native-snackbar";
+import Memberlist from "../HomeComponents/Memberlist";
 
 interface CreateTaskFormProps {
   onSubmit: (formData: CreateTaskFormValues, household_id: string) => void;
@@ -20,6 +39,8 @@ interface CreateTaskFormProps {
 const CreateTaskForm = (props: CreateTaskFormProps) => {
   const { onSubmit, profile } = props;
   const [open, setOpen] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+
   const [openWeek, setOpenWeek] = useState(false);
   const [openDayNumber, setOpenDayNumber] = useState(false);
   const [openWeekDay, setOpenWeekDay] = useState(false);
@@ -29,6 +50,11 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
     { label: "Bedroom", value: "Bedroom" },
     { label: "Kitchen", value: "Kitchen" },
   ]);
+  const [members, setMember] = useState<Member[]>([]);
+  const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [currentMember, setCurrentMember] = useState<Member | undefined>(
+    undefined
+  );
   const {
     control,
     handleSubmit,
@@ -112,6 +138,63 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
       setValue("week", { day: [], weekNumber: "" });
     }
   }, [repeatEveryField]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      let interval: NodeJS.Timeout;
+      setSelectedMember(null);
+      setCurrentMember(undefined);
+      const fetchProfiles = async () => {
+        if (!profile) return;
+
+        try {
+          const result = await getProfilesByHousehold(profile.household_id);
+          console.log("test");
+          if (!isActive) return;
+
+          if (result.data) {
+            setMember(result.data);
+          }
+
+          if (result.error) {
+            Snackbar.show({
+              text: result.error,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          }
+        } catch (error: any) {
+          if (isActive) {
+            Snackbar.show({
+              text: error.message,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          }
+        }
+      };
+
+      // Initial call
+      fetchProfiles();
+
+      // Poll every 5 seconds
+      interval = setInterval(fetchProfiles, 5000);
+
+      return () => {
+        isActive = false;
+        clearInterval(interval);
+      };
+    }, [profile])
+  );
+
+  useEffect(() => {
+    const selectedMemberObj = members.find(
+      (member) => member.user_id === watch("assign")
+    );
+    setCurrentMember(selectedMemberObj);
+  }, [watch("assign")]);
+
   return (
     <>
       <KeyboardAwareScrollView
@@ -899,6 +982,160 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
               </View>
             )}
           />
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "inter",
+                fontWeight: "300",
+                fontSize: 20,
+                lineHeight: 22,
+                width: 80,
+              }}
+            >
+              ASSIGN
+            </Text>
+            {watch("assign") && currentMember ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setOpenModal(true);
+                }}
+              >
+                <Avatar.Text
+                  size={44}
+                  label={`${currentMember?.first_name} ${currentMember?.last_name}`
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()}
+                  style={{
+                    backgroundColor: "#6915E0",
+                  }}
+                />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => {
+                  setOpenModal(true);
+                }}
+              >
+                <Image
+                  source={require("../../assets/images/addUser.png")}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 17,
+                    marginLeft: 4,
+                  }}
+                />
+              </TouchableOpacity>
+            )}
+
+            <View style={{ flex: 1 }}>
+              <Controller
+                control={control}
+                name="assign"
+                render={({
+                  field: { value, onChange },
+                  fieldState: { error },
+                }) => (
+                  <View>
+                    <Modal
+                      visible={openModal}
+                      transparent
+                      animationType="fade"
+                      onRequestClose={() => setOpenModal(false)}
+                    >
+                      {/* Background press closes modal */}
+                      <Pressable
+                        style={{
+                          flex: 1,
+                          backgroundColor: "rgba(0,0,0,0.4)",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                        onPress={() => setOpenModal(false)}
+                      >
+                        {/* Inner area should NOT close modal */}
+                        <Pressable
+                          style={{
+                            width: "80%",
+                            backgroundColor: "#F7F6FB",
+                            padding: 20,
+                            borderRadius: 12,
+                          }}
+                          onPress={(e) => e.stopPropagation()}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 18,
+                              fontWeight: "600",
+                              marginBottom: 16,
+                            }}
+                          >
+                            Add User
+                          </Text>
+
+                          <ScrollView
+                            style={{ paddingBottom: 20, maxHeight: 200 }}
+                          >
+                            {members?.map((member: Member) => {
+                              const selected =
+                                selectedMember === member.user_id;
+                              const name = `${member.first_name} ${member.last_name}`;
+                              const role = member.family_role;
+                              return (
+                                <Memberlist
+                                  member={member}
+                                  setSelectedMember={setSelectedMember}
+                                  selected={selected}
+                                  name={name}
+                                  role={role}
+                                />
+                              );
+                            })}
+                          </ScrollView>
+                          {selectedMember && (
+                            <SecondaryButton
+                              label={"Add User"}
+                              onPress={() => {
+                                onChange(selectedMember);
+                                setOpenModal(false);
+                              }}
+                              buttonStyle={{
+                                backgroundColor: "#6915E0",
+                                paddingVertical: 12,
+                                borderRadius: 10,
+                                width: "100%",
+                              }}
+                            />
+                          )}
+                        </Pressable>
+                      </Pressable>
+                    </Modal>
+
+                    {error && (
+                      <Text
+                        style={{
+                          color: "red",
+                          fontSize: 12,
+                          marginTop: 4,
+                          fontFamily: "Inter",
+                        }}
+                      >
+                        {error.message}
+                      </Text>
+                    )}
+                  </View>
+                )}
+              />
+            </View>
+          </View>
         </View>
       </KeyboardAwareScrollView>
     </>

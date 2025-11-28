@@ -15,10 +15,12 @@ import { Animated, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   AddUserTaskToSpruce,
+  assignUserToTask,
   createTask,
   deleteSpruceTasksByUserTaskId,
   deleteTaskById,
   fetchSpruceTasksByHouseHoldId,
+  getProfilesByHousehold,
   getTaskById,
   getUserProfile,
   removeTaskFromSpruce,
@@ -43,7 +45,7 @@ import {
   generateRepeatingDatesUnified,
 } from "../functions/commonFuntions";
 import { HomeStackParamList } from "../types/navigator_type";
-import { CreateTaskFormValues, WeekRepeat } from "../types/types";
+import { CreateTaskFormValues, Member, WeekRepeat } from "../types/types";
 
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Home">;
 const index = () => {
@@ -62,6 +64,10 @@ const index = () => {
   const today = new Date();
   const [loading, setLoading] = useState<boolean>(false);
   const [task, setTask] = useState<CreateTaskFormValues | undefined>(undefined);
+  const [members, setMember] = useState<Member[]>([]);
+  const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [taskId, setTaskId] = useState<string | undefined>(undefined);
+  const [openModal, setOpenModal] = useState(false);
 
   const handleDeleteTask = async (id?: string) => {
     if (!user) return;
@@ -380,6 +386,59 @@ const index = () => {
     bottomSheetRef.current?.close();
   };
 
+  const handleAssingTaskToUser = async (taskId: string, userId: string) => {
+    try {
+      setLoading(true);
+      const result = await assignUserToTask(taskId, userId);
+
+      if (result) {
+        if (result.data) {
+          // Local update of groupData
+          setGroupData((prevGroupData: any) => {
+            const updatedGroupData: Record<string, SpruceTaskDetails[]> = {};
+
+            Object.keys(prevGroupData).forEach((groupKey) => {
+              updatedGroupData[groupKey] = prevGroupData[groupKey].map(
+                (task: any) =>
+                  task.id === taskId
+                    ? { ...task, assign_user_id: userId } // update assign_user_id
+                    : task
+              );
+            });
+
+            return updatedGroupData;
+          });
+
+          Snackbar.show({
+            text: "Task assigned to user",
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "green",
+          });
+
+          setSelectedMember(null);
+          setOpenModal(false);
+          setLoading(false);
+        }
+
+        if (result.error) {
+          Snackbar.show({
+            text: result.error,
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "red",
+          });
+          setLoading(false);
+        }
+      }
+    } catch (error: any) {
+      Snackbar.show({
+        text: error.message,
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+      setLoading(false);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -433,6 +492,54 @@ const index = () => {
     }
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      let interval: NodeJS.Timeout;
+
+      const fetchProfiles = async () => {
+        if (!profile) return;
+
+        try {
+          const result = await getProfilesByHousehold(profile.household_id);
+          console.log("test");
+          if (!isActive) return;
+
+          if (result.data) {
+            setMember(result.data);
+          }
+
+          if (result.error) {
+            Snackbar.show({
+              text: result.error,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          }
+        } catch (error: any) {
+          if (isActive) {
+            Snackbar.show({
+              text: error.message,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          }
+        }
+      };
+
+      // Initial call
+      fetchProfiles();
+
+      // Poll every 5 seconds
+      interval = setInterval(fetchProfiles, 5000);
+
+      return () => {
+        isActive = false;
+        clearInterval(interval);
+      };
+    }, [profile])
+  );
+
   if (loading) {
     return (
       <MainLayout>
@@ -483,6 +590,14 @@ const index = () => {
             renderRightActions={renderRightActions}
             fetchTask={fetchTask}
             handleDeleteTask={handleDeleteTask}
+            members={members}
+            setSelectedMember={setSelectedMember}
+            selectedMember={selectedMember}
+            handleAssingTaskToUser={handleAssingTaskToUser}
+            setTaskId={setTaskId}
+            taskId={taskId}
+            setOpenModal={setOpenModal}
+            openModal={openModal}
           />
         </View>
         {profile && (

@@ -22,6 +22,7 @@ import TaskTypeTabing from "@/components/TaskListComponents/TaskTypeTabing";
 import { useUserProfileStore } from "@/store/userProfileStore";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import HomeIcon from "../../assets/images/icons/Vector (3).svg";
+
 import { HomeStackParamList } from "../types/navigator_type";
 import { TablisntType } from "../types/types";
 type NavigationProp = NativeStackNavigationProp<

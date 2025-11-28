@@ -4,9 +4,10 @@ import { Avatar } from "react-native-paper";
 interface HouseHoldProps {
   name: string;
   role: string;
+  selected?: boolean;
 }
 const HouseHoldContainer = (props: HouseHoldProps) => {
-  const { name, role } = props;
+  const { name, role, selected } = props;
   return (
     <View
       style={{
