@@ -5,12 +5,18 @@ import { StatusBar, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 interface MainLayoutProps {
   children: ReactNode;
+  color1?: string;
+  color2?: string;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({
+  children,
+  color1 = "#984BDC",
+  color2 = "#6530D0",
+}) => {
   return (
     <LinearGradient
-      colors={["#984BDC", "#6530D0"]}
+      colors={[color1, color2]}
       start={{ x: 0.2, y: 0 }}
       end={{ x: 0.8, y: 1 }}
       style={styles.gradient}

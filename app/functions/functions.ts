@@ -91,6 +91,7 @@ export interface SpruceTaskDetails {
   user_task_repeat_every?: string | null;
   user_task_created_at?: string | null;
   user_task_updated_at?: string | null;
+  task_status?: string;
 }
 
 type CreateTaskResult = {
@@ -777,6 +778,7 @@ export const fetchSpruceTasksByHouseHoldId = async (
         scheduled_date,
         created_at,
         updated_at,
+        task_status,
         user_task:user_task_id (
           id,
           name,
@@ -866,6 +868,7 @@ export const fetchSpruceTasksByHouseHoldId = async (
       user_task_repeat_every: item.user_task?.repeat_every ?? null,
       user_task_created_at: item.user_task?.created_at ?? null,
       user_task_updated_at: item.user_task?.updated_at ?? null,
+      task_status: item.task_status,
     }));
 
     return { data: result };
@@ -947,3 +950,121 @@ export async function assignUserToTask(taskId: string, userId: string) {
     return { success: false, data: null, error: (err as Error).message };
   }
 }
+
+export async function completeSpruceTask(taskId: string) {
+  try {
+    // 1️⃣ Get spruce task with related global & user task IDs
+    const { data: spruceTask, error: fetchError } = await supabase
+      .from("spruce_tasks")
+      .select("id, global_task_id, user_task_id")
+      .eq("id", taskId)
+      .single();
+
+    if (fetchError || !spruceTask) {
+      return { success: false, error: "Task not found" };
+    }
+
+    const { global_task_id, user_task_id } = spruceTask;
+
+    // 2️⃣ Update spruce task status
+    const { error: spruceUpdateError } = await supabase
+      .from("spruce_tasks")
+      .update({
+        task_status: "completed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", taskId);
+
+    if (spruceUpdateError) {
+      return { success: false, error: spruceUpdateError.message };
+    }
+
+    // 3️⃣ Update Global Task category if exists
+    if (global_task_id) {
+      await supabase
+        .from("global_task")
+        .update({ category: "completed_task" })
+        .eq("id", global_task_id);
+    }
+
+    // 4️⃣ Update User Task room (or add field if needed)
+    if (user_task_id) {
+      await supabase
+        .from("user_task")
+        .update({ room: "completed_task" }) // customize if needed
+        .eq("id", user_task_id);
+    }
+
+    return { success: true, error: null };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export interface Household {
+  id: string;
+  name: string;
+  owner_profile_id: string;
+  created_at: string;
+  updated_at: string;
+  spruce_time?: string;
+}
+
+export const fetchHouseholdById = async (
+  householdId: string
+): Promise<{ data?: Household; error?: string }> => {
+  try {
+    if (!householdId) return { error: "Missing household ID" };
+
+    const { data, error } = await supabase
+      .from("households")
+      .select("*")
+      .eq("id", householdId)
+      .single(); // ensures only one row is returned
+
+    if (error) {
+      console.error("Error fetching household:", error.message);
+      return { error: error.message };
+    }
+
+    return { data };
+  } catch (err: any) {
+    console.error("Unexpected error fetching household:", err);
+    return { error: err.message || "Unknown error occurred" };
+  }
+};
+
+export interface HouseholdUpdatePayload {
+  name?: string;
+  spruce_time?: string;
+  owner_profile_id?: string;
+  // add any other updatable fields here
+}
+
+export const updateHousehold = async (
+  householdId: string,
+  payload: HouseholdUpdatePayload
+): Promise<{ data?: any; error?: string }> => {
+  try {
+    if (!householdId) return { error: "Missing household ID" };
+    if (!payload || Object.keys(payload).length === 0)
+      return { error: "Nothing to update" };
+
+    const { data, error } = await supabase
+      .from("households")
+      .update(payload)
+      .eq("id", householdId)
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("Error updating household:", error.message);
+      return { error: error.message };
+    }
+
+    return { data };
+  } catch (err: any) {
+    console.error("Unexpected error updating household:", err);
+    return { error: err.message || "Unknown error occurred" };
+  }
+};

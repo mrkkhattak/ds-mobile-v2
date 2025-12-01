@@ -539,7 +539,7 @@ const index = () => {
       };
     }, [profile])
   );
-
+  console.log("user", user);
   if (loading) {
     return (
       <MainLayout>

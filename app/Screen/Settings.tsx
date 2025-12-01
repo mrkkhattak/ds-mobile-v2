@@ -15,18 +15,88 @@ import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/n
 import MenuIcon from "../../assets/images/icons/Vector (4).svg";
 import CrossIcon from "../../assets/images/icons/Vector (7).svg";
 
+import { SegmentedControl } from "@/components/ui/SegmentContainer";
+import { useAuthStore } from "@/store/authstore";
 import { useUserProfileStore } from "@/store/userProfileStore";
 import Snackbar from "react-native-snackbar";
-import { getProfilesByHousehold } from "../functions/functions";
+import {
+  fetchHouseholdById,
+  getProfilesByHousehold,
+  Household,
+  updateHousehold,
+} from "../functions/functions";
 import { HomeStackParamList } from "../types/navigator_type";
-import { Member } from "../types/types";
+import { Member, UserProfile } from "../types/types";
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Settings">;
 
 const Settings = () => {
+  const user = useAuthStore((s) => s.user);
+
   const navigation = useNavigation<NavigationProp>();
   const { profile, setProfile, updateProfile } = useUserProfileStore();
   const [isLoading, setIsLoading] = useState(false);
   const [members, setMember] = useState<Member[]>([]);
+  const [seletedValue, setSelectedValue] = useState<string>();
+  const [houseHold, setHouseHold] = useState<Household | null>(null);
+
+  const hanldeSpruceLenght = async (lenght: string) => {
+    try {
+      if (houseHold && profile) {
+        console.log("seletedValue", seletedValue);
+        const result = await updateHousehold(houseHold?.id, {
+          spruce_time: lenght,
+        });
+        if (result.data) {
+          console.log("result", result);
+          Snackbar.show({
+            text: "Spurce lenght Updated ",
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "green",
+          });
+          fetchHouseHold(profile);
+        }
+        if (result.error) {
+          Snackbar.show({
+            text: result.error,
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "red",
+          });
+        }
+      }
+    } catch (error: any) {
+      Snackbar.show({
+        text: error.message,
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+    }
+  };
+  const fetchHouseHold = async (profile: UserProfile) => {
+    try {
+      setIsLoading(true);
+      const result = await fetchHouseholdById(profile?.household_id);
+      if (result.data) {
+        setHouseHold(result.data);
+        setSelectedValue(`${result.data.spruce_time}`);
+        setIsLoading(false);
+      }
+      if (result.error) {
+        Snackbar.show({
+          text: result.error,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "red",
+        });
+      }
+      setIsLoading(false);
+    } catch (error: any) {
+      Snackbar.show({
+        text: error.message,
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+    }
+    setIsLoading(false);
+  };
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -73,6 +143,20 @@ const Settings = () => {
         clearInterval(interval);
       };
     }, [profile])
+  );
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      if (profile) {
+        setIsLoading(true);
+
+        fetchHouseHold(profile);
+      }
+
+      return () => {
+        isActive = false;
+      };
+    }, [user, profile])
   );
   if (isLoading) {
     return (
@@ -204,6 +288,52 @@ const Settings = () => {
               <TransparetButton
                 label={"Add Member"}
                 onPress={() => navigation.navigate("InviteUserScreen")}
+              />
+            </View>
+          </View>
+        </View>
+
+        <View>
+          <View
+            style={{
+              marginLeft: 10,
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 10,
+            }}
+          >
+            {/* Heading */}
+            <Text
+              style={{
+                fontSize: 13,
+                lineHeight: 18,
+                fontFamily: "Inter",
+                marginBottom: 10,
+              }}
+            >
+              SPRUCE LENGTH
+            </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                paddingHorizontal: 10,
+                // spacing from edges
+              }}
+            >
+              <SegmentedControl
+                values={["10:00", "15:00", "20:00", "30:00"]}
+                selectedValue={seletedValue ? seletedValue : ""}
+                onChange={hanldeSpruceLenght}
+                containerStyle={{
+                  height: 39,
+                  width: "85%",
+                  borderColor: "#ccc",
+                }}
+                textStyle={{
+                  fontSize: 12,
+                }}
               />
             </View>
           </View>

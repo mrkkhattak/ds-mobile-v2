@@ -7,6 +7,7 @@ import InviteUserScreen from "../Screen/InviteUserScreen";
 import MainMenu from "../Screen/MainMenu";
 import ProfileScreen from "../Screen/ProfileScreen";
 import Settings from "../Screen/Settings";
+import SpruceScreen from "../Screen/SpruceScreen";
 import TaskList from "../Screen/TaskList";
 import { HomeStackParamList } from "../types/navigator_type";
 
@@ -32,6 +33,7 @@ const HomeNavigator = () => {
         name="ResetPasswordScreen"
         component={CreateNewPasswordScreen}
       />
+      <Stack.Screen name="SpruceScreen" component={SpruceScreen} />
     </Stack.Navigator>
   );
 };

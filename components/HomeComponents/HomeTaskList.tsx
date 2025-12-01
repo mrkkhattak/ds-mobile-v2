@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextStyle,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -16,6 +17,7 @@ import { Member } from "@/app/types/types";
 import { useUserProfileStore } from "@/store/userProfileStore";
 import { Avatar } from "react-native-paper";
 import Snackbar from "react-native-snackbar";
+import CheckIcon from "../../assets/images/icons/check.svg";
 import LimeIcon from "../../assets/images/icons/Lime.svg";
 import { SecondaryButton } from "../ui/Buttons";
 import Memberlist from "./Memberlist";
@@ -34,6 +36,9 @@ interface HomeTaskListProps {
   taskId: string | undefined;
   setOpenModal: React.Dispatch<React.SetStateAction<boolean>>;
   openModal: boolean;
+  lableStyle?: TextStyle;
+  icon?: React.ReactNode;
+  handleUpdateTaskStatus?: (taskId: string) => Promise<void>;
 }
 const HomeTaskList = (props: HomeTaskListProps) => {
   const {
@@ -50,6 +55,9 @@ const HomeTaskList = (props: HomeTaskListProps) => {
     taskId,
     setOpenModal,
     openModal,
+    lableStyle,
+    icon,
+    handleUpdateTaskStatus,
   } = props;
   const swipeableRef = useRef<Swipeable>(null);
   const { profile, setProfile, updateProfile } = useUserProfileStore();
@@ -59,6 +67,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
       style={{
         paddingHorizontal: 40,
         marginTop: 20,
+        height: 400,
       }}
     >
       {groupData && Object.keys(groupData).length > 0 ? (
@@ -74,11 +83,14 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                 style={{
                   color: "#610FE0",
                   fontWeight: "700",
-                  fontSize: 16,
+                  fontSize: 12,
                   marginBottom: 10,
+                  ...lableStyle,
                 }}
               >
-                {item.toUpperCase()}
+                {item === "completed_task"
+                  ? "completed task".toUpperCase()
+                  : item.toUpperCase()}
               </Text>
 
               <FlatList
@@ -88,13 +100,14 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                 style={{
                   borderRadius: 30,
                   backgroundColor: "#FFFFFF",
+                  opacity: item === "completed_task" ? 0.5 : 1,
                 }}
                 renderItem={({ item: task }) => {
                   const selectedMemberObj = members.find(
                     (member) => member.user_id === task.assign_user_id
                   );
                   const name = `${selectedMemberObj?.first_name} ${selectedMemberObj?.last_name}`;
-                  console.log("selectedMemberObj", selectedMemberObj);
+                  console.log("task", task);
 
                   return (
                     <View
@@ -173,7 +186,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                             style={{
                               flexDirection: "row",
                               alignItems: "center",
-                              gap: 6,
+                              justifyContent: "space-between",
                             }}
                           >
                             {Array.from({
@@ -181,13 +194,15 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                             }).map((_, i) => (
                               <LimeIcon key={i} />
                             ))}
-
                             {selectedMemberObj ? (
                               <TouchableOpacity
                                 onPress={() => {
                                   setOpenModal(true);
                                   setTaskId(task.id);
                                 }}
+                                disabled={
+                                  item === "completed_task" ? true : false
+                                }
                               >
                                 <Avatar.Text
                                   size={44}
@@ -219,6 +234,25 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                                 />
                               </TouchableOpacity>
                             )}
+                            {icon &&
+                              handleUpdateTaskStatus &&
+                              task.assign_user_id && (
+                                <TouchableOpacity
+                                  style={{ marginLeft: 10, marginTop: 5 }}
+                                  onPress={() => {
+                                    handleUpdateTaskStatus(task.id);
+                                  }}
+                                  disabled={
+                                    item === "completed_task" ? true : false
+                                  }
+                                >
+                                  {task.task_status === "pending" ? (
+                                    icon
+                                  ) : (
+                                    <CheckIcon height={44} width={44} />
+                                  )}
+                                </TouchableOpacity>
+                              )}
                           </View>
                         </View>
                       </Swipeable>

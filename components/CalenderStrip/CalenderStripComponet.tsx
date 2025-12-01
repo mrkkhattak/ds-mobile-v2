@@ -58,7 +58,7 @@ const CalenderStripComponet = (props: CalenderStripComponetProps) => {
         label="Slide to start sprucing"
         icon={<SlideIcon />}
         onSlideComplete={() => {
-          navigation.navigate("TaskLibrary");
+          navigation.navigate("SpruceScreen");
         }}
         width={Platform.OS === "android" ? 340 : 370}
         textStyle={{

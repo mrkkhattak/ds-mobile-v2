@@ -21,6 +21,7 @@ const shouldHideTabBar = (route: any) => {
     "MainMenu",
     "InviteUserScreen",
     "ResetPasswordScreen",
+    "SpruceScreen",
   ];
 
   // Get the active route name for nested navigators
