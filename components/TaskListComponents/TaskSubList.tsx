@@ -53,7 +53,8 @@ const TaskSubList = (props: TaskSubListProps) => {
       <FlatList
         data={roomList}
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        showsHorizontalScrollIndicator={true}
         keyExtractor={(item) => `${item.value}`}
         contentContainerStyle={styles.subTabContainer}
         renderItem={({ item }) => {
@@ -64,7 +65,7 @@ const TaskSubList = (props: TaskSubListProps) => {
                 styles.subTabButton,
                 isSelected && styles.subTabButtonActive,
               ]}
-              onPress={() => setSelectedSubTab(item?.value)}
+              onPress={() => setSelectedSubTab(`${item.value}`)}
               activeOpacity={0.7}
             >
               <Text
@@ -91,6 +92,8 @@ const TaskSubList = (props: TaskSubListProps) => {
           <FlatList
             data={sortedTasks}
             keyExtractor={(item) => item.id.toString()}
+            showsVerticalScrollIndicator={true}
+            showsHorizontalScrollIndicator={true}
             contentContainerStyle={{ paddingBottom: 120 }}
             renderItem={({ item }) => {
               const createdAt = dayjs(item.created_at);
