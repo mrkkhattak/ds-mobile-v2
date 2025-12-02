@@ -80,8 +80,6 @@ const BottomSheetScreen = () => {
     }, [])
   );
 
-  console.log("loading", loading);
-
   const onSubmit = async (
     formData: CreateTaskFormValues,
     household_id: string
@@ -106,8 +104,6 @@ const BottomSheetScreen = () => {
           Number(formData.month?.dayNumber)
         );
       }
-
-      console.log("repeatingDates", repeatingDates);
 
       const result = await createTask(formData);
 

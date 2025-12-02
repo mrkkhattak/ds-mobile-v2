@@ -42,12 +42,10 @@ const Settings = () => {
   const hanldeSpruceLenght = async (lenght: string) => {
     try {
       if (houseHold && profile) {
-        console.log("seletedValue", seletedValue);
         const result = await updateHousehold(houseHold?.id, {
           spruce_time: lenght,
         });
         if (result.data) {
-          console.log("result", result);
           Snackbar.show({
             text: "Spurce lenght Updated ",
             duration: Snackbar.LENGTH_LONG,
@@ -107,7 +105,6 @@ const Settings = () => {
 
         try {
           const result = await getProfilesByHousehold(profile.household_id);
-          console.log("test");
           if (!isActive) return;
 
           if (result.data) {

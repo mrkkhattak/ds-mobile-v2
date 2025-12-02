@@ -26,9 +26,7 @@ const shouldHideTabBar = (route: any) => {
 
   // Get the active route name for nested navigators
   const activeRoute: any = getFocusedRouteNameFromRoute(route);
-  console.log("activeRoute", activeRoute);
   const result = hiddenRoutes.includes(activeRoute);
-  console.log(result);
   return result;
 };
 export default function TabNavigator() {
@@ -42,6 +40,7 @@ export default function TabNavigator() {
           elevation: 0,
           borderTopWidth: 0,
           marginBottom: 20,
+
           display: shouldHideTabBar(route) === true ? "none" : "flex",
         },
         tabBarShowLabel: false, // we'll use a custom label
@@ -61,9 +60,9 @@ export default function TabNavigator() {
           tabBarIcon: ({ focused }) => (
             <View
               style={{
-                alignItems: "center",
+                alignItems: "flex-end",
 
-                width: 200,
+                width: 160,
               }}
             >
               <Icon3
@@ -77,6 +76,7 @@ export default function TabNavigator() {
                   fontSize: 15,
                   marginTop: 4,
                   fontWeight: "600",
+                  marginRight: 20,
                 }}
               >
                 Library
@@ -160,8 +160,8 @@ export default function TabNavigator() {
           tabBarIcon: ({ focused }) => (
             <View
               style={{
-                alignItems: "center",
-                width: 200,
+                alignItems: "flex-start",
+                width: 160,
               }}
             >
               <Icon2
@@ -175,6 +175,7 @@ export default function TabNavigator() {
                   fontSize: 15,
                   marginTop: 4,
                   fontWeight: "600",
+                  marginLeft: 20,
                 }}
               >
                 Shuffle

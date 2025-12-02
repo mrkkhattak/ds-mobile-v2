@@ -81,9 +81,7 @@ const SetUpYourHomeScreen = () => {
     }
   };
   const onSubmit = (data: FormData) => {
-    console.log("Form Data:", data.selectedRooms);
     setSelectedRooms(data.selectedRooms); // ✅ save to global store
-    console.log("Form Data:", data.selectedRooms);
     navigation.navigate("PickYourTaskScreen");
   };
 

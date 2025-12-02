@@ -73,7 +73,6 @@ const PickYourTaskScreen: React.FC = () => {
   });
 
   const onSubmit = (data: FormValues) => {
-    console.log("Selected tasks:", data.tasks);
     setSelectedTask(data.tasks);
     navigation.navigate("SettingUpYourRoomScreen");
     // Navigate to next screen

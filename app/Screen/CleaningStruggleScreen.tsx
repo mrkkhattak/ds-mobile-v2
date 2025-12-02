@@ -96,10 +96,8 @@ const CleaningStruggleScreen = () => {
   };
 
   const onSubmit = (data: FormValues) => {
-    console.log("Saved to store:", data);
     setStruggles(data.struggles);
     setOtherText(data.otherText || "");
-    console.log("Saved to store:", data);
     navigation.navigate("SetUpYourHomeScreen");
   };
   return (

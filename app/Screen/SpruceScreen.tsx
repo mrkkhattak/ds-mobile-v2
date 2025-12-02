@@ -407,7 +407,6 @@ const SpruceScreen = () => {
     };
 
     const checkFirstLogin = async () => {
-      console.log("firstLogin");
       setTimeout(() => {
         navigation.navigate("ResetPasswordScreen");
       }, 2000);
@@ -432,7 +431,6 @@ const SpruceScreen = () => {
 
         try {
           const result = await getProfilesByHousehold(profile.household_id);
-          console.log("test");
           if (!isActive) return;
 
           if (result.data) {

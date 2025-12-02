@@ -20,7 +20,6 @@ const ProfileScreen = () => {
   const [laoding, setIsLoading] = useState(false);
 
   const onSubmit = async (data: UpdateProfileFormValues) => {
-    console.log(data);
     setIsLoading(true);
     try {
       if (!user) {
@@ -31,7 +30,6 @@ const ProfileScreen = () => {
         });
         return;
       }
-      console.log("user.id====>", user.id);
       const { data: profileData, error } = await createUserProfile(
         user.id,
         data.firstName,

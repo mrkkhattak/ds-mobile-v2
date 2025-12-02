@@ -1,6 +1,6 @@
 import MainLayout from "@/components/layout/MainLayout";
 import React, { useState } from "react";
-import { ActivityIndicator, Image, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
 
 import { useAuthStore } from "@/store/authstore";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -11,7 +11,9 @@ import PackIcon from "../../assets/images/icons/Packs.svg";
 import RepeatIcon from "../../assets/images/icons/Repeat.svg";
 import {
   fetchAndGroupTasks,
+  fetchPreMadePacksWithGlobalTasks,
   fetchSpruceTasksByHouseHoldId,
+  PreMadePack,
   SpruceTaskDetails,
 } from "../functions/functions";
 
@@ -23,8 +25,11 @@ import { useUserProfileStore } from "@/store/userProfileStore";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import HomeIcon from "../../assets/images/icons/Vector (3).svg";
 
+import Snackbar from "react-native-snackbar";
 import { HomeStackParamList } from "../types/navigator_type";
 import { TablisntType } from "../types/types";
+
+import PacksList from "@/components/TaskListComponents/PacksList";
 type NavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
   "TaskLibrary"
@@ -40,6 +45,7 @@ const TaskList = () => {
   const [myTasks, setMyTasks] = useState<SpruceTaskDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [collapsed, setCollapsed] = useState(true);
+  const gradientColors = ["#16C5E0", "#8DE016"];
   const tabList: TablisntType[] = [
     {
       label: "Go-To",
@@ -87,7 +93,8 @@ const TaskList = () => {
       unselectedIcon: <PackIcon />,
     },
   ];
-
+  const [packs, setPacks] = useState<PreMadePack[]>();
+  const [selectedPack, setSelectedPack] = useState<PreMadePack>();
   const subTabList = [
     "Kitchen",
     "Bedroom",
@@ -106,6 +113,25 @@ const TaskList = () => {
     if (aAssigned) return 1; // a is assigned, move down
     return -1; // a is unassigned, stay on top
   });
+
+  const formatDataForUI = (data: any) => {
+    if (!data?.length) return [];
+
+    const formatted: any[] = [];
+
+    // First item (big card)
+    formatted.push({ type: "big", item: data[0] });
+
+    // Remaining grouped by 2
+    for (let i = 1; i < data.length; i += 2) {
+      formatted.push({
+        type: "pair",
+        items: [data[i], data[i + 1]].filter(Boolean),
+      });
+    }
+
+    return formatted;
+  };
 
   const navigationToHome = () => {
     navigation.navigate("Home");
@@ -163,6 +189,47 @@ const TaskList = () => {
       };
     }, [user, selectedTab, profile])
   );
+
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        setLoading(true);
+        const { data, error } = await fetchPreMadePacksWithGlobalTasks();
+        if (error) {
+          Snackbar.show({
+            text: error,
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "red",
+          });
+          setLoading(false);
+        }
+        if (data) {
+          setPacks(data);
+
+          setSelectedPack(data[0]);
+        }
+
+        setLoading(false);
+      })();
+    }, [user, selectedTab, profile])
+  );
+  const formattedData = formatDataForUI(packs);
+  // const taskList = useMemo(() => {
+  //   return (
+  //     <FlatList
+  //       data={selectedPack?.tasks}
+  //       keyExtractor={(item) => item.id.toString()}
+  //       contentContainerStyle={{
+  //         paddingBottom: 100,
+  //         backgroundColor: "red",
+  //       }}
+  //       style={{ flexGrow: 0 }}
+  //       initialNumToRender={10}
+  //       removeClippedSubviews={false}
+
+  //     />
+  //   );
+  // }, [selectedPack?.tasks, myTasks]);
   if (loading) {
     return (
       <MainLayout>
@@ -180,7 +247,7 @@ const TaskList = () => {
   }
   return (
     <MainLayout>
-      <View>
+      <View style={{ flex: 1 }}>
         <Header
           screenName="Task Library"
           label="SELECT TASKS TO ADD TO TODAY’S SPRUCE
@@ -216,9 +283,59 @@ const TaskList = () => {
             profile={profile}
           />
         )}
+        {selectedTab === "Packs" && profile && user && (
+          <PacksList
+            formattedData={formattedData}
+            selectedPack={selectedPack}
+            setSelectedPack={setSelectedPack}
+            gradientColors={gradientColors}
+            setMyTasks={setMyTasks}
+            myTasks={myTasks}
+            user={user}
+            profile={profile}
+          />
+        )}
       </View>
     </MainLayout>
   );
 };
 
 export default TaskList;
+
+const styles = StyleSheet.create({
+  subTabContainer: {
+    paddingHorizontal: 20,
+    gap: 15,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
+    paddingVertical: 2,
+  },
+  subTabButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+  },
+  subTabButtonActive: {
+    borderBottomWidth: 5,
+    borderColor: "#fff",
+  },
+  subTabLabel: { color: "#fff", fontSize: 14, fontWeight: "500" },
+  subTabLabelActive: { color: "#fff", fontWeight: "700" },
+  taskCard: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  taskName: {
+    color: "#362B32",
+    fontSize: 14,
+    fontWeight: "300",
+    fontFamily: "inter",
+  },
+  taskDesc: { color: "#444", fontSize: 14, marginTop: 4 },
+  taskPoints: { color: "#888", fontSize: 12, marginTop: 6 },
+});

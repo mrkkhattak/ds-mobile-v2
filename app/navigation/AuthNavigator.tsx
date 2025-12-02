@@ -29,7 +29,6 @@ export default function AuthNavigator() {
     const checkOnboarding = async () => {
       try {
         const value = await AsyncStorage.getItem("hasSeenOnboarding");
-        console.log("value", value);
         if (isPasswordRecovery) {
           setInitialRoute("ResetPasswordScreen");
         } else if (value === "true") {

@@ -107,7 +107,6 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                     (member) => member.user_id === task.assign_user_id
                   );
                   const name = `${selectedMemberObj?.first_name} ${selectedMemberObj?.last_name}`;
-                  console.log("task", task);
 
                   return (
                     <View
@@ -135,7 +134,6 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                           }
                         }}
                         onSwipeableRightOpen={() => {
-                          console.log("task", task);
                           handleDeleteTask(task.id);
                           swipeableRef.current?.close();
                         }}

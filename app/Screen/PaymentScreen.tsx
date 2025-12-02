@@ -52,7 +52,6 @@ const PaymentScreen = () => {
       return;
     }
     // Continue to next step here
-    console.log("Selected Plan:", selected);
     navigation.navigate("HereWhatWaitingForYouScreen");
   };
 

@@ -1068,3 +1068,105 @@ export const updateHousehold = async (
     return { error: err.message || "Unknown error occurred" };
   }
 };
+
+export interface GlobalPackTask {
+  id: string;
+  name?: string | null;
+  description_us: string;
+  description_uk: string;
+  description_row: string;
+  type?: string | null;
+  icon_name?: string | null;
+  icon?: string | null;
+  room?: string | null;
+  category?: string | null;
+  effort_level?: number | null;
+  estimated_effort?: number | null;
+  estimated_time?: number | null;
+  points?: number | null;
+  child_friendly?: boolean | null;
+  child_appropriate?: boolean | null;
+  is_active?: boolean | null;
+  keywords?: string[] | null;
+  display_names?: Record<string, string> | null;
+  display_names_us?: string | null;
+  display_names_uk?: string | null;
+  display_names_row?: string | null;
+  unique_completions?: number | null;
+  total_completions?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  created_date?: string | null;
+  last_modified?: string | null;
+}
+
+export interface PreMadePack {
+  id: string;
+  name_us: string;
+  name_uk: string;
+  name_row: string;
+  created_at: string;
+  updated_at: string;
+  description?: string | null;
+  category?: string | null;
+  region?: string | null;
+  status?: string | null;
+  taskids?: string; // JSON array of global_task ids
+  taskorder?: string; // JSON array for ordering tasks
+  selection_count?: number;
+  tasks?: GlobalPackTask[]; // populated tasks
+}
+
+export const fetchPreMadePacksWithGlobalTasks = async (): Promise<{
+  data?: PreMadePack[];
+  error?: string;
+}> => {
+  try {
+    // 1️⃣ Get all pre-made packs
+    const { data: packs, error: packError } = await supabase
+      .from("pre_made_packs")
+      .select("*");
+
+    if (packError) return { error: packError.message };
+    if (!packs) return { data: [] };
+
+    // 2️⃣ Fetch tasks for each pack
+    const result: PreMadePack[] = await Promise.all(
+      packs.map(async (pack) => {
+        let tasks: GlobalTask[] = [];
+
+        if (pack.taskids) {
+          const taskIds: string[] = pack.taskids;
+
+          if (taskIds.length > 0) {
+            const { data: taskData, error: taskError } = await supabase
+              .from("global_tasks")
+              .select("*")
+              .in("id", taskIds);
+
+            if (taskError) {
+              console.error(
+                `Error fetching global tasks for pack ${pack.id}:`,
+                taskError.message
+              );
+            } else if (taskData) {
+              const order = pack.taskorder ? pack.taskorder : [];
+              tasks = order.length
+                ? (order
+                    .map((id: string) => taskData.find((t) => t.id === id))
+                    .filter(Boolean) as GlobalTask[])
+                : taskData;
+            }
+          }
+        }
+
+        return { ...pack, tasks };
+      })
+    );
+
+    return { data: result };
+  } catch (err: any) {
+    console.error("Unexpected error fetching pre-made packs:", err);
+    return { error: err.message || "Unknown error occurred" };
+  }
+};

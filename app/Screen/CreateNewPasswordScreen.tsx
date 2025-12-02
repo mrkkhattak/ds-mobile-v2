@@ -53,7 +53,6 @@ const CreateNewPasswordScreen = () => {
   const setIsPasswordRecovery = useAuthStore((s) => s.setIsPasswordRecovery);
   const signOut = useAuthStore((s) => s.signOut);
   const user = useAuthStore((s) => s.user);
-  console.log(user);
   const {
     control,
     handleSubmit,

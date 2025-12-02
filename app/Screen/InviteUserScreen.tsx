@@ -87,7 +87,6 @@ const InviteUserScreen = () => {
   const onSubmit = async (data: InviteFormValues) => {
     setIsLoading(true);
     try {
-      console.log("__DEV__", __DEV__);
       const payload = {
         email: data.email,
         firstName: data.firstName,
@@ -146,7 +145,6 @@ const InviteUserScreen = () => {
           });
           return;
         }
-        console.log("profile", profile);
         setHouseHoldId(profile.household_id);
       }
     };

@@ -150,7 +150,6 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
 
         try {
           const result = await getProfilesByHousehold(profile.household_id);
-          console.log("test");
           if (!isActive) return;
 
           if (result.data) {
