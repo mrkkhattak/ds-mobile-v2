@@ -12,6 +12,7 @@ import RepeatIcon from "../../assets/images/icons/Repeat.svg";
 import {
   fetchAndGroupTasks,
   fetchPreMadePacksWithGlobalTasks,
+  fetchRooms,
   fetchSpruceTasksByHouseHoldId,
   PreMadePack,
   SpruceTaskDetails,
@@ -40,7 +41,7 @@ const TaskList = () => {
   const { profile, setProfile, updateProfile } = useUserProfileStore();
 
   const [selectedTab, setSelectedTab] = useState("Go-To");
-  const [selectedSubTab, setSelectedSubTab] = useState("Kitchen");
+
   const [groupData, setGroupData] = useState<any>({});
   const [myTasks, setMyTasks] = useState<SpruceTaskDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -95,14 +96,18 @@ const TaskList = () => {
   ];
   const [packs, setPacks] = useState<PreMadePack[]>();
   const [selectedPack, setSelectedPack] = useState<PreMadePack>();
-  const subTabList = [
-    "Kitchen",
-    "Bedroom",
-    "Living Room",
-    "Bathroom",
-    "General Cleaning",
-    "Outdoor",
-  ];
+  // const subTabList = [
+  //   "Kitchen",
+  //   "Bedroom",
+  //   "Living Room",
+  //   "Bathroom",
+  //   "General Cleaning",
+  //   "Outdoor",
+  // ];
+  const [roomList, setRoomList] = useState<{ label: String; value: String }[]>(
+    []
+  );
+  const [selectedSubTab, setSelectedSubTab] = useState("Kitchen");
   const currentTasks = groupData[selectedSubTab] || [];
 
   const sortedTasks = [...currentTasks].sort((a, b) => {
@@ -187,7 +192,7 @@ const TaskList = () => {
         isActive = false;
         clearInterval(interval); // stop polling on unmount
       };
-    }, [user, selectedTab, profile])
+    }, [user, selectedTab, profile, selectedSubTab])
   );
 
   useFocusEffect(
@@ -212,6 +217,24 @@ const TaskList = () => {
         setLoading(false);
       })();
     }, [user, selectedTab, profile])
+  );
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const result = await fetchRooms();
+        if ("error" in result) {
+          Snackbar.show({
+            text: result.error,
+            duration: 2000,
+            backgroundColor: "red",
+          });
+        } else {
+          setRoomList(result);
+          setSelectedSubTab(result[0].value);
+          console.log("Fetched rooms:", result);
+        }
+      })();
+    }, [profile])
   );
   const formattedData = formatDataForUI(packs);
   // const taskList = useMemo(() => {
@@ -266,7 +289,7 @@ const TaskList = () => {
             setSelectedSubTab={setSelectedSubTab}
             myTasks={myTasks}
             groupData={groupData}
-            subTabList={subTabList}
+            roomList={roomList}
             sortedTasks={sortedTasks}
             user={user}
             setMyTasks={setMyTasks}

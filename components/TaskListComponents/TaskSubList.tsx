@@ -26,7 +26,10 @@ interface TaskSubListProps {
   setSelectedSubTab: (tab: string) => void;
   myTasks: SpruceTaskDetails[];
   groupData: Record<string, any[]>;
-  subTabList: string[];
+  roomList: {
+    label: String;
+    value: String;
+  }[];
   sortedTasks: any[];
   user: User | null;
   setMyTasks: React.Dispatch<React.SetStateAction<SpruceTaskDetails[]>>;
@@ -38,7 +41,7 @@ const TaskSubList = (props: TaskSubListProps) => {
     setSelectedSubTab,
     myTasks,
     groupData,
-    subTabList,
+    roomList,
     sortedTasks,
     user,
     setMyTasks,
@@ -48,20 +51,20 @@ const TaskSubList = (props: TaskSubListProps) => {
     <View style={{ marginTop: 30 }}>
       {/* Sub Tabs */}
       <FlatList
-        data={subTabList}
+        data={roomList}
         horizontal
         showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item}
+        keyExtractor={(item) => `${item.value}`}
         contentContainerStyle={styles.subTabContainer}
         renderItem={({ item }) => {
-          const isSelected = selectedSubTab === item;
+          const isSelected = selectedSubTab === item.value;
           return (
             <TouchableOpacity
               style={[
                 styles.subTabButton,
                 isSelected && styles.subTabButtonActive,
               ]}
-              onPress={() => setSelectedSubTab(item)}
+              onPress={() => setSelectedSubTab(item?.value)}
               activeOpacity={0.7}
             >
               <Text
@@ -70,7 +73,7 @@ const TaskSubList = (props: TaskSubListProps) => {
                   isSelected && styles.subTabLabelActive,
                 ]}
               >
-                {item.toLocaleUpperCase()}
+                {item.label.toLocaleUpperCase()}
               </Text>
             </TouchableOpacity>
           );

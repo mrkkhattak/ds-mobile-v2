@@ -90,7 +90,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
               >
                 {item === "completed_task"
                   ? "completed task".toUpperCase()
-                  : item.toUpperCase()}
+                  : item.replace(/-/g, " ").toUpperCase()}
               </Text>
 
               <FlatList

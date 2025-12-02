@@ -136,6 +136,81 @@ export type TaskResult = {
   data: FullTask | null;
   error: string | null;
 };
+
+export interface GlobalPackTask {
+  id: string;
+  name?: string | null;
+  description_us: string;
+  description_uk: string;
+  description_row: string;
+  type?: string | null;
+  icon_name?: string | null;
+  icon?: string | null;
+  room?: string | null;
+  category?: string | null;
+  effort_level?: number | null;
+  estimated_effort?: number | null;
+  estimated_time?: number | null;
+  points?: number | null;
+  child_friendly?: boolean | null;
+  child_appropriate?: boolean | null;
+  is_active?: boolean | null;
+  keywords?: string[] | null;
+  display_names?: Record<string, string> | null;
+  display_names_us?: string | null;
+  display_names_uk?: string | null;
+  display_names_row?: string | null;
+  unique_completions?: number | null;
+  total_completions?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  created_date?: string | null;
+  last_modified?: string | null;
+}
+
+export interface PreMadePack {
+  id: string;
+  name_us: string;
+  name_uk: string;
+  name_row: string;
+  created_at: string;
+  updated_at: string;
+  description?: string | null;
+  category?: string | null;
+  region?: string | null;
+  status?: string | null;
+  taskids?: string; // JSON array of global_task ids
+  taskorder?: string; // JSON array for ordering tasks
+  selection_count?: number;
+  tasks?: GlobalPackTask[]; // populated tasks
+}
+
+export interface Household {
+  id: string;
+  name: string;
+  owner_profile_id: string;
+  created_at: string;
+  updated_at: string;
+  spruce_time?: string;
+}
+
+export interface HouseholdUpdatePayload {
+  name?: string;
+  spruce_time?: string;
+  owner_profile_id?: string;
+  // add any other updatable fields here
+}
+
+export type Profile = {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  gender: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export async function getGlobalTasks(): Promise<GlobalTask[]> {
   const { data, error } = await supabase
     .from("global_tasks")
@@ -149,16 +224,6 @@ export async function getGlobalTasks(): Promise<GlobalTask[]> {
 
   return data || [];
 }
-
-export type Profile = {
-  id: string;
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  gender: string;
-  created_at: string;
-  updated_at: string;
-};
 
 // export const fetchAndGroupTasks = async () => {
 //   const { data, error } = await supabase
@@ -220,7 +285,6 @@ export const fetchAndGroupTasks = async (taskType?: string) => {
 
   // Group by category
   const groupedTasks: Record<string, any[]> = {};
-
   data.forEach((task) => {
     const category = task.category || "Uncategorized";
     if (!groupedTasks[category]) {
@@ -1001,15 +1065,6 @@ export async function completeSpruceTask(taskId: string) {
   }
 }
 
-export interface Household {
-  id: string;
-  name: string;
-  owner_profile_id: string;
-  created_at: string;
-  updated_at: string;
-  spruce_time?: string;
-}
-
 export const fetchHouseholdById = async (
   householdId: string
 ): Promise<{ data?: Household; error?: string }> => {
@@ -1033,13 +1088,6 @@ export const fetchHouseholdById = async (
     return { error: err.message || "Unknown error occurred" };
   }
 };
-
-export interface HouseholdUpdatePayload {
-  name?: string;
-  spruce_time?: string;
-  owner_profile_id?: string;
-  // add any other updatable fields here
-}
 
 export const updateHousehold = async (
   householdId: string,
@@ -1068,54 +1116,6 @@ export const updateHousehold = async (
     return { error: err.message || "Unknown error occurred" };
   }
 };
-
-export interface GlobalPackTask {
-  id: string;
-  name?: string | null;
-  description_us: string;
-  description_uk: string;
-  description_row: string;
-  type?: string | null;
-  icon_name?: string | null;
-  icon?: string | null;
-  room?: string | null;
-  category?: string | null;
-  effort_level?: number | null;
-  estimated_effort?: number | null;
-  estimated_time?: number | null;
-  points?: number | null;
-  child_friendly?: boolean | null;
-  child_appropriate?: boolean | null;
-  is_active?: boolean | null;
-  keywords?: string[] | null;
-  display_names?: Record<string, string> | null;
-  display_names_us?: string | null;
-  display_names_uk?: string | null;
-  display_names_row?: string | null;
-  unique_completions?: number | null;
-  total_completions?: number | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  created_date?: string | null;
-  last_modified?: string | null;
-}
-
-export interface PreMadePack {
-  id: string;
-  name_us: string;
-  name_uk: string;
-  name_row: string;
-  created_at: string;
-  updated_at: string;
-  description?: string | null;
-  category?: string | null;
-  region?: string | null;
-  status?: string | null;
-  taskids?: string; // JSON array of global_task ids
-  taskorder?: string; // JSON array for ordering tasks
-  selection_count?: number;
-  tasks?: GlobalPackTask[]; // populated tasks
-}
 
 export const fetchPreMadePacksWithGlobalTasks = async (): Promise<{
   data?: PreMadePack[];
@@ -1168,5 +1168,38 @@ export const fetchPreMadePacksWithGlobalTasks = async (): Promise<{
   } catch (err: any) {
     console.error("Unexpected error fetching pre-made packs:", err);
     return { error: err.message || "Unknown error occurred" };
+  }
+};
+
+export const fetchRooms = async (): Promise<
+  { label: string; value: string }[] | { error: string }
+> => {
+  try {
+    const { data, error } = await supabase
+      .from("rooms")
+      .select("name_us")
+      .eq("active", true)
+      .order("display_order", { ascending: true });
+
+    if (error) throw error;
+
+    if (!data || !Array.isArray(data)) {
+      throw new Error("Invalid data format");
+    }
+
+    const roomOptions = data.map((room) => {
+      if (!room.name_us) {
+        throw new Error("Missing name_us in room data");
+      }
+
+      return {
+        label: room.name_us,
+        value: room.name_us.replace(/\s+/g, "-"),
+      };
+    });
+
+    return roomOptions;
+  } catch (err: any) {
+    return { error: err.message || "Unknown error" };
   }
 };

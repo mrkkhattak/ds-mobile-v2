@@ -1,4 +1,4 @@
-import { getProfilesByHousehold } from "@/app/functions/functions";
+import { fetchRooms, getProfilesByHousehold } from "@/app/functions/functions";
 import { schema } from "@/app/Schema/Schema";
 import { CreateTaskFormValues, Member, UserProfile } from "@/app/types/types";
 import StartIcon from "@/assets/images/icons/Group_3.svg";
@@ -45,7 +45,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
   const [openDayNumber, setOpenDayNumber] = useState(false);
   const [openWeekDay, setOpenWeekDay] = useState(false);
   const [openMonthList, setOpenMonthList] = useState(false);
-  const [items, setItems] = useState([
+  const [items, setItems] = useState<{ label: string; value: string }[]>([
     { label: "Living Room", value: "Living Room" },
     { label: "Bedroom", value: "Bedroom" },
     { label: "Kitchen", value: "Kitchen" },
@@ -193,6 +193,23 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
     );
     setCurrentMember(selectedMemberObj);
   }, [watch("assign")]);
+
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const result = await fetchRooms();
+        if ("error" in result) {
+          Snackbar.show({
+            text: result.error,
+            duration: 2000,
+            backgroundColor: "red",
+          });
+        } else {
+          setItems(result);
+        }
+      })();
+    }, [profile])
+  );
 
   return (
     <>

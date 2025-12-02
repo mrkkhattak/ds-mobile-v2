@@ -1,3 +1,4 @@
+import { fetchRooms } from "@/app/functions/functions";
 import { schema } from "@/app/Schema/Schema";
 import { CreateTaskFormValues, UserProfile } from "@/app/types/types";
 import StartIcon from "@/assets/images/icons/Group_3.svg";
@@ -6,11 +7,13 @@ import { CustomTextInput } from "@/components/ui/CustomTextInput";
 import ProgressTrackerCard from "@/components/ui/ProgressTrackerCard";
 import { SegmentedControl } from "@/components/ui/SegmentContainer";
 import { yupResolver } from "@hookform/resolvers/yup";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from "react";
 import { Controller, Resolver, useForm } from "react-hook-form";
 import { StyleSheet, Switch, Text, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import Snackbar from "react-native-snackbar";
 
 interface CreateTaskFormProps {
   onSubmit: (formData: CreateTaskFormValues, household_id: string) => void;
@@ -132,6 +135,23 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
       },
     });
   }, [defalutValues]);
+
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        const result = await fetchRooms();
+        if ("error" in result) {
+          Snackbar.show({
+            text: result.error,
+            duration: 2000,
+            backgroundColor: "red",
+          });
+        } else {
+          setItems(result);
+        }
+      })();
+    }, [profile])
+  );
 
   return (
     <>
