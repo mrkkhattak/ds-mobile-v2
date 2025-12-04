@@ -32,11 +32,11 @@ const InviteSchema = yup.object({
     .string()
     .matches(/^[A-Za-z]+$/, "Only letters allowed")
     .required("First name is required"),
-  lastName: yup
-    .string()
-    .matches(/^[A-Za-z]+$/, "Only letters allowed")
-    .required("Last name is required"),
-  gender: yup.string().required("Gender is required"),
+  // lastName: yup
+  //   .string()
+  //   .matches(/^[A-Za-z]+$/, "Only letters allowed")
+  //   .required("Last name is required"),
+  // gender: yup.string().required("Gender is required"),
   familyRole: yup.string().required("Role is required"),
 });
 
@@ -59,12 +59,12 @@ const InviteUserScreen = () => {
   const [roleOpen, setRoleOpen] = useState(false);
   const [roleValue, setRoleValue] = useState<string | null>(null);
   const [roleItems, setRoleItems] = useState<ItemType<string>[]>([
-    { label: "Father", value: "father" },
-    { label: "Mother", value: "mother" },
     { label: "Child", value: "child" },
-    { label: "Admin", value: "admin" },
-    { label: "Guest", value: "guest" },
-    { label: "Brother", value: "brother" },
+    { label: "Adult", value: "adult" },
+    // { label: "Child", value: "child" },
+    // { label: "Admin", value: "admin" },
+    // { label: "Guest", value: "guest" },
+    // { label: "Brother", value: "brother" },
   ]);
   const [houseHoldId, setHouseHoldId] = useState<string | undefined>(undefined);
 
@@ -79,8 +79,8 @@ const InviteUserScreen = () => {
     defaultValues: {
       email: "",
       firstName: "",
-      lastName: "",
-      gender: "",
+      // lastName: "",
+      // gender: "",
     },
   });
 
@@ -90,8 +90,8 @@ const InviteUserScreen = () => {
       const payload = {
         email: data.email,
         firstName: data.firstName,
-        lastName: data.lastName,
-        gender: data.gender,
+        lastName: "",
+        gender: "",
         familyRole: data.familyRole,
         houseHoldId, // make sure this variable is defined in your component
         redirectTo: __DEV__
@@ -216,7 +216,7 @@ const InviteUserScreen = () => {
           )}
 
           {/* Last Name */}
-          <Controller
+          {/* <Controller
             control={control}
             name="lastName"
             render={({ field: { onChange, value } }) => (
@@ -229,10 +229,10 @@ const InviteUserScreen = () => {
           />
           {errors.lastName && (
             <Text style={styles.errorText}>{errors.lastName.message}</Text>
-          )}
+          )} */}
 
           {/* Gender Dropdown */}
-          <Controller
+          {/* <Controller
             control={control}
             name="gender"
             render={({ field: { onChange } }) => (
@@ -260,7 +260,7 @@ const InviteUserScreen = () => {
           />
           {errors.gender && (
             <Text style={styles.errorText}>{errors.gender.message}</Text>
-          )}
+          )} */}
 
           <Controller
             control={control}

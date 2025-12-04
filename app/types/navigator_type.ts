@@ -25,4 +25,7 @@ export type HomeStackParamList = {
   InviteUserScreen: undefined;
   ResetPasswordScreen: undefined;
   SpruceScreen: undefined;
+  BottomSheetScreen: {
+    taskName?: String;
+  };
 };

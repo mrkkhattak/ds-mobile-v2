@@ -17,8 +17,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../store/authstore";
 import AuthNavigator from "./navigation/AuthNavigator";
+import HomeNavigator from "./navigation/HomeNavigator";
 import SpalshScreen from "./Screen/SpalshScreen";
-import TabNavigator from "./navigation/TabNavigator";
 
 // Keep the splash screen visible while fonts load
 Splash.preventAutoHideAsync();
@@ -134,7 +134,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "grey" }}>
-      <TabNavigator/>
+      <HomeNavigator />
     </GestureHandlerRootView>
   );
 }

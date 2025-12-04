@@ -1,6 +1,7 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 import index from "../(tabs)";
+import BottomSheetScreen from "../Screen/BottomSheetScreen";
 import CreateHouseholdScreen from "../Screen/CreateHouseHoldScreen";
 import CreateNewPasswordScreen from "../Screen/CreateNewPasswordScreen";
 import InviteUserScreen from "../Screen/InviteUserScreen";
@@ -34,6 +35,7 @@ const HomeNavigator = () => {
         component={CreateNewPasswordScreen}
       />
       <Stack.Screen name="SpruceScreen" component={SpruceScreen} />
+      <Stack.Screen name="BottomSheetScreen" component={BottomSheetScreen} />
     </Stack.Navigator>
   );
 };

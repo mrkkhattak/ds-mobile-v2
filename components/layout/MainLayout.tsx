@@ -27,6 +27,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           translucent
           backgroundColor="transparent"
         />
+
         {children}
       </SafeAreaView>
     </LinearGradient>

@@ -36,7 +36,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 };
 
 interface CustomTextInputProps {
-  value: string;
+  value: string | String;
   onChangeText: (text: string) => void;
   placeholder?: string;
   containerStyle?: ViewStyle;
@@ -65,7 +65,7 @@ export const CustomTextInput: React.FC<CustomTextInputProps> = ({
       ]}
     >
       <TextInput
-        value={value}
+        value={`${value}`}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#999"

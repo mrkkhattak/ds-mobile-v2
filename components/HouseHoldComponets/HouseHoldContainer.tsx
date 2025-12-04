@@ -50,10 +50,13 @@ const HouseHoldContainer = (props: HouseHoldProps) => {
           <Text
             style={{
               fontFamily: "inter",
-              fontWeight: "700",
-              fontSize: 10,
-              lineHeight: 18,
-              color: "rgba(105, 21, 224, 1)",
+              fontWeight: role === "ADMIN" ? "700" : "400",
+              fontSize: role === "ADMIN" ? 10 : 8,
+              lineHeight: role === "ADMIN" ? 18 : 12,
+              color:
+                role === "ADMIN"
+                  ? "rgba(105, 21, 224, 1)"
+                  : "rgba(51, 51, 51, 0.5)",
             }}
           >
             {role}

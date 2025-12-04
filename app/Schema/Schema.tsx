@@ -1,7 +1,7 @@
 import * as yup from "yup";
 export const schema = yup.object({
   name: yup.string().required("Name is required"),
-  room: yup.string().nullable(),
+  room: yup.string().required("Room is required"),
   type: yup.string().oneOf(["BOTH", "ADULT", "CHILD"]).required(),
   effort: yup.string().required("Effort is required"),
   repeat: yup.boolean().required(),

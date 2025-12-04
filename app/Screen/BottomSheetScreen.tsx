@@ -8,7 +8,12 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import React, {
   useCallback,
   useEffect,
@@ -16,12 +21,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import {
   useAnimatedStyle,
@@ -36,11 +36,16 @@ import {
   generateRepeatingDatesUnified,
 } from "../functions/commonFuntions";
 import { AddUserTaskToSpruce, createTask } from "../functions/functions";
+import { HomeStackParamList } from "../types/navigator_type";
 import { CreateTaskFormValues } from "../types/types";
 type NavigationProp = NativeStackNavigationProp<any, "BottomSheerScreen">;
-
+type BottomSheetScreenRouteProp = RouteProp<
+  HomeStackParamList,
+  "BottomSheetScreen"
+>;
 const BottomSheetScreen = () => {
   const user = useAuthStore((s) => s.user);
+  const route = useRoute<BottomSheetScreenRouteProp>();
   const visible = true;
   const { profile, setProfile, updateProfile } = useUserProfileStore();
 
@@ -83,7 +88,7 @@ const BottomSheetScreen = () => {
   const onSubmit = async (
     formData: CreateTaskFormValues,
     household_id: string
-  ) => {
+  ): Promise<"success" | "error"> => {
     try {
       setLoading(true);
 
@@ -114,7 +119,7 @@ const BottomSheetScreen = () => {
           backgroundColor: "red",
         });
         setLoading(false);
-        return;
+        return "error";
       }
 
       const taskId = result.data.id;
@@ -122,24 +127,31 @@ const BottomSheetScreen = () => {
 
       if (!userId) {
         setLoading(false);
-        return;
+        return "error";
       }
 
       if (formData.repeat && repeatingDates.length > 0) {
-        for (const date of repeatingDates) {
-          await AddUserTaskToSpruce(
-            taskId,
-            userId,
-            date,
-            household_id,
-            formData.assign
+        (async () => {
+          for (const date of repeatingDates) {
+            await AddUserTaskToSpruce(
+              taskId,
+              userId,
+              date,
+              household_id,
+              formData.assign
+            );
+          }
+          console.log(
+            `Repeating schedule created (${repeatingDates.length} tasks)`
           );
-        }
+        })();
+
         Snackbar.show({
           text: `Repeating schedule created (${repeatingDates.length} tasks).`,
           duration: Snackbar.LENGTH_LONG,
           backgroundColor: "green",
         });
+        return "success";
       } else {
         const today = new Date().toISOString().split("T")[0];
         await AddUserTaskToSpruce(
@@ -155,41 +167,40 @@ const BottomSheetScreen = () => {
           duration: Snackbar.LENGTH_SHORT,
           backgroundColor: "green",
         });
+        return "success";
       }
-
-      navigation.navigate("Library");
     } catch (err: any) {
       Snackbar.show({
         text: err.message || "Something went wrong",
         duration: Snackbar.LENGTH_LONG,
         backgroundColor: "red",
       });
+      return "error";
     } finally {
       setLoading(false);
+      return "success";
     }
   };
 
-  if (loading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <ActivityIndicator size="large" color="#8C50FB" />
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View
+  //       style={{
+  //         flex: 1,
+  //         justifyContent: "center",
+  //         alignItems: "center",
+  //       }}
+  //     >
+  //       <ActivityIndicator size="large" color="#8C50FB" />
+  //     </View>
+  //   );
+  // }
   return (
     <MainLayout>
       <TouchableOpacity
         style={{ flex: 1 }}
         onPress={() => {
-          navigation.navigate("Library", {
-            screen: "Home",
-          });
+          navigation.navigate("Home");
         }}
       >
         <Header
@@ -214,7 +225,7 @@ const BottomSheetScreen = () => {
         onChange={(index) => {
           // when index === -1 → bottom sheet is closed
           if (index === -1) {
-            navigation.navigate("Library");
+            navigation.navigate("Home");
           }
         }}
         backgroundStyle={{
@@ -230,9 +241,7 @@ const BottomSheetScreen = () => {
             disappearsOnIndex={-1}
             pressBehavior="close"
             onPress={() => {
-              navigation.navigate("Library", {
-                screen: "Home",
-              });
+              navigation.navigate("Home");
             }}
           />
         )}
@@ -240,7 +249,12 @@ const BottomSheetScreen = () => {
         <BottomSheetView style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 100 }}>
             {profile && (
-              <CreateTaskForm onSubmit={onSubmit} profile={profile} />
+              <CreateTaskForm
+                onSubmit={onSubmit}
+                taskName={route.params.taskName}
+                profile={profile}
+                onSuccess={() => console.log("FORM RESET")}
+              />
             )}
           </ScrollView>
         </BottomSheetView>

@@ -32,12 +32,17 @@ import Snackbar from "react-native-snackbar";
 import Memberlist from "../HomeComponents/Memberlist";
 
 interface CreateTaskFormProps {
-  onSubmit: (formData: CreateTaskFormValues, household_id: string) => void;
+  onSubmit: (
+    formData: CreateTaskFormValues,
+    household_id: string
+  ) => Promise<"success" | "error">;
   profile: UserProfile;
+  onSuccess?: () => void;
+  taskName?: String | undefined;
 }
 
 const CreateTaskForm = (props: CreateTaskFormProps) => {
-  const { onSubmit, profile } = props;
+  const { onSubmit, profile, onSuccess, taskName } = props;
   const [open, setOpen] = useState(false);
   const [openModal, setOpenModal] = useState(false);
 
@@ -45,11 +50,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
   const [openDayNumber, setOpenDayNumber] = useState(false);
   const [openWeekDay, setOpenWeekDay] = useState(false);
   const [openMonthList, setOpenMonthList] = useState(false);
-  const [items, setItems] = useState<{ label: string; value: string }[]>([
-    { label: "Living Room", value: "Living Room" },
-    { label: "Bedroom", value: "Bedroom" },
-    { label: "Kitchen", value: "Kitchen" },
-  ]);
+  const [items, setItems] = useState<{ label: string; value: string }[]>([]);
   const [members, setMember] = useState<Member[]>([]);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [currentMember, setCurrentMember] = useState<Member | undefined>(
@@ -60,12 +61,13 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<CreateTaskFormValues>({
     resolver: yupResolver(schema) as unknown as Resolver<CreateTaskFormValues>,
     defaultValues: {
-      name: "",
-      room: "Living Room",
+      name: `${taskName}`,
+      room: undefined,
       type: "BOTH",
       effort: "",
       repeat: false,
@@ -138,6 +140,29 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
       setValue("week", { day: [], weekNumber: "" });
     }
   }, [repeatEveryField]);
+
+  const handleInternalSubmit = async (
+    data: CreateTaskFormValues,
+    household_id: string
+  ) => {
+    const result = await onSubmit(data, household_id);
+    console.log("result", result);
+    if (result === "success") {
+      reset({
+        name: "",
+        room: watch("room"),
+        type: "BOTH",
+        effort: watch("effort"),
+        repeat: watch("repeat"),
+        repeatEvery: watch("repeatEvery"),
+        days: watch("days"),
+        month: watch("month"),
+        week: watch("week"),
+        assign: watch("assign"),
+      });
+      onSuccess?.();
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -247,7 +272,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
             <CustomButton
               label="Save"
               onPress={handleSubmit((data) => {
-                onSubmit(data, profile.household_id);
+                handleInternalSubmit(data, profile.household_id);
               })}
             />
           </View>
@@ -402,7 +427,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
                         style={{
                           color: "red",
                           fontSize: 12,
-                          marginTop: 4,
+                          marginTop: 10,
                           fontFamily: "Inter",
                         }}
                       >

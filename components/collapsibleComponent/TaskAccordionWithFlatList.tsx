@@ -194,14 +194,19 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
 
                           // 2️⃣ Execute the tasks
                           setLoading(true);
-                          for (const date of repeatingDates) {
-                            await AddTaskToSpruce(
-                              item.id,
-                              user.id,
-                              date,
-                              profile?.household_id
+                          (async () => {
+                            for (const date of repeatingDates) {
+                              await AddTaskToSpruce(
+                                item.id,
+                                user.id,
+                                date,
+                                profile?.household_id
+                              );
+                            }
+                            console.log(
+                              `Repeating schedule created (${repeatingDates.length} tasks)`
                             );
-                          }
+                          })();
                           Snackbar.show({
                             text: `Repeating schedule created (${repeatingDates.length} tasks).`,
                             duration: Snackbar.LENGTH_LONG,

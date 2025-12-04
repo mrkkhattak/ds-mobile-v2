@@ -120,7 +120,8 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                         renderLeftActions={renderLeftActions}
                         renderRightActions={renderRightActions}
                         onSwipeableLeftOpen={() => {
-                          if (task.owner_user_id === task.user_task_user_id) {
+                          if (task.user_task_id) {
+                            console.log("task", task);
                             fetchTask(task.user_task_id);
                             //
                             swipeableRef.current?.close();

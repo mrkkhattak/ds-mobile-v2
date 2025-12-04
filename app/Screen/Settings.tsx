@@ -257,7 +257,7 @@ const Settings = () => {
                   }}
                 >
                   <HouseHoldContainer
-                    name={`${member.first_name} ${member.last_name}`}
+                    name={`${member.first_name} `}
                     role={member.family_role.toUpperCase()}
                   />
                 </View>

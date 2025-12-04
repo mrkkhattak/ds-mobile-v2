@@ -4,8 +4,10 @@ import {
   SpruceTaskDetails,
 } from "@/app/functions/functions";
 import RemoveIcon from "@/assets/images/icons/remove.svg";
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
+  Animated,
+  Dimensions,
   FlatList,
   StyleSheet,
   Text,
@@ -47,6 +49,12 @@ const TaskSubList = (props: TaskSubListProps) => {
     setMyTasks,
     profile,
   } = props;
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Screen and indicator sizes
+  const screenHeight = Dimensions.get("window").height;
+  const [contentHeight, setContentHeight] = useState(0);
+  const indicatorHeight = screenHeight * (screenHeight / contentHeight);
   return (
     <View style={{ marginTop: 30 }}>
       {/* Sub Tabs */}
@@ -85,182 +93,232 @@ const TaskSubList = (props: TaskSubListProps) => {
         style={{
           marginTop: 30,
           paddingHorizontal: 20,
-          height: 400,
+          height: screenHeight - 400,
         }}
       >
         {sortedTasks.length > 0 ? (
-          <FlatList
-            data={sortedTasks}
-            keyExtractor={(item) => item.id.toString()}
-            showsVerticalScrollIndicator={true}
-            showsHorizontalScrollIndicator={true}
-            contentContainerStyle={{ paddingBottom: 120 }}
-            renderItem={({ item }) => {
-              const createdAt = dayjs(item.created_at);
-              const today = dayjs();
-              const diffDays = today.diff(createdAt, "day"); // difference in days
-              const isAssigned = myTasks.some(
-                (task) => task.task_id === item.id
-              );
-              return (
-                <View
-                  style={
-                    !isAssigned
-                      ? [styles.taskCard]
-                      : [
-                          styles.taskCard,
-                          {
-                            backgroundColor: "#1511271C",
-                            opacity: 0.9,
-                          },
-                        ]
-                  }
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <View></View>
-                    <Text
-                      style={
-                        !isAssigned
-                          ? styles.taskName
-                          : [styles.taskName, { color: "white" }]
-                      }
-                    >
-                      {item.name}
-                    </Text>
-                  </View>
-
-                  {!isAssigned ? (
-                    <View>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View>
-                          <View style={{ flexDirection: "row" }}>
-                            <LimeIcon />
-                            <LimeIcon />
-                            <LimeIcon />
-                          </View>
-                          <Text
-                            style={{
-                              color: "#5D0FD5",
-                              fontWeight: "200",
-                              fontSize: 10,
-                              marginTop: 5,
-                              fontFamily: "inter",
-                            }}
-                          >
-                            {diffDays} days ago
-                          </Text>
-                        </View>
-                        {user && (
-                          <TouchableOpacity
-                            onPress={async () => {
-                              const today = new Date()
-                                .toISOString()
-                                .split("T")[0];
-
-                              const success = await AddTaskToSpruce(
-                                item.id,
-                                user.id,
-                                today,
-                                profile.household_id
-                              );
-                              if (success) {
-                                Snackbar.show({
-                                  text: "Task assigned successfully!",
-                                  duration: Snackbar.LENGTH_SHORT,
-                                  backgroundColor: "green",
-                                });
-                                // Optionally update myTasks locally
-                                const newTask: SpruceTaskDetails = {
-                                  id: "", // you can update from returned data if needed
-                                  assigned_at: new Date().toISOString(),
-                                  updated_at: new Date().toISOString(),
-                                  assign_user_id: user.id,
-                                  assign_user_email: user.email || null,
-                                  owner_user_id: user.id,
-                                  owner_user_email: user.email || null,
-                                  task_id: item.id,
-                                  task_name: item.name,
-                                  description_us: item.description_us,
-                                  description_uk: item.description_uk,
-                                  description_row: item.description_row,
-                                  icon_name: item.icon_name,
-                                  child_friendly: item.child_friendly,
-                                  estimated_effort: item.estimated_effort,
-                                  points: item.points,
-                                  room: item.room,
-                                  category: item.category,
-                                  keywords: null,
-                                  display_names: null,
-                                  unique_completions: 0,
-                                  total_completions: 0,
-                                  effort_level: null,
-                                };
-                                setMyTasks((prev) => [...prev, newTask]);
-                              } else {
-                                Snackbar.show({
-                                  text: "Failed to assign task.",
-                                  duration: Snackbar.LENGTH_SHORT,
-                                  backgroundColor: "red",
-                                });
-                              }
-                            }}
-                          >
-                            <AddIcon />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </View>
-                  ) : (
-                    <View>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                        }}
-                      >
-                        {user && (
-                          <TouchableOpacity
-                            onPress={async () => {
-                              const success = await removeTasksByGlobalId(
-                                item.id
-                              );
-                              if (success) {
-                                Snackbar.show({
-                                  text: "Task removed successfully!",
-                                  duration: 2000,
-                                  backgroundColor: "green",
-                                });
-
-                                // Update local state to remove the task instantly
-                                setMyTasks((prev) =>
-                                  prev.filter(
-                                    (task) => task.task_id !== item.id
-                                  )
-                                );
-                              } else {
-                                Snackbar.show({
-                                  text: "Failed to remove task.",
-                                  duration: 2000,
-                                  backgroundColor: "red",
-                                });
-                              }
-                            }}
-                          >
-                            <RemoveIcon />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </View>
-                  )}
-                </View>
-              );
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              gap: 10,
             }}
-          />
+          >
+            <FlatList
+              data={sortedTasks}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: false }
+              )}
+              scrollEventThrottle={16}
+              onContentSizeChange={(w, h) => setContentHeight(h)}
+              contentContainerStyle={{ paddingBottom: 120 }}
+              renderItem={({ item }) => {
+                const createdAt = dayjs(item.created_at);
+                const today = dayjs();
+                const diffDays = today.diff(createdAt, "day"); // difference in days
+                const isAssigned = myTasks.some(
+                  (task) => task.task_id === item.id
+                );
+                return (
+                  <View
+                    style={
+                      !isAssigned
+                        ? [styles.taskCard]
+                        : [
+                            styles.taskCard,
+                            {
+                              backgroundColor: "#1511271C",
+                              opacity: 0.9,
+                            },
+                          ]
+                    }
+                  >
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <View></View>
+                      <Text
+                        style={
+                          !isAssigned
+                            ? styles.taskName
+                            : [styles.taskName, { color: "white" }]
+                        }
+                      >
+                        {item.name}
+                      </Text>
+                    </View>
+
+                    {!isAssigned ? (
+                      <View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          <View>
+                            <View style={{ flexDirection: "row" }}>
+                              <LimeIcon />
+                              <LimeIcon />
+                              <LimeIcon />
+                            </View>
+                            <Text
+                              style={{
+                                color: "#5D0FD5",
+                                fontWeight: "200",
+                                fontSize: 10,
+                                marginTop: 5,
+                                fontFamily: "inter",
+                              }}
+                            >
+                              {diffDays} days ago
+                            </Text>
+                          </View>
+                          {user && (
+                            <TouchableOpacity
+                              onPress={async () => {
+                                const today = new Date()
+                                  .toISOString()
+                                  .split("T")[0];
+
+                                const success = await AddTaskToSpruce(
+                                  item.id,
+                                  user.id,
+                                  today,
+                                  profile.household_id
+                                );
+                                if (success) {
+                                  Snackbar.show({
+                                    text: "Task assigned successfully!",
+                                    duration: Snackbar.LENGTH_SHORT,
+                                    backgroundColor: "green",
+                                  });
+                                  // Optionally update myTasks locally
+                                  const newTask: SpruceTaskDetails = {
+                                    id: "", // you can update from returned data if needed
+                                    assigned_at: new Date().toISOString(),
+                                    updated_at: new Date().toISOString(),
+                                    assign_user_id: user.id,
+                                    assign_user_email: user.email || null,
+                                    owner_user_id: user.id,
+                                    owner_user_email: user.email || null,
+                                    task_id: item.id,
+                                    task_name: item.name,
+                                    description_us: item.description_us,
+                                    description_uk: item.description_uk,
+                                    description_row: item.description_row,
+                                    icon_name: item.icon_name,
+                                    child_friendly: item.child_friendly,
+                                    estimated_effort: item.estimated_effort,
+                                    points: item.points,
+                                    room: item.room,
+                                    category: item.category,
+                                    keywords: null,
+                                    display_names: null,
+                                    unique_completions: 0,
+                                    total_completions: 0,
+                                    effort_level: null,
+                                  };
+                                  setMyTasks((prev) => [...prev, newTask]);
+                                } else {
+                                  Snackbar.show({
+                                    text: "Failed to assign task.",
+                                    duration: Snackbar.LENGTH_SHORT,
+                                    backgroundColor: "red",
+                                  });
+                                }
+                              }}
+                            >
+                              <AddIcon />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    ) : (
+                      <View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          {user && (
+                            <TouchableOpacity
+                              onPress={async () => {
+                                const success = await removeTasksByGlobalId(
+                                  item.id
+                                );
+                                if (success) {
+                                  Snackbar.show({
+                                    text: "Task removed successfully!",
+                                    duration: 2000,
+                                    backgroundColor: "green",
+                                  });
+
+                                  // Update local state to remove the task instantly
+                                  setMyTasks((prev) =>
+                                    prev.filter(
+                                      (task) => task.task_id !== item.id
+                                    )
+                                  );
+                                } else {
+                                  Snackbar.show({
+                                    text: "Failed to remove task.",
+                                    duration: 2000,
+                                    backgroundColor: "red",
+                                  });
+                                }
+                              }}
+                            >
+                              <RemoveIcon />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                );
+              }}
+            />
+            <View
+              style={{
+                width: 7,
+                backgroundColor: "rgba(193, 191, 196, 0.3)",
+                borderRadius: 2,
+                marginTop: 2,
+                height: screenHeight - 400,
+              }}
+            >
+              <Animated.View
+                style={{
+                  width: 7,
+                  height: 123,
+                  backgroundColor: "rgba(193, 191, 196, 0.5)",
+                  borderRadius: 2,
+
+                  transform: [
+                    {
+                      translateY: scrollY.interpolate({
+                        inputRange: [
+                          0,
+                          Math.max(contentHeight - screenHeight, 0),
+                        ],
+                        outputRange: [
+                          0,
+                          Math.max(screenHeight - indicatorHeight, 0),
+                        ],
+                        extrapolate: "clamp",
+                      }),
+                    },
+                  ],
+                }}
+              />
+            </View>
+          </View>
         ) : (
           <Text style={{ color: "white", fontSize: 16, textAlign: "center" }}>
             No tasks found for {selectedSubTab}
@@ -296,7 +354,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 20,
     padding: 16,
-    marginBottom: 15,
+    marginBottom: 10,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",

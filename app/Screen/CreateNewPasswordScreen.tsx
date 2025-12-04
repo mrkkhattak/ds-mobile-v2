@@ -4,6 +4,7 @@ import { MainHeading, SubtitleText } from "@/components/ui/Heading";
 import { supabase } from "@/lib/supabase";
 import { useAuthStore } from "@/store/authstore";
 import { yupResolver } from "@hookform/resolvers/yup";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "expo-router";
 import React from "react";
 import { Controller, Resolver, useForm } from "react-hook-form";
@@ -99,6 +100,7 @@ const CreateNewPasswordScreen = () => {
       Alert.alert("Error", profileError || "Failed to update password");
 
     setIsPasswordRecovery(false);
+    await AsyncStorage.setItem("hasSeenOnboarding", "true");
     await signOut();
 
     Alert.alert(
