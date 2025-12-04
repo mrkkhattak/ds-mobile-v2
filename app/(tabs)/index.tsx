@@ -2,10 +2,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import DateLabel from "@/components/ui/DateLabel";
 import { useAuthStore } from "@/store/authstore";
 
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import BottomSheet from "@gorhom/bottom-sheet";
 import { useFocusEffect } from "@react-navigation/native";
 import React, {
   useCallback,
@@ -14,9 +11,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Animated, FlatList, Text, TouchableOpacity, View } from "react-native";
+import { Animated, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Icon2 from "../../assets/images/icons/Group 38.svg";
 import {
   AddTaskToSpruce,
   AddUserTaskToSpruce,
@@ -34,10 +30,6 @@ import {
   SpruceTaskDetails,
 } from "../functions/functions";
 
-import AddIcon from "../../assets/images/icons/Add.svg";
-
-import Icon3 from "../../assets/images/icons/Group 37.svg";
-
 import EditBottomSheet from "@/components/BottomSheets/EditBottomSheet";
 import CalenderStripComponet from "@/components/CalenderStrip/CalenderStripComponet";
 import Header from "@/components/Header/Header";
@@ -49,10 +41,9 @@ import DeleteIcon from "../../assets/images/icons/Delete task.svg";
 import EditIcon from "../../assets/images/icons/Edit task.svg";
 import MenuIcon from "../../assets/images/icons/Vector (4).svg";
 
-import { TransparetButton } from "@/components/ui/Buttons";
-import { CustomTextInput } from "@/components/ui/CustomTextInput";
+import AddTaskBottomSheet from "@/components/BottomSheets/AddTaskBottomSheet";
+import Tab from "@/components/BottomTab/Tab";
 import { useUserProfileStore } from "@/store/userProfileStore";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { ActivityIndicator } from "react-native-paper";
 import {
   generateMonthlyRepeatingDates,
@@ -727,70 +718,11 @@ const index = () => {
             setOpenModal={setOpenModal}
             openModal={openModal}
           />
-          <View
-            style={{
-              justifyContent: "flex-end",
-              marginBottom: 20,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <TouchableOpacity
-                style={{ justifyContent: "center", alignItems: "center" }}
-                onPress={() => navigation.navigate("TaskLibrary")}
-              >
-                <Icon3 />
-                <Text
-                  style={{
-                    color: "#AAA",
-                    fontSize: 15,
-                    marginTop: 4,
-                    fontWeight: "600",
-                  }}
-                >
-                  Library
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{ justifyContent: "center", alignItems: "center" }}
-                onPress={() => bottomAddTaskSheetRef.current?.expand()}
-              >
-                <AddIcon />
-                <Text
-                  style={{
-                    color: "#AAA",
-                    fontSize: 15,
-                    marginTop: 4,
-                    fontWeight: "600",
-                  }}
-                >
-                  Add
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ justifyContent: "center", alignItems: "center" }}
-                onPress={handleShuffle}
-              >
-                <Icon2 />
-                <Text
-                  style={{
-                    color: "#AAA",
-                    fontSize: 15,
-                    marginTop: 4,
-                    fontWeight: "600",
-                  }}
-                >
-                  Shuffle
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <Tab
+            navigation={navigation}
+            bottomAddTaskSheetRef={bottomAddTaskSheetRef}
+            handleShuffle={handleShuffle}
+          />
         </View>
         {profile && (
           <EditBottomSheet
@@ -801,126 +733,16 @@ const index = () => {
             handleUpdateTask={handleUpdateTask}
           />
         )}
-        <BottomSheet
-          ref={bottomAddTaskSheetRef}
-          index={1} // hidden initially
-          snapPoints={["20%"]} // percent format is correct
-          enablePanDownToClose
-          backgroundStyle={{
-            borderTopLeftRadius: 50,
-            borderTopRightRadius: 50,
-            backgroundColor: "#8E2DE2",
-          }}
-          backdropComponent={(props) => (
-            <BottomSheetBackdrop
-              {...props}
-              appearsOnIndex={0}
-              disappearsOnIndex={-1}
-              opacity={0.7}
-              pressBehavior="close"
-              onPress={() => navigation.navigate("Home")}
-            />
-          )}
-        >
-          <BottomSheetView>
-            <KeyboardAwareScrollView
-              enableOnAndroid={true}
-              keyboardShouldPersistTaps="handled"
-              showsHorizontalScrollIndicator={false}
-              showsVerticalScrollIndicator={false}
-            >
-              <FlatList
-                data={filteredTasks}
-                keyExtractor={(item) => item.id.toString()}
-                numColumns={2}
-                columnWrapperStyle={{
-                  paddingHorizontal: 10,
-                  justifyContent: "space-between",
-                }}
-                contentContainerStyle={{ paddingVertical: 10 }}
-                style={{ height: 400 }}
-                renderItem={({ item }) => {
-                  const isSelected = selected?.id === item.id;
-
-                  return (
-                    <TouchableOpacity
-                      onPress={() => {
-                        setSelected(item);
-                        setValue(item.name); // update input when selecting chip
-                      }}
-                      style={{
-                        paddingVertical: 12,
-                        paddingHorizontal: 18,
-                        borderRadius: 10,
-                        marginVertical: 8,
-                        width: "48%",
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
-                        borderWidth: isSelected ? 2 : 0,
-                        borderColor: isSelected ? "#A77BFF" : "transparent",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "rgba(255, 255, 255, 1)",
-                          fontSize: 16,
-                          textAlign: "center",
-                        }}
-                      >
-                        {item.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }}
-              />
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginVertical: 40,
-                }}
-              >
-                <CustomTextInput
-                  value={value ?? ""}
-                  onChangeText={(text) => setValue(text)}
-                  containerStyle={{
-                    backgroundColor: "white",
-                    borderWidth: 1,
-                    borderColor: "white",
-                  }}
-                  inputStyle={{
-                    paddingHorizontal: 20,
-                    color: "rgba(54, 43, 50, 1)",
-                    fontSize: 15,
-                    fontWeight: "300",
-                  }}
-                />
-
-                <TransparetButton
-                  label={"ADD"}
-                  onPress={() => {
-                    handleAddTask(value);
-                  }}
-                  containerStyle={{
-                    backgroundColor: "rgba(152, 100, 225, 1)",
-                    borderRadius: 10,
-                    height: 40,
-                    paddingHorizontal: 20,
-                    marginLeft: 10,
-                    justifyContent: "center",
-                  }}
-                  labelStyle={{
-                    color: "white",
-                    fontWeight: "700",
-                    fontSize: 16,
-                    paddingVertical: 10,
-                  }}
-                />
-              </View>
-            </KeyboardAwareScrollView>
-          </BottomSheetView>
-        </BottomSheet>
+        <AddTaskBottomSheet
+          bottomAddTaskSheetRef={bottomAddTaskSheetRef}
+          navigation={navigation}
+          filteredTasks={filteredTasks}
+          selected={selected}
+          setSelected={setSelected}
+          value={value}
+          setValue={setValue}
+          handleAddTask={handleAddTask}
+        />
       </MainLayout>
     </GestureHandlerRootView>
   );
