@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import DropDownPicker, { ItemType } from "react-native-dropdown-picker";
+import { ItemType } from "react-native-dropdown-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -101,7 +101,7 @@ const ProfileFormScreen = (props: ProfileScreenForm) => {
           )}
 
           {/* Gender Dropdown */}
-          <Controller
+          {/* <Controller
             control={control}
             name="gender"
             render={({ field: { onChange } }) => (
@@ -124,7 +124,7 @@ const ProfileFormScreen = (props: ProfileScreenForm) => {
           />
           {errors.gender && (
             <Text style={styles.errorText}>{errors.gender.message}</Text>
-          )}
+          )} */}
         </View>
 
         <View

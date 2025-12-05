@@ -1,8 +1,10 @@
 import MainLayout from "@/components/layout/MainLayout";
+import { useAuthStore } from "@/store/authstore";
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity } from "react-native";
 const MainMenu = () => {
+  const { signOut } = useAuthStore();
   const naviagtion = useNavigation<any>();
   const list = [
     { label: "Home", value: "Home" },
@@ -10,11 +12,14 @@ const MainMenu = () => {
     { label: "Flash Back", value: "FlashBack" },
     { label: "Settings", value: "Settings" },
     { label: "FeedBack", value: "FeedBack" },
+    { label: "Logout", value: "logout" },
   ];
   const renderItem = ({ item }: { item: (typeof list)[0] }) => (
     <TouchableOpacity
       style={styles.itemContainer}
-      onPress={() => naviagtion.navigate(item.value)}
+      onPress={() => {
+        item.value === "logout" ? signOut() : naviagtion.navigate(item.value);
+      }}
     >
       <Text style={styles.itemText}>{item.label}</Text>
     </TouchableOpacity>

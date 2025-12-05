@@ -396,7 +396,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                         width: "100%",
                         borderColor: error ? "red" : "#ccc",
                       }}
-                      textStyle={{ fontSize: 12, paddingBottom: 15 }}
+                      textStyle={{ fontSize: 12 }}
                     />
 
                     {error && (
@@ -519,7 +519,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                                 width: "100%",
                                 marginVertical: 10,
                               }}
-                              textStyle={{ fontSize: 12, paddingBottom: 15 }}
+                              textStyle={{ fontSize: 12 }}
                             />
 
                             {/* === DAY Mode === */}

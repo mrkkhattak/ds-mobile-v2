@@ -157,10 +157,10 @@ const TaskList = () => {
               : selectedTab === "Repeat"
               ? "repeat"
               : selectedTab === "Ideas"
-              ? "idea"
+              ? "ideas"
               : "pack"
           );
-
+          console.log("result", result);
           if (isActive && result) {
             setGroupData(result);
           }
@@ -270,55 +270,66 @@ const TaskList = () => {
   }
   return (
     <MainLayout>
-      <View style={{ flex: 1 }}>
-        <Header
-          screenName="Task Library"
-          label="SELECT TASKS TO ADD TO TODAY’S SPRUCE
+      <Header
+        screenName="Task Library"
+        label="SELECT TASKS TO ADD TO TODAY’S SPRUCE
 "
-          navigation={navigationToHome}
-          icon={<HomeIcon />}
+        navigation={navigationToHome}
+        icon={<HomeIcon />}
+      />
+      <TaskTypeTabing
+        tabList={tabList}
+        selectedTab={selectedTab}
+        setSelectedTab={setSelectedTab}
+      />
+      {selectedTab === "Go-To" && profile && (
+        <TaskSubList
+          selectedSubTab={selectedSubTab}
+          setSelectedSubTab={setSelectedSubTab}
+          myTasks={myTasks}
+          groupData={groupData}
+          roomList={roomList}
+          sortedTasks={sortedTasks}
+          user={user}
+          setMyTasks={setMyTasks}
+          profile={profile}
         />
-        <TaskTypeTabing
-          tabList={tabList}
-          selectedTab={selectedTab}
-          setSelectedTab={setSelectedTab}
+      )}
+      {selectedTab === "Repeat" && profile && (
+        <TaskAccordionWithFlatList
+          groupData={groupData}
+          myTasks={myTasks}
+          setMyTasks={setMyTasks}
+          user={user}
+          setLoading={setLoading}
+          profile={profile}
         />
-        {selectedTab === "Go-To" && profile && (
-          <TaskSubList
-            selectedSubTab={selectedSubTab}
-            setSelectedSubTab={setSelectedSubTab}
-            myTasks={myTasks}
-            groupData={groupData}
-            roomList={roomList}
-            sortedTasks={sortedTasks}
-            user={user}
-            setMyTasks={setMyTasks}
-            profile={profile}
-          />
-        )}
-        {selectedTab === "Repeat" && profile && (
-          <TaskAccordionWithFlatList
-            groupData={groupData}
-            myTasks={myTasks}
-            setMyTasks={setMyTasks}
-            user={user}
-            setLoading={setLoading}
-            profile={profile}
-          />
-        )}
-        {selectedTab === "Packs" && profile && user && (
-          <PacksList
-            formattedData={formattedData}
-            selectedPack={selectedPack}
-            setSelectedPack={setSelectedPack}
-            gradientColors={gradientColors}
-            setMyTasks={setMyTasks}
-            myTasks={myTasks}
-            user={user}
-            profile={profile}
-          />
-        )}
-      </View>
+      )}
+      {selectedTab === "Ideas" && profile && (
+        <TaskSubList
+          selectedSubTab={selectedSubTab}
+          setSelectedSubTab={setSelectedSubTab}
+          myTasks={myTasks}
+          groupData={groupData}
+          roomList={roomList}
+          sortedTasks={sortedTasks}
+          user={user}
+          setMyTasks={setMyTasks}
+          profile={profile}
+        />
+      )}
+      {selectedTab === "Packs" && profile && user && (
+        <PacksList
+          formattedData={formattedData}
+          selectedPack={selectedPack}
+          setSelectedPack={setSelectedPack}
+          gradientColors={gradientColors}
+          setMyTasks={setMyTasks}
+          myTasks={myTasks}
+          user={user}
+          profile={profile}
+        />
+      )}
     </MainLayout>
   );
 };

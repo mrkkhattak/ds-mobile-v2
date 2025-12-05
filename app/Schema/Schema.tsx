@@ -58,5 +58,5 @@ export const ProfileSchema = yup.object({
     .string()
     .required("Last name is required")
     .matches(/^[A-Za-z]+$/, "Last name can only contain letters"),
-  gender: yup.string().required("Please select a gender"),
+  // gender: yup.string().required("Please select a gender"),
 });

@@ -182,6 +182,10 @@ const BottomSheetScreen = () => {
     }
   };
 
+  const handleClose = async () => {
+    await navigation.navigate("Home");
+  };
+
   // if (loading) {
   //   return (
   //     <View
@@ -254,6 +258,7 @@ const BottomSheetScreen = () => {
                 taskName={route.params.taskName}
                 profile={profile}
                 onSuccess={() => console.log("FORM RESET")}
+                handleClose={handleClose}
               />
             )}
           </ScrollView>

@@ -86,12 +86,13 @@ const InviteUserScreen = () => {
 
   const onSubmit = async (data: InviteFormValues) => {
     setIsLoading(true);
+
     try {
       const payload = {
         email: data.email,
         firstName: data.firstName,
-        lastName: "",
-        gender: "",
+        lastName: "Khan", // or use data.lastName if you have it
+        gender: "Male", // or use data.gender
         familyRole: data.familyRole,
         houseHoldId, // make sure this variable is defined in your component
         redirectTo: __DEV__
@@ -105,7 +106,7 @@ const InviteUserScreen = () => {
       );
 
       if (error) {
-        console.log(error);
+        console.log("Edge function error:", error);
         Snackbar.show({
           text: error.message,
           duration: Snackbar.LENGTH_LONG,
@@ -114,13 +115,24 @@ const InviteUserScreen = () => {
         return;
       }
 
-      Snackbar.show({
-        text: `Invite email sent successfully to ${data.email}!`,
-        duration: Snackbar.LENGTH_LONG,
-        backgroundColor: "green",
-      });
-      navigation.navigate("Settings");
+      console.log("inviteData", JSON.parse(inviteData));
+      const invitedData = JSON.parse(inviteData);
+      if (invitedData.success === false) {
+        Snackbar.show({
+          text: invitedData.error,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "red",
+        });
+      } else {
+        Snackbar.show({
+          text: `Invite email sent successfully to ${data.email}!`,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "green",
+        });
+        navigation.navigate("Settings");
+      }
     } catch (err: any) {
+      console.log("Submit error:", err);
       Snackbar.show({
         text: err.message || "Something went wrong",
         duration: Snackbar.LENGTH_LONG,

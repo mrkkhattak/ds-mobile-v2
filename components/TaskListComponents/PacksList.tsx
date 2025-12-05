@@ -99,6 +99,7 @@ const PacksList = (props: PackListProps) => {
             [{ nativeEvent: { contentOffset: { x: scrollX } } }],
             { useNativeDriver: false }
           )}
+          style={{ marginTop: 10 }}
           scrollEventThrottle={16}
           //   style={{ marginTop: 5 }}
           renderItem={({ item }) => {
@@ -188,7 +189,7 @@ const PacksList = (props: PackListProps) => {
                       key={index}
                       onPress={() => setSelectedPack(pack)}
                       style={{
-                        width: 160,
+                        width: 140,
                         height: 70,
 
                         overflow: "hidden",
@@ -251,7 +252,12 @@ const PacksList = (props: PackListProps) => {
         />
       </>
 
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
         <FlatList
           data={selectedPack?.tasks}
           keyExtractor={(item) => item.id.toString()}
@@ -260,11 +266,11 @@ const PacksList = (props: PackListProps) => {
             paddingVertical: 12,
             paddingHorizontal: 10,
           }}
-          style={{ marginBottom: 100, marginTop: 10, height: 300 }}
+          style={{ marginBottom: 100, marginTop: 10, height: 500 }}
           initialNumToRender={10}
           removeClippedSubviews={false}
-          showsVerticalScrollIndicator={true}
-          showsHorizontalScrollIndicator={true}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
             { useNativeDriver: false }
@@ -435,17 +441,13 @@ const PacksList = (props: PackListProps) => {
           }}
         />
 
-        {/* <View
+        <View
           style={{
-            position: "absolute",
-            right: 4,
-            top: 0,
-            bottom: 0,
             width: 7,
             backgroundColor: "rgba(193, 191, 196, 0.3)",
             borderRadius: 2,
-            marginTop: 2,
-            height: 300,
+
+            height: 600,
           }}
         >
           <Animated.View
@@ -469,7 +471,7 @@ const PacksList = (props: PackListProps) => {
               ],
             }}
           />
-        </View> */}
+        </View>
       </View>
     </View>
   );

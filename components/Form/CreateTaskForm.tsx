@@ -39,10 +39,11 @@ interface CreateTaskFormProps {
   profile: UserProfile;
   onSuccess?: () => void;
   taskName?: String | undefined;
+  handleClose: () => Promise<void>;
 }
 
 const CreateTaskForm = (props: CreateTaskFormProps) => {
-  const { onSubmit, profile, onSuccess, taskName } = props;
+  const { onSubmit, profile, onSuccess, taskName, handleClose } = props;
   const [open, setOpen] = useState(false);
   const [openModal, setOpenModal] = useState(false);
 
@@ -268,12 +269,23 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
           >
             New Task
           </Text>
-          <View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <CustomButton
               label="Save"
               onPress={handleSubmit((data) => {
                 handleInternalSubmit(data, profile.household_id);
               })}
+            />
+            <CustomButton
+              label="Close"
+              onPress={handleClose}
+              viewStyle={{ marginLeft: 5 }}
             />
           </View>
         </View>

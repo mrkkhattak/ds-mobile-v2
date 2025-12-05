@@ -11,7 +11,7 @@ interface HeaderProps {
 const Header = (props: HeaderProps) => {
   const { label, screenName, icon, navigation } = props;
   return (
-    <View>
+    <View style={{}}>
       <View style={{ marginTop: 20, paddingHorizontal: 40 }}></View>
       <View>
         <View
@@ -36,6 +36,8 @@ const Header = (props: HeaderProps) => {
             fontFamily: "inter",
             fontSize: 14,
             marginHorizontal: 20,
+
+            height: 40,
           }}
         >
           {label}

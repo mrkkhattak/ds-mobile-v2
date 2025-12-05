@@ -17,6 +17,7 @@ const Tab = (props: TabProps) => {
     <View
       style={{
         justifyContent: "flex-end",
+
         marginBottom: 20,
       }}
     >

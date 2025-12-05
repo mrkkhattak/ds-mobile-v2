@@ -1,7 +1,7 @@
 import Header from "@/components/Header/Header";
 import HouseHoldContainer from "@/components/HouseHoldComponets/HouseHoldContainer";
 import MainLayout from "@/components/layout/MainLayout";
-import { CustomButton, TransparetButton } from "@/components/ui/Buttons";
+import { TransparetButton } from "@/components/ui/Buttons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import {
@@ -202,14 +202,14 @@ const Settings = () => {
               justifyContent: "center",
               alignItems: "center",
               gap: 20,
-              marginHorizontal: 10,
+              marginHorizontal: 20,
             }}
           >
-            <CustomButton
+            {/* <CustomButton
               label="Save"
               onPress={() => {}}
               textStyle={{ textAlign: "center" }}
-            />
+            /> */}
             <TouchableOpacity
               onPress={() => {
                 navigation.navigate("Home");

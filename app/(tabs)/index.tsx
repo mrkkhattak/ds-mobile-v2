@@ -69,7 +69,7 @@ const index = () => {
   const [isToday, setIsToday] = useState<Boolean>(false);
   const [groupData, setGroupData] = useState<any>();
   const today = new Date();
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [task, setTask] = useState<CreateTaskFormValues | undefined>(undefined);
   const [members, setMember] = useState<Member[]>([]);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
@@ -215,46 +215,41 @@ const index = () => {
 
   const fetchTasks = async () => {
     try {
-      if (user && profile) {
-        const { data, error } = await fetchSpruceTasksByHouseHoldId(
-          profile?.household_id,
-          selectedDate.toISOString().split("T")[0]
-        );
+      if (!user || !profile) return;
 
-        if (error) {
-          Snackbar.show({
-            text: error,
-            duration: Snackbar.LENGTH_LONG,
-            backgroundColor: "red",
-          });
-          console.log("Error loading tasks:", error);
-          setLoading(false);
-          return;
-        }
+      const { data, error } = await fetchSpruceTasksByHouseHoldId(
+        profile.household_id,
+        selectedDate.toISOString().split("T")[0]
+      );
 
-        if (data && Array.isArray(data)) {
-          const grouped = data.reduce((acc, task) => {
-            const groupKey =
-              task.category || task.user_task_room || "Uncategorized";
-            if (!acc[groupKey]) acc[groupKey] = [];
-            acc[groupKey].push(task);
-            return acc;
-          }, {} as Record<string, SpruceTaskDetails[]>);
+      if (error) {
+        Snackbar.show({
+          text: error,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "red",
+        });
+        console.log("Error loading tasks:", error);
+        return;
+      }
 
-          setGroupData(grouped);
-        }
-
-        setLoading(false);
+      if (Array.isArray(data)) {
+        const grouped = data.reduce((acc: any, task: any) => {
+          const groupKey: any =
+            task.category || task.user_task_room || "Uncategorized";
+          if (!acc[groupKey]) acc[groupKey] = [];
+          acc[groupKey].push(task);
+          return acc;
+        }, {});
+        setGroupData(grouped);
       }
     } catch (err: any) {
-      const message = err?.message || "Failed to load tasks";
+      console.log("err", err);
       Snackbar.show({
-        text: message,
+        text: err.message || "Failed to load tasks",
         duration: Snackbar.LENGTH_LONG,
         backgroundColor: "red",
       });
       console.log("Error loading tasks:", err);
-      setLoading(false);
     }
   };
   const CreateNewTask = async (
@@ -262,7 +257,7 @@ const index = () => {
     household_id: string
   ) => {
     try {
-      setLoading(true);
+      // setLoading(true);
 
       let repeatingDates: string[] = [];
       if (formData.repeatEvery === "DAY") {
@@ -335,7 +330,7 @@ const index = () => {
           duration: Snackbar.LENGTH_SHORT,
           backgroundColor: "green",
         });
-        fetchTasks();
+        // await fetchTasks();
       }
 
       // navigation.navigate("Library");
@@ -355,7 +350,7 @@ const index = () => {
     household_id: string
   ) => {
     const taskId: string | undefined = task?.id;
-    setLoading(true);
+    // setLoading(true);
 
     const { success, error } = await deleteSpruceTasksByUserTaskId(
       taskId ?? ""
@@ -364,11 +359,11 @@ const index = () => {
       Snackbar.show({ text: error, duration: Snackbar.LENGTH_SHORT });
       setLoading(false);
     } else {
-      Snackbar.show({
-        text: "Task deleted successfully",
-        duration: Snackbar.LENGTH_SHORT,
-        backgroundColor: "green",
-      });
+      // Snackbar.show({
+      //   text: "Task deleted successfully",
+      //   duration: Snackbar.LENGTH_SHORT,
+      //   backgroundColor: "green",
+      // });
 
       const { success, error } = await deleteTaskById(taskId ?? "");
       if (!success && error) {
@@ -379,11 +374,11 @@ const index = () => {
         });
         setLoading(false);
       } else {
-        Snackbar.show({
-          text: "Spruce tasks deleted successfully",
-          duration: Snackbar.LENGTH_SHORT,
-          backgroundColor: "green",
-        });
+        // Snackbar.show({
+        //   text: "Spruce tasks deleted successfully",
+        //   duration: Snackbar.LENGTH_SHORT,
+        //   backgroundColor: "green",
+        // });
         setGroupData((prev: Record<string, SpruceTaskDetails[]>) => {
           const updated: Record<string, SpruceTaskDetails[]> = {};
 
@@ -400,7 +395,9 @@ const index = () => {
 
           return updated;
         });
-        CreateNewTask(data, household_id);
+
+        await CreateNewTask(data, household_id);
+        await fetchTasks();
       }
     }
     bottomSheetRef.current?.close();
@@ -408,7 +405,7 @@ const index = () => {
 
   const handleAssingTaskToUser = async (taskId: string, userId: string) => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const result = await assignUserToTask(taskId, userId);
 
       if (result) {
@@ -508,157 +505,94 @@ const index = () => {
 
     const allTasks = Object.values(groupData).flat();
 
+    // only unassigned tasks
     const unassignedTasks = allTasks.filter(
       (task: any) =>
         task.assign_user_id === null || task.assign_user_id === undefined
     );
 
-    if (unassignedTasks.length === 0) return; // no tasks to assign
+    if (unassignedTasks.length === 0) return;
     if (members.length === 0) return;
 
-    const randomTask: any =
-      unassignedTasks[Math.floor(Math.random() * unassignedTasks.length)];
+    // loop through all unassigned tasks
+    unassignedTasks.forEach((task: any) => {
+      const randomUser = members[Math.floor(Math.random() * members.length)];
 
-    const randomUser = members[Math.floor(Math.random() * members.length)];
-
-    handleAssingTaskToUser(randomTask.id, randomUser.user_id);
+      handleAssingTaskToUser(task.id, randomUser.user_id);
+    });
   };
-  useFocusEffect(
-    useCallback(() => {
-      let isActive = true;
-      setLoading(true);
 
-      fetchTasks();
-
-      return () => {
-        isActive = false;
-      };
-    }, [user, selectedDate, profile])
-  );
+  const showError = (message: string) => {
+    console.log(message);
+    Snackbar.show({
+      text: message,
+      duration: Snackbar.LENGTH_LONG,
+      backgroundColor: "red",
+    });
+  };
 
   useEffect(() => {
-    const checkProfile = async () => {
+    const init = async () => {
       if (!user) return signOut();
 
-      const { data: profile, error } = await getUserProfile(user.id);
-
-      if (error) {
-        console.log(error);
-        Snackbar.show({
-          text: error.message,
-          duration: Snackbar.LENGTH_LONG,
-          backgroundColor: "red",
-        });
+      // First login logic
+      if (user.user_metadata.firstLogin === true) {
+        setTimeout(() => navigation.navigate("ResetPasswordScreen"), 2000);
         return;
       }
 
-      if (!profile) {
-        navigation.navigate("ProfileScreen");
-      } else if (!profile.household_id) {
-        navigation.navigate("CreateHouseholdScreen");
-      }
-      setProfile(profile);
+      // Fetch profile
+      const { data: profileData, error } = await getUserProfile(user.id);
+
+      if (error) return showError(error.message);
+      if (!profileData) return navigation.navigate("ProfileScreen");
+      if (!profileData.household_id)
+        return navigation.navigate("CreateHouseholdScreen");
+
+      setProfile(profileData);
     };
 
-    const checkFirstLogin = async () => {
-      console.log("firstLogin");
-      setTimeout(() => {
-        navigation.navigate("ResetPasswordScreen");
-      }, 2000);
-    };
-
-    if (user) {
-      if (user.user_metadata.firstLogin === true) {
-        checkFirstLogin();
-      } else {
-        checkProfile();
-      }
-    }
+    init().finally(() => setLoading(false));
   }, []);
-
   useFocusEffect(
     useCallback(() => {
+      if (!profile) return;
+
       let isActive = true;
       let interval: NodeJS.Timeout;
 
-      const fetchProfiles = async () => {
-        if (!profile) return;
-
+      const loadHomeScreenData = async () => {
         try {
-          const result = await getProfilesByHousehold(profile.household_id);
-          if (!isActive) return;
-
-          if (result.data) {
-            setMember(result.data);
-          }
-
-          if (result.error) {
-            Snackbar.show({
-              text: result.error,
-              duration: 2000,
-              backgroundColor: "red",
-            });
-          }
-        } catch (error: any) {
+          // --- MEMBERS ---
+          const memberRes = await getProfilesByHousehold(profile.household_id);
           if (isActive) {
-            Snackbar.show({
-              text: error.message,
-              duration: 2000,
-              backgroundColor: "red",
-            });
+            if (memberRes.data) setMember(memberRes.data);
+            if (memberRes.error) showError(memberRes.error);
           }
+
+          // --- GLOBAL TASKS ---
+          const taskRes = await getGlobalTasks();
+          if (isActive && taskRes) setTasks(taskRes);
+
+          // --- DAILY TASKS (fetchTasks) ---
+          await fetchTasks(); // NO more double-calls
+        } catch (err: any) {
+          if (isActive) showError(err.message);
         }
       };
 
-      // Initial call
-      fetchProfiles();
+      // initial load
+      loadHomeScreenData();
 
-      // Poll every 5 seconds
-      interval = setInterval(fetchProfiles, 5000);
+      // polling
+      interval = setInterval(loadHomeScreenData, 5000);
 
       return () => {
         isActive = false;
         clearInterval(interval);
       };
-    }, [profile])
+    }, [profile, selectedDate])
   );
-
-  useFocusEffect(
-    useCallback(() => {
-      let isActive = true;
-      let interval: NodeJS.Timeout;
-
-      const fetchData = async () => {
-        try {
-          // setLoading(true);
-
-          // 1️⃣ Fetch grouped tasks
-          const result = await getGlobalTasks();
-
-          if (isActive && result) {
-            setTasks(result);
-          }
-
-          if (isActive) setLoading(false);
-        } catch (error) {
-          console.error("Error fetching grouped or assigned tasks:", error);
-          if (isActive) setLoading(false);
-        }
-      };
-
-      // Initial fetch
-      fetchData();
-
-      // Poll every 5 seconds
-      interval = setInterval(fetchData, 5000);
-
-      return () => {
-        isActive = false;
-        clearInterval(interval); // stop polling on unmount
-      };
-    }, [user, profile])
-  );
-
   if (loading) {
     return (
       <MainLayout>
@@ -695,7 +629,6 @@ const index = () => {
         </View>
         <View
           style={{
-            flex: 2.5,
             backgroundColor: "#F7F6FB",
             borderTopRightRadius: 40,
             borderTopLeftRadius: 40,

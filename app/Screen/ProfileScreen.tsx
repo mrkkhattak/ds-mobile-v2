@@ -34,7 +34,7 @@ const ProfileScreen = () => {
         user.id,
         data.firstName,
         data.lastName,
-        data.gender
+        ""
       );
 
       if (error) {

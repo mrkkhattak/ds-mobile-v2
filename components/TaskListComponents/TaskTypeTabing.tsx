@@ -16,7 +16,12 @@ interface TaskTypeTabingProps {
 const TaskTypeTabing = (props: TaskTypeTabingProps) => {
   const { tabList, selectedTab, setSelectedTab } = props;
   return (
-    <View style={{ justifyContent: "center", alignItems: "center" }}>
+    <View
+      style={{
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
       <FlatList
         data={tabList}
         horizontal
