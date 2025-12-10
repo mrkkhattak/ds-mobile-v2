@@ -1,5 +1,5 @@
 import MainLayout from "@/components/layout/MainLayout";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
 
 import { useAuthStore } from "@/store/authstore";
@@ -30,7 +30,9 @@ import Snackbar from "react-native-snackbar";
 import { HomeStackParamList } from "../types/navigator_type";
 import { TablisntType } from "../types/types";
 
+import Tab from "@/components/BottomTab/Tab";
 import PacksList from "@/components/TaskListComponents/PacksList";
+import BottomSheet from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheet";
 type NavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
   "TaskLibrary"
@@ -39,7 +41,7 @@ const TaskList = () => {
   const navigation = useNavigation<NavigationProp>();
   const user = useAuthStore((e) => e.user);
   const { profile, setProfile, updateProfile } = useUserProfileStore();
-
+  const bottomAddTaskSheetRef = useRef<BottomSheet>(null);
   const [selectedTab, setSelectedTab] = useState("Go-To");
 
   const [groupData, setGroupData] = useState<any>({});
@@ -283,17 +285,24 @@ const TaskList = () => {
         setSelectedTab={setSelectedTab}
       />
       {selectedTab === "Go-To" && profile && (
-        <TaskSubList
-          selectedSubTab={selectedSubTab}
-          setSelectedSubTab={setSelectedSubTab}
-          myTasks={myTasks}
-          groupData={groupData}
-          roomList={roomList}
-          sortedTasks={sortedTasks}
-          user={user}
-          setMyTasks={setMyTasks}
-          profile={profile}
-        />
+        <View style={{ marginBottom: 40 }}>
+          <TaskSubList
+            selectedSubTab={selectedSubTab}
+            setSelectedSubTab={setSelectedSubTab}
+            myTasks={myTasks}
+            groupData={groupData}
+            roomList={roomList}
+            sortedTasks={sortedTasks}
+            user={user}
+            setMyTasks={setMyTasks}
+            profile={profile}
+          />
+          <Tab
+            navigation={navigation}
+            bottomAddTaskSheetRef={bottomAddTaskSheetRef}
+            handleShuffle={() => {}}
+          />
+        </View>
       )}
       {selectedTab === "Repeat" && profile && (
         <TaskAccordionWithFlatList

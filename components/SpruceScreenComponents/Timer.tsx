@@ -1,4 +1,5 @@
 import { HomeStackParamList } from "@/app/types/navigator_type";
+import { BottomSheetMethods } from "@gorhom/bottom-sheet/lib/typescript/types";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
@@ -10,9 +11,10 @@ type NavigationProp = NativeStackNavigationProp<
 interface TimerProps {
   time: string;
   navigation: NavigationProp;
+  bottomAddTaskSheetRef: React.RefObject<BottomSheetMethods | null>;
 }
 const Timer = (props: TimerProps) => {
-  const { time, navigation } = props;
+  const { time, navigation, bottomAddTaskSheetRef } = props;
   const [timeLeft, setTimeLeft] = useState(time);
   // convert mm:ss -> seconds
   const convertToSeconds = (t: string) => {
@@ -31,7 +33,7 @@ const Timer = (props: TimerProps) => {
     let seconds = convertToSeconds(timeLeft);
 
     if (seconds === 0) {
-      navigation.navigate("Home"); // 👈 AUTO NAVIGATE WHEN TIMER ENDS
+      // navigation.navigate("Home"); // 👈 AUTO NAVIGATE WHEN TIMER ENDS
       return;
     }
 
@@ -125,24 +127,75 @@ const Timer = (props: TimerProps) => {
         </Text> */}
       </View>
       <View>
-        <TransparetButton
-          label={"End Spruce"}
-          onPress={() => {
-            navigation.navigate("Home");
-          }}
-          containerStyle={{
-            borderColor: "white",
-            width: 200,
-            height: 40,
-            borderRadius: 50,
-          }}
-          labelStyle={{
-            color: "white",
-            fontWeight: "bold",
-            fontSize: 18,
-            lineHeight: 20,
-          }}
-        />
+        {timeLeft === "00:00" ? (
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <TransparetButton
+              label={"DISMISS"}
+              onPress={() => {
+                bottomAddTaskSheetRef.current?.expand();
+              }}
+              containerStyle={{
+                borderColor: "white",
+                height: 40,
+                borderRadius: 50,
+              }}
+              labelStyle={{
+                color: "white",
+                fontWeight: "bold",
+                fontSize: 18,
+                lineHeight: 20,
+                textAlign: "center",
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+              }}
+            />
+            <TransparetButton
+              label={"End"}
+              onPress={() => {
+                bottomAddTaskSheetRef.current?.expand();
+              }}
+              containerStyle={{
+                borderColor: "white",
+                height: 40,
+                borderRadius: 50,
+              }}
+              labelStyle={{
+                color: "white",
+                fontWeight: "bold",
+                fontSize: 18,
+                lineHeight: 20,
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+              }}
+            />
+          </View>
+        ) : (
+          <TransparetButton
+            label={"End Spruce"}
+            onPress={() => {
+              bottomAddTaskSheetRef.current?.expand();
+            }}
+            containerStyle={{
+              borderColor: "white",
+              width: 200,
+              height: 40,
+              borderRadius: 50,
+            }}
+            labelStyle={{
+              color: "white",
+              fontWeight: "bold",
+              fontSize: 18,
+              lineHeight: 20,
+            }}
+          />
+        )}
       </View>
     </View>
   );

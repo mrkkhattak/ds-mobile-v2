@@ -13,16 +13,18 @@ import { Controller, Resolver, useForm } from "react-hook-form";
 import { StyleSheet, Switch, Text, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { ActivityIndicator } from "react-native-paper";
 import Snackbar from "react-native-snackbar";
 
 interface CreateTaskFormProps {
   onSubmit: (formData: CreateTaskFormValues, household_id: string) => void;
   defalutValues?: CreateTaskFormValues;
   profile: UserProfile;
+  editTaskloading: boolean;
 }
 
 const EditTaskForm = (props: CreateTaskFormProps) => {
-  const { onSubmit, defalutValues, profile } = props;
+  const { onSubmit, defalutValues, profile, editTaskloading } = props;
   const [open, setOpen] = useState(false);
   const [openWeek, setOpenWeek] = useState(false);
   const [openDayNumber, setOpenDayNumber] = useState(false);
@@ -185,13 +187,18 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
           >
             Edit Task
           </Text>
+
           <View>
-            <CustomButton
-              label="Save"
-              onPress={handleSubmit((data) =>
-                onSubmit(data, profile.household_id)
-              )}
-            />
+            {editTaskloading ? (
+              <ActivityIndicator />
+            ) : (
+              <CustomButton
+                label="Save"
+                onPress={handleSubmit((data) =>
+                  onSubmit(data, profile.household_id)
+                )}
+              />
+            )}
           </View>
         </View>
         <View

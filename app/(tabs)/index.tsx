@@ -2,7 +2,10 @@ import MainLayout from "@/components/layout/MainLayout";
 import DateLabel from "@/components/ui/DateLabel";
 import { useAuthStore } from "@/store/authstore";
 
-import BottomSheet from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { useFocusEffect } from "@react-navigation/native";
 import React, {
   useCallback,
@@ -11,7 +14,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Animated, View } from "react-native";
+import { Animated, Platform, Text, View } from "react-native";
+import DropDownPicker from "react-native-dropdown-picker";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   AddTaskToSpruce,
@@ -33,7 +37,6 @@ import {
 import EditBottomSheet from "@/components/BottomSheets/EditBottomSheet";
 import CalenderStripComponet from "@/components/CalenderStrip/CalenderStripComponet";
 import Header from "@/components/Header/Header";
-import HomeTaskList from "@/components/HomeComponents/HomeTaskList";
 import { useNavigation } from "expo-router";
 import { NativeStackNavigationProp } from "react-native-screens/lib/typescript/native-stack/types";
 import Snackbar from "react-native-snackbar";
@@ -43,8 +46,11 @@ import MenuIcon from "../../assets/images/icons/Vector (4).svg";
 
 import AddTaskBottomSheet from "@/components/BottomSheets/AddTaskBottomSheet";
 import Tab from "@/components/BottomTab/Tab";
+import HomeTaskList from "@/components/HomeComponents/HomeTaskList";
+import { SlideButton } from "@/components/ui/Buttons";
 import { useUserProfileStore } from "@/store/userProfileStore";
 import { ActivityIndicator } from "react-native-paper";
+import SlideIcon from "../../assets/images/icons/arrow.svg";
 import {
   generateMonthlyRepeatingDates,
   generateRepeatingDatesUnified,
@@ -52,6 +58,7 @@ import {
 import { HomeStackParamList } from "../types/navigator_type";
 import { CreateTaskFormValues, Member, WeekRepeat } from "../types/types";
 
+type GroupByOption = "category" | "person";
 type NavigationProp = NativeStackNavigationProp<HomeStackParamList, "Home">;
 const index = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -70,6 +77,8 @@ const index = () => {
   const [groupData, setGroupData] = useState<any>();
   const today = new Date();
   const [loading, setLoading] = useState<boolean>(true);
+  const [editTaskloading, setEditTaskLoading] = useState<boolean>(false);
+
   const [task, setTask] = useState<CreateTaskFormValues | undefined>(undefined);
   const [members, setMember] = useState<Member[]>([]);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
@@ -78,6 +87,75 @@ const index = () => {
   const [tasks, setTasks] = useState<GlobalTask[]>([]);
   const [selected, setSelected] = useState<GlobalTask | null>(null);
   const [value, setValue] = useState<String>("");
+  const [category, setCategory] = useState([
+    { label: "Room", value: "category" },
+    { label: "Person", value: "person" },
+  ]);
+  const [openGroupDropdown, setOpenGroupDropDown] = useState(false);
+  const [groupValue, setGroupValue] = useState<"category" | "person">(
+    "category"
+  );
+
+  const [totalDone, setTotalDone] = useState<number>(0);
+  const fetchTasks = async () => {
+    try {
+      if (user && profile) {
+        const selectedDate = new Date();
+        const { data, error } = await fetchSpruceTasksByHouseHoldId(
+          profile?.household_id,
+          selectedDate.toISOString().split("T")[0]
+        );
+
+        if (error) {
+          Snackbar.show({
+            text: error,
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "red",
+          });
+          console.log("Error loading tasks:", error);
+          setLoading(false);
+          return;
+        }
+
+        if (data && Array.isArray(data)) {
+          const grouped = groupTasks(data, groupValue);
+          setGroupData(grouped);
+        }
+
+        setLoading(false);
+      }
+    } catch (err: any) {
+      const message = err?.message || "Failed to load tasks";
+      Snackbar.show({
+        text: message,
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+      console.log("Error loading tasks:", err);
+      setLoading(false);
+    }
+  };
+
+  const groupTasks = (tasks: SpruceTaskDetails[], groupBy: GroupByOption) => {
+    return tasks.reduce((acc, task) => {
+      let groupKey: any;
+
+      if (groupBy === "category") {
+        // Fallback: category → room → Uncategorized
+        groupKey = task.category || task.user_task_room || "Uncategorized";
+      } else if (groupBy === "person") {
+        const profile = task.assign_user_profile;
+        groupKey = profile
+          ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
+            "Unassigned"
+          : "Unassigned";
+      }
+
+      if (!acc[groupKey]) acc[groupKey] = [];
+      acc[groupKey].push(task);
+      return acc;
+    }, {} as Record<string, SpruceTaskDetails[]>);
+  };
   const handleDeleteTask = async (id?: string) => {
     if (!user) return;
 
@@ -213,45 +291,45 @@ const index = () => {
     // setTask(data);
   };
 
-  const fetchTasks = async () => {
-    try {
-      if (!user || !profile) return;
+  // const fetchTasks = async () => {
+  //   try {
+  //     if (!user || !profile) return;
 
-      const { data, error } = await fetchSpruceTasksByHouseHoldId(
-        profile.household_id,
-        selectedDate.toISOString().split("T")[0]
-      );
+  //     const { data, error } = await fetchSpruceTasksByHouseHoldId(
+  //       profile.household_id,
+  //       selectedDate.toISOString().split("T")[0]
+  //     );
 
-      if (error) {
-        Snackbar.show({
-          text: error,
-          duration: Snackbar.LENGTH_LONG,
-          backgroundColor: "red",
-        });
-        console.log("Error loading tasks:", error);
-        return;
-      }
+  //     if (error) {
+  //       Snackbar.show({
+  //         text: error,
+  //         duration: Snackbar.LENGTH_LONG,
+  //         backgroundColor: "red",
+  //       });
+  //       console.log("Error loading tasks:", error);
+  //       return;
+  //     }
 
-      if (Array.isArray(data)) {
-        const grouped = data.reduce((acc: any, task: any) => {
-          const groupKey: any =
-            task.category || task.user_task_room || "Uncategorized";
-          if (!acc[groupKey]) acc[groupKey] = [];
-          acc[groupKey].push(task);
-          return acc;
-        }, {});
-        setGroupData(grouped);
-      }
-    } catch (err: any) {
-      console.log("err", err);
-      Snackbar.show({
-        text: err.message || "Failed to load tasks",
-        duration: Snackbar.LENGTH_LONG,
-        backgroundColor: "red",
-      });
-      console.log("Error loading tasks:", err);
-    }
-  };
+  //     if (Array.isArray(data)) {
+  //       const grouped = data.reduce((acc: any, task: any) => {
+  //         const groupKey: any =
+  //           task.category || task.user_task_room || "Uncategorized";
+  //         if (!acc[groupKey]) acc[groupKey] = [];
+  //         acc[groupKey].push(task);
+  //         return acc;
+  //       }, {});
+  //       setGroupData(grouped);
+  //     }
+  //   } catch (err: any) {
+  //     console.log("err", err);
+  //     Snackbar.show({
+  //       text: err.message || "Failed to load tasks",
+  //       duration: Snackbar.LENGTH_LONG,
+  //       backgroundColor: "red",
+  //     });
+  //     console.log("Error loading tasks:", err);
+  //   }
+  // };
   const CreateNewTask = async (
     formData: CreateTaskFormValues,
     household_id: string
@@ -350,14 +428,14 @@ const index = () => {
     household_id: string
   ) => {
     const taskId: string | undefined = task?.id;
-    // setLoading(true);
+    setEditTaskLoading(true);
 
     const { success, error } = await deleteSpruceTasksByUserTaskId(
       taskId ?? ""
     );
     if (!success && error) {
       Snackbar.show({ text: error, duration: Snackbar.LENGTH_SHORT });
-      setLoading(false);
+      setEditTaskLoading(false);
     } else {
       // Snackbar.show({
       //   text: "Task deleted successfully",
@@ -372,7 +450,7 @@ const index = () => {
           duration: Snackbar.LENGTH_SHORT,
           backgroundColor: "red",
         });
-        setLoading(false);
+        setEditTaskLoading(false);
       } else {
         // Snackbar.show({
         //   text: "Spruce tasks deleted successfully",
@@ -407,6 +485,8 @@ const index = () => {
     try {
       // setLoading(true);
       const result = await assignUserToTask(taskId, userId);
+      console.log("taskId", taskId);
+      console.log("userId", userId);
 
       if (result) {
         if (result.data) {
@@ -502,22 +582,14 @@ const index = () => {
 
   const handleShuffle = () => {
     if (!groupData) return;
-
-    const allTasks = Object.values(groupData).flat();
-
-    // only unassigned tasks
-    const unassignedTasks = allTasks.filter(
-      (task: any) =>
-        task.assign_user_id === null || task.assign_user_id === undefined
-    );
-
-    if (unassignedTasks.length === 0) return;
     if (members.length === 0) return;
 
-    // loop through all unassigned tasks
-    unassignedTasks.forEach((task: any) => {
-      const randomUser = members[Math.floor(Math.random() * members.length)];
+    // flatten all tasks
+    const allTasks = Object.values(groupData).flat();
 
+    // assign each task to a random member
+    allTasks.forEach((task: any) => {
+      const randomUser = members[Math.floor(Math.random() * members.length)];
       handleAssingTaskToUser(task.id, randomUser.user_id);
     });
   };
@@ -591,8 +663,21 @@ const index = () => {
         isActive = false;
         clearInterval(interval);
       };
-    }, [profile, selectedDate])
+    }, [profile, selectedDate, groupValue])
   );
+  useEffect(() => {
+    if (groupData) {
+      let completedCount = 0;
+      Object.values(groupData).forEach((roomTasks: any) => {
+        roomTasks.forEach((task: any) => {
+          if (task.task_status === "completed") {
+            completedCount++;
+          }
+        });
+      });
+      setTotalDone(completedCount);
+    }
+  }, [groupData]);
   if (loading) {
     return (
       <MainLayout>
@@ -611,7 +696,7 @@ const index = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "grey" }}>
       <MainLayout>
-        <View style={{ flex: 1 }}>
+        <View style={{}}>
           <Header
             label="SMALL STEPS. BIG IMPACT!"
             screenName="Daily Spruce"
@@ -627,36 +712,150 @@ const index = () => {
             today={today}
           />
         </View>
-        <View
-          style={{
-            backgroundColor: "#F7F6FB",
-            borderTopRightRadius: 40,
-            borderTopLeftRadius: 40,
-            marginTop: 10,
+
+        <BottomSheet
+          ref={bottomAddTaskSheetRef}
+          index={1}
+          snapPoints={["60%", "80%", "90%"]}
+          enablePanDownToClose={false}
+          enableContentPanningGesture={true}
+          enableHandlePanningGesture={true}
+          backgroundStyle={{
+            borderTopLeftRadius: 50,
+            borderTopRightRadius: 50,
+
+            backgroundColor: "transparent",
           }}
+          backdropComponent={(props) => (
+            <BottomSheetBackdrop
+              {...props}
+              appearsOnIndex={0}
+              disappearsOnIndex={-1}
+              opacity={0}
+            />
+          )}
         >
-          <DateLabel selectedDate={selectedDate} />
-          <HomeTaskList
-            groupData={groupData}
-            renderLeftActions={renderLeftActions}
-            renderRightActions={renderRightActions}
-            fetchTask={fetchTask}
-            handleDeleteTask={handleDeleteTask}
-            members={members}
-            setSelectedMember={setSelectedMember}
-            selectedMember={selectedMember}
-            handleAssingTaskToUser={handleAssingTaskToUser}
-            setTaskId={setTaskId}
-            taskId={taskId}
-            setOpenModal={setOpenModal}
-            openModal={openModal}
-          />
-          <Tab
-            navigation={navigation}
-            bottomAddTaskSheetRef={bottomAddTaskSheetRef}
-            handleShuffle={handleShuffle}
-          />
-        </View>
+          <BottomSheetView style={{ flex: 1 }}>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <SlideButton
+                label="Slide to start sprucing"
+                icon={<SlideIcon />}
+                onSlideComplete={() => navigation.navigate("SpruceScreen")}
+                width={Platform.OS === "android" ? 340 : 370}
+                textStyle={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  textAlign: "center",
+                }}
+              />
+            </View>
+            <View
+              style={{
+                backgroundColor: "white",
+                borderTopLeftRadius: 50,
+                borderTopRightRadius: 50,
+              }}
+            >
+              {/* MAIN CONTENT (scrollable list section) */}
+              <View style={{ flex: 1 }}>
+                {/* HEADER */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginHorizontal: 10,
+                    marginTop: 10,
+                  }}
+                >
+                  <DateLabel selectedDate={selectedDate} />
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      borderWidth: 0.5,
+                      borderRadius: 20,
+                      borderColor: "rgba(105, 21, 224, 1)",
+                      paddingHorizontal: 10,
+                      height: 30,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontWeight: "400",
+                        fontFamily: "Inter",
+                        fontSize: 12,
+                        color: "rgba(105, 21, 224, 1)",
+                      }}
+                    >
+                      Group:
+                    </Text>
+
+                    <DropDownPicker
+                      open={openGroupDropdown}
+                      value={groupValue}
+                      items={category}
+                      setOpen={setOpenGroupDropDown}
+                      setValue={setGroupValue}
+                      setItems={setCategory}
+                      containerStyle={{ width: 90 }}
+                      style={{
+                        backgroundColor: "transparent",
+                        borderWidth: 0,
+                      }}
+                      dropDownContainerStyle={{
+                        borderWidth: 1,
+                        backgroundColor: "white",
+                        borderRadius: 10,
+                        borderColor: "rgba(105, 21, 224, 1)",
+                      }}
+                      textStyle={{
+                        fontSize: 12,
+                        color: "rgba(105, 21, 224, 1)",
+                      }}
+                    />
+                  </View>
+                </View>
+
+                {/* TASK LIST — flex: 1 lets it fill space and push tab to bottom */}
+                <View style={{ flex: 1 }}>
+                  <HomeTaskList
+                    groupData={groupData}
+                    renderLeftActions={renderLeftActions}
+                    renderRightActions={renderRightActions}
+                    fetchTask={fetchTask}
+                    handleDeleteTask={handleDeleteTask}
+                    members={members}
+                    setSelectedMember={setSelectedMember}
+                    selectedMember={selectedMember}
+                    handleAssingTaskToUser={handleAssingTaskToUser}
+                    setTaskId={setTaskId}
+                    taskId={taskId}
+                    setOpenModal={setOpenModal}
+                    openModal={openModal}
+                    height={500}
+                  />
+                </View>
+              </View>
+
+              <View style={{ paddingBottom: 30 }}>
+                <Tab
+                  navigation={navigation}
+                  bottomAddTaskSheetRef={bottomAddTaskSheetRef}
+                  handleShuffle={handleShuffle}
+                />
+              </View>
+            </View>
+          </BottomSheetView>
+        </BottomSheet>
+
         {profile && (
           <EditBottomSheet
             bottomSheetRef={bottomSheetRef}
@@ -664,6 +863,7 @@ const index = () => {
             task={task}
             profile={profile}
             handleUpdateTask={handleUpdateTask}
+            editTaskloading={editTaskloading}
           />
         )}
         <AddTaskBottomSheet

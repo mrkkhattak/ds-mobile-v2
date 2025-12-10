@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import Icon2 from "../../assets/images/icons/Group 38.svg";
 
 import AddIcon from "../../assets/images/icons/Add.svg";
@@ -11,7 +11,7 @@ interface TabProps {
   handleShuffle: () => void;
 }
 
-const Tab = (props: TabProps) => {
+const TaskListTab = (props: TabProps) => {
   const { navigation, bottomAddTaskSheetRef, handleShuffle } = props;
   return (
     <View
@@ -81,6 +81,4 @@ const Tab = (props: TabProps) => {
   );
 };
 
-export default Tab;
-
-const styles = StyleSheet.create({});
+export default TaskListTab;

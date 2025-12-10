@@ -12,7 +12,7 @@ const Header = (props: HeaderProps) => {
   const { label, screenName, icon, navigation } = props;
   return (
     <View style={{}}>
-      <View style={{ marginTop: 20, paddingHorizontal: 40 }}></View>
+      <View style={{ paddingHorizontal: 40 }}></View>
       <View>
         <View
           style={{

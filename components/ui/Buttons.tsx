@@ -18,7 +18,10 @@ type MainButtonProps = {
   label: string;
   onPress: () => void;
   style?: ViewStyle;
+  gradentStyle?: ViewStyle;
   textStyle?: TextStyle;
+  color1: string;
+  color2: string;
 };
 
 export const MainButton: React.FC<MainButtonProps> = ({
@@ -26,6 +29,9 @@ export const MainButton: React.FC<MainButtonProps> = ({
   onPress,
   style,
   textStyle,
+  color1 = "#16C5E0",
+  color2 = "#8DE016",
+  gradentStyle,
 }) => {
   return (
     <TouchableOpacity
@@ -34,10 +40,10 @@ export const MainButton: React.FC<MainButtonProps> = ({
       style={[styles.wrapper, style]}
     >
       <LinearGradient
-        colors={["#16C5E0", "#8DE016"]}
+        colors={[color1, color2]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.gradient}
+        style={[styles.gradient, gradentStyle]}
       >
         <Text style={[styles.label, textStyle]}>{label}</Text>
       </LinearGradient>

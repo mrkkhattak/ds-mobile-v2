@@ -38,6 +38,7 @@ interface HomeTaskListProps {
   openModal: boolean;
   lableStyle?: TextStyle;
   icon?: React.ReactNode;
+  height?: number;
   handleUpdateTaskStatus?: (taskId: string) => Promise<void>;
 }
 const HomeTaskList = (props: HomeTaskListProps) => {
@@ -58,6 +59,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
     lableStyle,
     icon,
     handleUpdateTaskStatus,
+    height = 390,
   } = props;
   const swipeableRef = useRef<Swipeable>(null);
   const { profile, setProfile, updateProfile } = useUserProfileStore();
@@ -67,7 +69,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
       style={{
         paddingHorizontal: 40,
         marginTop: 20,
-        height: 400,
+        height: height,
       }}
     >
       {groupData && Object.keys(groupData).length > 0 ? (
@@ -121,7 +123,6 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                         renderRightActions={renderRightActions}
                         onSwipeableLeftOpen={() => {
                           if (task.user_task_id) {
-                            console.log("task", task);
                             fetchTask(task.user_task_id);
                             //
                             swipeableRef.current?.close();

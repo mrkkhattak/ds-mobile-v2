@@ -14,9 +14,17 @@ interface EditBottomSheetProps {
   task: any;
   handleUpdateTask: (data: CreateTaskFormValues, household_id: string) => void;
   profile: UserProfile;
+  editTaskloading: boolean;
 }
 const EditBottomSheet = (props: EditBottomSheetProps) => {
-  const { bottomSheetRef, snapPoints, task, handleUpdateTask, profile } = props;
+  const {
+    bottomSheetRef,
+    snapPoints,
+    task,
+    handleUpdateTask,
+    profile,
+    editTaskloading,
+  } = props;
   return (
     <BottomSheet
       ref={bottomSheetRef}
@@ -44,6 +52,7 @@ const EditBottomSheet = (props: EditBottomSheetProps) => {
               onSubmit={handleUpdateTask}
               defalutValues={task}
               profile={profile}
+              editTaskloading={editTaskloading}
             />
           )}
         </ScrollView>

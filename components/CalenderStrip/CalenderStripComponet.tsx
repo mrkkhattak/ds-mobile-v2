@@ -1,9 +1,7 @@
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import CalendarStrip from "react-native-calendar-strip";
-import { SlideButton } from "../ui/Buttons";
 
-import SlideIcon from "../../assets/images/icons/arrow.svg";
 interface CalenderStripComponetProps {
   navigation: any;
   selectedDate: Date | null;
@@ -52,20 +50,6 @@ const CalenderStripComponet = (props: CalenderStripComponetProps) => {
         calendarColor={"#E0CFF3"}
         iconLeft={require("../../assets/rightArrow.png")} // Left arrow icon
         iconRight={require("../../assets/Arrow_right.png")} // Right arrow icon
-      />
-
-      <SlideButton
-        label="Slide to start sprucing"
-        icon={<SlideIcon />}
-        onSlideComplete={() => {
-          navigation.navigate("SpruceScreen");
-        }}
-        width={Platform.OS === "android" ? 340 : 370}
-        textStyle={{
-          fontSize: 16,
-          fontWeight: "700",
-          textAlign: "center",
-        }}
       />
     </View>
   );

@@ -52,17 +52,28 @@ export interface SpruceTask {
   } | null;
 }
 
-export interface SpruceTaskDetails {
-  // Assignment info
+export type UserProfile = {
+  user_id: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  gender?: string | null;
+  family_role?: string | null;
+  household_id?: string | null;
+  email?: string | null;
+};
+
+export type SpruceTaskDetails = {
   id: string;
   assigned_at: string | null;
   updated_at: string | null;
   assign_user_id: string | null;
+  scheduled_date: string | null;
   assign_user_email: string | null;
+  assign_user_profile: UserProfile | null;
   owner_user_id: string | null;
   owner_user_email: string | null;
 
-  // Global task fields
+  // Global task
   task_id: string | null;
   task_name: string | null;
   description_us: string | null;
@@ -74,25 +85,26 @@ export interface SpruceTaskDetails {
   points: number | null;
   room: string | null;
   category: string | null;
-  keywords: string[] | null;
-  display_names: Record<string, any> | null;
+  keywords: string | null;
+  display_names: string | null;
   unique_completions: number | null;
   total_completions: number | null;
-  effort_level: number | null;
+  effort_level: string | null;
 
-  // User task fields
-  user_task_id?: string;
-  user_task_user_id?: string;
-  user_task_name?: string;
-  user_task_room?: string | null;
-  user_task_type?: string | null;
-  user_task_effort?: number | null;
-  user_task_repeat?: boolean;
-  user_task_repeat_every?: string | null;
-  user_task_created_at?: string | null;
-  user_task_updated_at?: string | null;
-  task_status?: string;
-}
+  // User task
+  user_task_id: string | null;
+  user_task_user_id: string | null;
+  user_task_name: string | null;
+  user_task_room: string | null;
+  user_task_type: string | null;
+  user_task_effort: number | null;
+  user_task_repeat: boolean;
+  user_task_repeat_every: string | null;
+  user_task_created_at: string | null;
+  user_task_updated_at: string | null;
+
+  task_status: string | null;
+};
 
 type CreateTaskResult = {
   data?: any;
@@ -831,6 +843,7 @@ export const fetchSpruceTasksByHouseHoldId = async (
   try {
     if (!household_id) return { error: "Missing houseHold Id" };
 
+    // 1️⃣ Fetch tasks
     let query = supabase
       .from("spruce_tasks")
       .select(
@@ -877,29 +890,52 @@ export const fetchSpruceTasksByHouseHoldId = async (
       )
       .eq("household_id", household_id);
 
-    // Apply date filter if provided
     if (scheduledDate) {
       query = query.eq("scheduled_date", scheduledDate);
     }
 
-    const { data: spruceData, error } = await query.order("scheduled_date", {
-      ascending: true,
-    });
+    const { data: spruceData, error: spruceError } = await query.order(
+      "scheduled_date",
+      { ascending: true }
+    );
 
-    if (error) {
-      console.error("Error fetching spruce tasks:", error.message);
-      return { error: error.message };
+    if (spruceError) {
+      console.error("Error fetching spruce tasks:", spruceError.message);
+      return { error: spruceError.message };
     }
 
-    if (!spruceData) return { data: [] };
+    if (!spruceData || spruceData.length === 0) return { data: [] };
 
+    // 2️⃣ Collect all assign_user_ids
+    const assignUserIds = Array.from(
+      new Set(spruceData.map((task) => task.assign_user_id).filter(Boolean))
+    );
+
+    // 3️⃣ Fetch profiles info including email (stored in profiles)
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select(
+        "user_id, first_name, last_name, gender, family_role, household_id"
+      )
+      .in("user_id", assignUserIds);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError.message);
+      return { error: profilesError.message };
+    }
+
+    // 4️⃣ Map profiles by user_id
+    const profilesMap = new Map(profilesData.map((p) => [p.user_id, p]));
+
+    // 5️⃣ Combine data
     const result: SpruceTaskDetails[] = spruceData.map((item: any) => ({
       id: item.id,
       assigned_at: item.created_at,
       updated_at: item.updated_at,
       assign_user_id: item.assign_user_id,
       scheduled_date: item.scheduled_date,
-      assign_user_email: null,
+      assign_user_email: profilesMap.get(item.assign_user_id)?.email ?? null,
+      assign_user_profile: profilesMap.get(item.assign_user_id) ?? null,
       owner_user_id: item.user_id,
       owner_user_email: null,
 
@@ -1006,6 +1042,7 @@ export async function assignUserToTask(taskId: string, userId: string) {
       .single(); // ensures single row is returned
 
     if (error) {
+      console.log(error)
       return { success: false, data: null, error: error.message };
     }
 
@@ -1029,7 +1066,8 @@ export async function completeSpruceTask(taskId: string) {
     }
 
     const { global_task_id, user_task_id } = spruceTask;
-
+    console.log("global_task_id", global_task_id);
+    console.log("spruceTask", spruceTask);
     // 2️⃣ Update spruce task status
     const { error: spruceUpdateError } = await supabase
       .from("spruce_tasks")
@@ -1046,7 +1084,7 @@ export async function completeSpruceTask(taskId: string) {
     // 3️⃣ Update Global Task category if exists
     if (global_task_id) {
       await supabase
-        .from("global_task")
+        .from("global_tasks")
         .update({ category: "completed_task" })
         .eq("id", global_task_id);
     }
