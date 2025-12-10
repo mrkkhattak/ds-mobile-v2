@@ -270,7 +270,58 @@ export async function getGlobalTasks(): Promise<GlobalTask[]> {
 //   return groupedTasks;
 // };
 
-export const fetchAndGroupTasks = async (taskType?: string) => {
+// export const fetchAndGroupTasks = async (taskType?: string) => {
+//   let query = supabase
+//     .from("global_tasks")
+//     .select(
+//       `
+//       *,
+//       task_repeat_days(*),
+//       task_repeat_weeks(*),
+//       task_repeat_months(*)
+//     `
+//     )
+//     .order("category", { ascending: true });
+
+//   // Only filter by type if provided
+//   if (taskType) {
+//     query = query.eq("type", taskType);
+//   }
+
+//   const { data, error } = await query;
+
+//   if (error) {
+//     console.error("Error fetching tasks:", error);
+//     return {};
+//   }
+
+//   // Group by category
+//   const groupedTasks: Record<string, any[]> = {};
+//   data.forEach((task) => {
+//     const category = task.category || "Uncategorized";
+//     if (!groupedTasks[category]) {
+//       groupedTasks[category] = [];
+//     }
+//     groupedTasks[category].push(task);
+//   });
+
+//   return groupedTasks;
+// };
+export interface FilterOptions {
+  effort?: number[]; // e.g., [1, 2] to show Low & Medium
+}
+
+export interface SortOptions {
+  days?: "old-new" | "new-old";
+  effort?: "low-high" | "high-low";
+  name?: "a-z" | "z-a";
+}
+
+export const fetchAndGroupTasks = async (
+  taskType?: string,
+  sortOptions?: SortOptions,
+  filterOptions?: FilterOptions
+) => {
   let query = supabase
     .from("global_tasks")
     .select(
@@ -283,9 +334,14 @@ export const fetchAndGroupTasks = async (taskType?: string) => {
     )
     .order("category", { ascending: true });
 
-  // Only filter by type if provided
   if (taskType) {
     query = query.eq("type", taskType);
+  }
+
+  // Apply effort filter if provided
+  console.log("---s", filterOptions?.effort?.length);
+  if (filterOptions?.effort?.length) {
+    query = query.in("effort_level", filterOptions.effort);
   }
 
   const { data, error } = await query;
@@ -299,15 +355,42 @@ export const fetchAndGroupTasks = async (taskType?: string) => {
   const groupedTasks: Record<string, any[]> = {};
   data.forEach((task) => {
     const category = task.category || "Uncategorized";
-    if (!groupedTasks[category]) {
-      groupedTasks[category] = [];
-    }
+    if (!groupedTasks[category]) groupedTasks[category] = [];
     groupedTasks[category].push(task);
+  });
+
+  // Apply sorting within each category
+  Object.keys(groupedTasks).forEach((category) => {
+    groupedTasks[category].sort((a, b) => {
+      // Days sorting
+      if (sortOptions?.days) {
+        const diff =
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        if (sortOptions.days === "old-new") return diff;
+        if (sortOptions.days === "new-old") return -diff;
+      }
+
+      // Effort sorting
+      if (sortOptions?.effort) {
+        const diff = (a.effort_level ?? 0) - (b.effort_level ?? 0);
+        if (sortOptions.effort === "low-high") return diff;
+        if (sortOptions.effort === "high-low") return -diff;
+      }
+
+      // Name sorting
+      if (sortOptions?.name) {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        if (sortOptions.name === "a-z") return nameA.localeCompare(nameB);
+        if (sortOptions.name === "z-a") return nameB.localeCompare(nameA);
+      }
+
+      return 0;
+    });
   });
 
   return groupedTasks;
 };
-
 export const fetchSpruceTasks = async (
   userId: string,
   scheduledDate?: string
@@ -1042,7 +1125,7 @@ export async function assignUserToTask(taskId: string, userId: string) {
       .single(); // ensures single row is returned
 
     if (error) {
-      console.log(error)
+      console.log(error);
       return { success: false, data: null, error: error.message };
     }
 

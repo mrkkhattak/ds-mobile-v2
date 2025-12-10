@@ -1,6 +1,13 @@
 import MainLayout from "@/components/layout/MainLayout";
 import React, { useRef, useState } from "react";
-import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { useAuthStore } from "@/store/authstore";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -32,16 +39,38 @@ import { TablisntType } from "../types/types";
 
 import TaskListTab from "@/components/BottomTab/TaskListTab";
 import PacksList from "@/components/TaskListComponents/PacksList";
-import BottomSheet from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheet";
+import { MainButton, TransparetButton } from "@/components/ui/Buttons";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { ScrollView } from "react-native-gesture-handler";
 type NavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
   "TaskLibrary"
 >;
+
 const TaskList = () => {
   const navigation = useNavigation<NavigationProp>();
   const user = useAuthStore((e) => e.user);
+  const [selectedType, setSelectedType] = useState<string | null | any>(null);
+  const [selectedEffort, setSelectedEffort] = useState<number[]>([]);
+  const [selectedDaysSort, setSelectedDaysSort] = useState<string | null | any>(
+    null
+  );
+  const [selectedEffortSort, setSelectedEffortSort] = useState<
+    string | null | any
+  >(null);
+  const [selectedNameSort, setSelectedNameSort] = useState<string | null | any>(
+    null
+  );
+
+  console.log("====>", selectedEffort);
+
   const { profile, setProfile, updateProfile } = useUserProfileStore();
   const bottomAddTaskSheetRef = useRef<BottomSheet>(null);
+  const bottomFilterTaskSheetRef = useRef<BottomSheet>(null);
+
   const [selectedTab, setSelectedTab] = useState("Go-To");
 
   const [groupData, setGroupData] = useState<any>({});
@@ -98,14 +127,7 @@ const TaskList = () => {
   ];
   const [packs, setPacks] = useState<PreMadePack[]>();
   const [selectedPack, setSelectedPack] = useState<PreMadePack>();
-  // const subTabList = [
-  //   "Kitchen",
-  //   "Bedroom",
-  //   "Living Room",
-  //   "Bathroom",
-  //   "General Cleaning",
-  //   "Outdoor",
-  // ];
+
   const [roomList, setRoomList] = useState<{ label: String; value: String }[]>(
     []
   );
@@ -146,35 +168,40 @@ const TaskList = () => {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-      let interval: NodeJS.Timeout;
+      // let interval: NodeJS.Timeout;
 
       const fetchData = async () => {
         try {
           // setLoading(true);
 
-          // 1️⃣ Fetch grouped tasks
-          const result = await fetchAndGroupTasks(
-            selectedTab === "Go-To"
-              ? "goto"
-              : selectedTab === "Repeat"
-              ? "repeat"
-              : selectedTab === "Ideas"
-              ? "ideas"
-              : "pack"
-          );
-          console.log("result", result);
-          if (isActive && result) {
-            setGroupData(result);
-          }
+          const taskTypeMap: Record<string, string> = {
+            "Go-To": "goto",
+            Repeat: "repeat",
+            Ideas: "ideas",
+            Pack: "pack",
+          };
+          const taskType = taskTypeMap[selectedTab] || "pack";
 
-          // 2️⃣ Fetch assigned tasks
+          const result = await fetchAndGroupTasks(
+            taskType,
+            {
+              days: selectedDaysSort, // "old-new" | "new-old"
+              effort: selectedEffortSort, // "low-high" | "high-low"
+              name: selectedNameSort,
+              // "a-z" | "z-a"
+            },
+            {
+              effort: selectedEffort,
+            }
+          );
+
+          if (isActive && result) setGroupData(result);
+
           if (user && profile) {
             const assignedTasks = await fetchSpruceTasksByHouseHoldId(
-              profile?.household_id
+              profile.household_id
             );
-            if (isActive && assignedTasks) {
-              setMyTasks(assignedTasks.data || []);
-            }
+            if (isActive && assignedTasks) setMyTasks(assignedTasks.data || []);
           }
 
           if (isActive) setLoading(false);
@@ -188,13 +215,23 @@ const TaskList = () => {
       fetchData();
 
       // Poll every 5 seconds
-      interval = setInterval(fetchData, 5000);
+      // interval = setInterval(fetchData, 5000);
 
       return () => {
         isActive = false;
-        clearInterval(interval); // stop polling on unmount
+        // clearInterval(interval); // stop polling on unmount
       };
-    }, [user, selectedTab, profile, selectedSubTab])
+    }, [
+      user,
+      selectedTab,
+      profile,
+      selectedSubTab,
+      selectedType,
+      selectedEffort,
+      selectedDaysSort,
+      selectedEffortSort,
+      selectedNameSort,
+    ])
   );
 
   useFocusEffect(
@@ -239,22 +276,83 @@ const TaskList = () => {
     }, [profile])
   );
   const formattedData = formatDataForUI(packs);
-  // const taskList = useMemo(() => {
-  //   return (
-  //     <FlatList
-  //       data={selectedPack?.tasks}
-  //       keyExtractor={(item) => item.id.toString()}
-  //       contentContainerStyle={{
-  //         paddingBottom: 100,
-  //         backgroundColor: "red",
-  //       }}
-  //       style={{ flexGrow: 0 }}
-  //       initialNumToRender={10}
-  //       removeClippedSubviews={false}
+  const hanldeFilterSheet = () => {
+    bottomFilterTaskSheetRef.current?.expand();
+  };
 
-  //     />
-  //   );
-  // }, [selectedPack?.tasks, myTasks]);
+  const fetchData = async () => {
+    try {
+      // setLoading(true);
+
+      const taskTypeMap: Record<string, string> = {
+        "Go-To": "goto",
+        Repeat: "repeat",
+        Ideas: "ideas",
+        Pack: "pack",
+      };
+      const taskType = taskTypeMap[selectedTab] || "pack";
+
+      const result = await fetchAndGroupTasks(
+        taskType,
+        {
+          days: selectedDaysSort, // "old-new" | "new-old"
+          effort: selectedEffortSort, // "low-high" | "high-low"
+          name: selectedNameSort,
+          // "a-z" | "z-a"
+        },
+        {
+          effort: selectedEffort,
+        }
+      );
+
+      if (result) {
+        setGroupData(result);
+        bottomFilterTaskSheetRef.current?.close();
+      }
+
+      if (user && profile) {
+        const assignedTasks = await fetchSpruceTasksByHouseHoldId(
+          profile.household_id
+        );
+        if (assignedTasks) setMyTasks(assignedTasks.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching grouped or assigned tasks:", error);
+    }
+  };
+
+  const renderButton = (
+    label: string,
+    selected: boolean,
+    onPress: () => void
+  ) => (
+    <TouchableOpacity
+      onPress={onPress}
+      style={{
+        marginLeft: 20,
+        width: 80,
+        paddingVertical: 10,
+        paddingLeft: 2,
+        paddingRight: 2,
+        borderRadius: 10,
+        backgroundColor: selected
+          ? "rgba(152, 100, 225, 1)"
+          : "rgba(227, 227, 227, 1)",
+      }}
+    >
+      <Text
+        style={{
+          textAlign: "center",
+          color: selected ? "white" : "black",
+          fontWeight: "400",
+          fontSize: 12,
+        }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
   if (loading) {
     return (
       <MainLayout>
@@ -285,7 +383,7 @@ const TaskList = () => {
         setSelectedTab={setSelectedTab}
       />
       {selectedTab === "Go-To" && profile && (
-        <View style={{ marginBottom: 40 }}>
+        <>
           <TaskSubList
             selectedSubTab={selectedSubTab}
             setSelectedSubTab={setSelectedSubTab}
@@ -298,11 +396,12 @@ const TaskList = () => {
             profile={profile}
           />
           <TaskListTab
+            hanldeFilterSheet={hanldeFilterSheet}
             navigation={navigation}
             bottomAddTaskSheetRef={bottomAddTaskSheetRef}
             handleShuffle={() => {}}
           />
-        </View>
+        </>
       )}
       {selectedTab === "Repeat" && profile && (
         <TaskAccordionWithFlatList
@@ -339,6 +438,243 @@ const TaskList = () => {
           profile={profile}
         />
       )}
+      <BottomSheet
+        ref={bottomFilterTaskSheetRef}
+        index={1}
+        snapPoints={["60%"]}
+        enablePanDownToClose={false}
+        enableContentPanningGesture={true}
+        enableHandlePanningGesture={true}
+        backgroundStyle={{
+          borderTopLeftRadius: 50,
+          borderTopRightRadius: 50,
+          backgroundColor: "white",
+        }}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            opacity={0.7}
+            pressBehavior="close"
+          />
+        )}
+      >
+        <BottomSheetView style={{ flex: 1 }}>
+          {/* FILTER TITLE */}
+          <ScrollView>
+            <View
+              style={{
+                borderBottomWidth: 0.2,
+                paddingBottom: 20,
+                borderColor: "rgba(0,0,0,0.5)",
+              }}
+            >
+              <Text style={{ fontSize: 22, fontWeight: "300", marginLeft: 20 }}>
+                FILTER
+              </Text>
+            </View>
+
+            {/* TYPE */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 40,
+              }}
+            >
+              <View style={{ flex: 0.6 }}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "400", marginLeft: 20 }}
+                >
+                  TYPE
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", flex: 2 }}>
+                {["CHILD", "ADULT", "BOTH"].map((type) =>
+                  renderButton(type, selectedType === type, () =>
+                    setSelectedType(type)
+                  )
+                )}
+              </View>
+            </View>
+
+            {/* EFFORT FILTER */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 40,
+              }}
+            >
+              <View style={{ flex: 0.6 }}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "400", marginLeft: 20 }}
+                >
+                  EFFORT
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", flex: 2 }}>
+                {[1, 2, 3, 4].map((level) =>
+                  renderButton(
+                    level === 1
+                      ? "LOW"
+                      : level === 2
+                      ? "MED"
+                      : level === 3
+                      ? "HIGH"
+                      : "VERY HIGH",
+                    selectedEffort.includes(level), // check in array
+                    () => {
+                      if (selectedEffort.includes(level)) {
+                        setSelectedEffort(
+                          selectedEffort.filter((l) => l !== level)
+                        );
+                      } else {
+                        setSelectedEffort([...selectedEffort, level]);
+                      }
+                    }
+                  )
+                )}
+              </View>
+            </View>
+
+            {/* SORT */}
+            <View
+              style={{
+                borderBottomWidth: 0.2,
+                paddingBottom: 20,
+                borderColor: "rgba(0,0,0,0.5)",
+                marginTop: 20,
+              }}
+            >
+              <Text style={{ fontSize: 22, fontWeight: "300", marginLeft: 20 }}>
+                SORT
+              </Text>
+            </View>
+
+            {/* DAYS SORT */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 10,
+              }}
+            >
+              <View style={{ flex: 0.6 }}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "400", marginLeft: 20 }}
+                >
+                  DAYS
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", flex: 2 }}>
+                {[
+                  { label: "OLD - NEW", value: "old-new" },
+                  { label: "NEW - OLD", value: "new-old" },
+                ].map((d) =>
+                  renderButton(d.label, selectedDaysSort === d.value, () =>
+                    setSelectedDaysSort(d.value)
+                  )
+                )}
+              </View>
+            </View>
+
+            {/* EFFORT SORT */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 40,
+              }}
+            >
+              <View style={{ flex: 0.6 }}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "400", marginLeft: 20 }}
+                >
+                  EFFORT
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", flex: 2 }}>
+                {[
+                  { label: "LOW - HIGH", value: "low-high" },
+                  { label: "HIGH - LOW", value: "high-low" },
+                ].map((e) =>
+                  renderButton(e.label, selectedEffortSort === e.value, () =>
+                    setSelectedEffortSort(e.value)
+                  )
+                )}
+              </View>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 40,
+              }}
+            >
+              <View style={{ flex: 0.6 }}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: "400", marginLeft: 20 }}
+                >
+                  NAME
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", flex: 2 }}>
+                {[
+                  { label: "A - Z", value: "a-z" },
+                  { label: "Z - A", value: "z-a" },
+                ].map((n) =>
+                  renderButton(n.label, selectedNameSort === n.value, () =>
+                    setSelectedNameSort(n.value)
+                  )
+                )}
+              </View>
+            </View>
+
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                marginVertical: 20,
+              }}
+            >
+              <MainButton
+                label={"SHOW TASKS"}
+                onPress={fetchData}
+                color1={"rgba(142, 45, 226, 1)"}
+                color2={"rgba(74, 0, 224, 1)"}
+                style={{
+                  marginVertical: 5,
+                  width: "60%",
+
+                  borderRadius: 10,
+                }}
+                textStyle={{
+                  paddingHorizontal: 20,
+
+                  fontSize: 12,
+                  fontWeight: "400",
+                  fontFamily: "inter",
+                }}
+                gradentStyle={{ borderRadius: 15, height: 30 }}
+              />
+              <TransparetButton
+                label={"Clear All"}
+                containerStyle={{ width: "60%" }}
+                onPress={() => {
+                  setSelectedType(null);
+                  setSelectedEffort([]);
+                  setSelectedDaysSort(null);
+                  setSelectedEffortSort(null);
+                  setSelectedNameSort(null);
+                }}
+              />
+            </View>
+          </ScrollView>
+        </BottomSheetView>
+      </BottomSheet>
     </MainLayout>
   );
 };

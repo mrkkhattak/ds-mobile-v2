@@ -9,15 +9,22 @@ interface TabProps {
   navigation: any;
   bottomAddTaskSheetRef: React.RefObject<any>;
   handleShuffle: () => void;
+  hanldeFilterSheet: () => void;
 }
 
 const TaskListTab = (props: TabProps) => {
-  const { navigation, bottomAddTaskSheetRef, handleShuffle } = props;
+  const {
+    navigation,
+    bottomAddTaskSheetRef,
+    handleShuffle,
+    hanldeFilterSheet,
+  } = props;
   return (
     <View
       style={{
         justifyContent: "flex-end",
         flex: 1,
+        marginBottom: 20,
       }}
     >
       <View
@@ -28,15 +35,17 @@ const TaskListTab = (props: TabProps) => {
         }}
       >
         <TouchableOpacity
-          style={{ justifyContent: "center", alignItems: "center" }}
-          onPress={() => navigation.navigate("TaskLibrary")}
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          onPress={hanldeFilterSheet}
         >
           <Icon3 />
           <Text
             style={{
               color: "#AAA",
               fontSize: 15,
-              marginTop: 4,
               fontWeight: "600",
             }}
           >
@@ -53,7 +62,7 @@ const TaskListTab = (props: TabProps) => {
             style={{
               color: "#AAA",
               fontSize: 15,
-              marginTop: 4,
+
               fontWeight: "600",
             }}
           >
@@ -69,7 +78,7 @@ const TaskListTab = (props: TabProps) => {
             style={{
               color: "#AAA",
               fontSize: 15,
-              marginTop: 4,
+
               fontWeight: "600",
             }}
           >
