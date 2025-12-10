@@ -440,9 +440,9 @@ const TaskList = () => {
       )}
       <BottomSheet
         ref={bottomFilterTaskSheetRef}
-        index={1}
+        index={-1}
         snapPoints={["60%"]}
-        enablePanDownToClose={false}
+        enablePanDownToClose={true}
         enableContentPanningGesture={true}
         enableHandlePanningGesture={true}
         backgroundStyle={{

@@ -55,7 +55,7 @@ const TaskListTab = (props: TabProps) => {
 
         <TouchableOpacity
           style={{ justifyContent: "center", alignItems: "center" }}
-          onPress={() => bottomAddTaskSheetRef.current?.expand()}
+          onPress={() => navigation.navigate("BottomSheetScreen")}
         >
           <AddIcon />
           <Text

@@ -255,7 +255,7 @@ const BottomSheetScreen = () => {
             {profile && (
               <CreateTaskForm
                 onSubmit={onSubmit}
-                taskName={route.params.taskName}
+                taskName={route.params ? route.params.taskName : ""}
                 profile={profile}
                 onSuccess={() => console.log("FORM RESET")}
                 handleClose={handleClose}
