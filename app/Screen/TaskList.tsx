@@ -30,7 +30,7 @@ import Snackbar from "react-native-snackbar";
 import { HomeStackParamList } from "../types/navigator_type";
 import { TablisntType } from "../types/types";
 
-import Tab from "@/components/BottomTab/Tab";
+import TaskListTab from "@/components/BottomTab/TaskListTab";
 import PacksList from "@/components/TaskListComponents/PacksList";
 import BottomSheet from "@gorhom/bottom-sheet/lib/typescript/components/bottomSheet";
 type NavigationProp = NativeStackNavigationProp<
@@ -297,7 +297,7 @@ const TaskList = () => {
             setMyTasks={setMyTasks}
             profile={profile}
           />
-          <Tab
+          <TaskListTab
             navigation={navigation}
             bottomAddTaskSheetRef={bottomAddTaskSheetRef}
             handleShuffle={() => {}}
