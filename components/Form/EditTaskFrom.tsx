@@ -48,7 +48,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
       name: defalutValues?.name ?? "",
       room: defalutValues?.room || "",
       type: defalutValues?.type,
-      effort: defalutValues?.effort || "0",
+      effort: defalutValues?.effort || 0,
       repeat: defalutValues?.repeat || false,
       repeatEvery: defalutValues?.repeatEvery || "DAY",
       days: defalutValues?.days || [],
@@ -125,7 +125,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
       name: defalutValues?.name ?? "",
       room: defalutValues?.room || "",
       type: defalutValues?.type,
-      effort: defalutValues?.effort || "0",
+      effort: defalutValues?.effort || 0,
       repeat: defalutValues?.repeat || false,
       repeatEvery: defalutValues?.repeatEvery || "DAY",
       days: defalutValues?.days || [],
@@ -137,6 +137,19 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
       },
     });
   }, [defalutValues]);
+
+  const handleEffortChange = (newProgress: number) => {
+    // Map 0-100 to 1-5
+    let effortValue = 1;
+    if (newProgress <= 20) effortValue = 1;
+    else if (newProgress <= 40) effortValue = 2;
+    else if (newProgress <= 60) effortValue = 3;
+    else if (newProgress <= 80) effortValue = 4;
+    else effortValue = 5;
+
+    // Update your react-hook-form value
+    setValue("effort", effortValue);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -453,8 +466,8 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                 }) => (
                   <View>
                     <ProgressTrackerCard
-                      progress={Number(value)}
-                      onProgressChange={onChange}
+                      progress={(watch("effort") / 5) * 100}
+                      onProgressChange={handleEffortChange}
                     />
 
                     {error && (

@@ -59,7 +59,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
     lableStyle,
     icon,
     handleUpdateTaskStatus,
-    height = 390,
+    height = "100%",
   } = props;
   const swipeableRef = useRef<Swipeable>(null);
   const { profile, setProfile, updateProfile } = useUserProfileStore();

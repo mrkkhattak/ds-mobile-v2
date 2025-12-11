@@ -1,13 +1,6 @@
 import MainLayout from "@/components/layout/MainLayout";
 import React, { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { useAuthStore } from "@/store/authstore";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -16,12 +9,20 @@ import GoToIcon from "../../assets/images/icons/Go-To (2).svg";
 import IdeaIcon from "../../assets/images/icons/Ideas.svg";
 import PackIcon from "../../assets/images/icons/Packs.svg";
 import RepeatIcon from "../../assets/images/icons/Repeat.svg";
+import CrossIcon from "../../assets/images/icons/Vector (7).svg";
 import {
+  AddTaskToSpruce,
+  AddUserTaskToSpruce,
+  fetchAndGlobalGroupTasks,
+  fetchAndGroupGlobalSearchTasks,
+  fetchAndGroupSearchTasks,
   fetchAndGroupTasks,
   fetchPreMadePacksWithGlobalTasks,
   fetchRooms,
   fetchSpruceTasksByHouseHoldId,
   PreMadePack,
+  removeTasksByGlobalId,
+  removeUserTasksById,
   SpruceTaskDetails,
 } from "../functions/functions";
 
@@ -39,12 +40,19 @@ import { TablisntType } from "../types/types";
 
 import TaskListTab from "@/components/BottomTab/TaskListTab";
 import PacksList from "@/components/TaskListComponents/PacksList";
+import SearchTaskList from "@/components/TaskListComponents/SearchTaskList";
 import { MainButton, TransparetButton } from "@/components/ui/Buttons";
+import { CustomTextInput } from "@/components/ui/CustomTextInput";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { ScrollView } from "react-native-gesture-handler";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import {
+  generateMonthlyRepeatingDates,
+  generateRepeatingDatesUnified,
+} from "../functions/commonFuntions";
 type NavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
   "TaskLibrary"
@@ -70,14 +78,22 @@ const TaskList = () => {
   const { profile, setProfile, updateProfile } = useUserProfileStore();
   const bottomAddTaskSheetRef = useRef<BottomSheet>(null);
   const bottomFilterTaskSheetRef = useRef<BottomSheet>(null);
+  const bottomSearchIdeasTaskSheetRef = useRef<BottomSheet>(null);
+
+  const bottomSearchGotoTaskSheetRef = useRef<BottomSheet>(null);
 
   const [selectedTab, setSelectedTab] = useState("Go-To");
 
   const [groupData, setGroupData] = useState<any>({});
+  const [groupDataIdeas, setGroupIdeasData] = useState<any>({});
+
   const [myTasks, setMyTasks] = useState<SpruceTaskDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [collapsed, setCollapsed] = useState(true);
-  const gradientColors = ["#16C5E0", "#8DE016"];
+  const gradientColors = ["#182527ff", "#8DE016"];
+  const [value, setValue] = useState<string>("");
+  const [searchTasks, setSearchTasks] = useState([]);
+  const [searchGlobalTasks, setGlobalSearchTasks] = useState([]);
   const tabList: TablisntType[] = [
     {
       label: "Go-To",
@@ -143,6 +159,17 @@ const TaskList = () => {
     return -1; // a is unassigned, stay on top
   });
 
+  const currentIdeasTasks = groupDataIdeas[selectedSubTab] || [];
+
+  const sortedIdeasTasks = [...currentIdeasTasks].sort((a, b) => {
+    const aAssigned = myTasks.some((task) => task.task_id === a.id);
+    const bAssigned = myTasks.some((task) => task.task_id === b.id);
+
+    if (aAssigned === bAssigned) return 0; // same status, keep order
+    if (aAssigned) return 1; // a is assigned, move down
+    return -1; // a is unassigned, stay on top
+  });
+
   const formatDataForUI = (data: any) => {
     if (!data?.length) return [];
 
@@ -173,38 +200,75 @@ const TaskList = () => {
       const fetchData = async () => {
         try {
           // setLoading(true);
+          if (selectedTab === "Ideas") {
+            const taskTypeMap: Record<string, string> = {
+              "Go-To": "goto",
+              Repeat: "repeat",
+              Ideas: "ideas",
+              Pack: "pack",
+            };
+            const taskType = taskTypeMap[selectedTab] || "pack";
 
-          const taskTypeMap: Record<string, string> = {
-            "Go-To": "goto",
-            Repeat: "repeat",
-            Ideas: "ideas",
-            Pack: "pack",
-          };
-          const taskType = taskTypeMap[selectedTab] || "pack";
-
-          const result = await fetchAndGroupTasks(
-            taskType,
-            {
-              days: selectedDaysSort, // "old-new" | "new-old"
-              effort: selectedEffortSort, // "low-high" | "high-low"
-              name: selectedNameSort,
-              // "a-z" | "z-a"
-            },
-            {
-              effort: selectedEffort,
-            }
-          );
-
-          if (isActive && result) setGroupData(result);
-
-          if (user && profile) {
-            const assignedTasks = await fetchSpruceTasksByHouseHoldId(
-              profile.household_id
+            const result = await fetchAndGlobalGroupTasks(
+              "ideas",
+              {
+                days: selectedDaysSort, // "old-new" | "new-old"
+                effort: selectedEffortSort, // "low-high" | "high-low"
+                name: selectedNameSort,
+                // "a-z" | "z-a"
+              },
+              {
+                effort: selectedEffort,
+              }
             );
-            if (isActive && assignedTasks) setMyTasks(assignedTasks.data || []);
-          }
 
-          if (isActive) setLoading(false);
+            console.log("reslut", result);
+
+            if (isActive && result) setGroupIdeasData(result);
+
+            if (user && profile) {
+              const assignedTasks = await fetchSpruceTasksByHouseHoldId(
+                profile.household_id
+              );
+              if (isActive && assignedTasks)
+                setMyTasks(assignedTasks.data || []);
+            }
+
+            if (isActive) setLoading(false);
+          } else {
+            const taskTypeMap: Record<string, string> = {
+              "Go-To": "goto",
+              Repeat: "repeat",
+              Ideas: "ideas",
+              Pack: "pack",
+            };
+            const taskType = taskTypeMap[selectedTab] || "pack";
+
+            const result = await fetchAndGroupTasks(
+              taskType,
+              {
+                days: selectedDaysSort, // "old-new" | "new-old"
+                effort: selectedEffortSort, // "low-high" | "high-low"
+                name: selectedNameSort,
+                // "a-z" | "z-a"
+              },
+              {
+                effort: selectedEffort,
+              }
+            );
+
+            if (isActive && result) setGroupData(result);
+
+            if (user && profile) {
+              const assignedTasks = await fetchSpruceTasksByHouseHoldId(
+                profile.household_id
+              );
+              if (isActive && assignedTasks)
+                setMyTasks(assignedTasks.data || []);
+            }
+
+            if (isActive) setLoading(false);
+          }
         } catch (error) {
           console.error("Error fetching grouped or assigned tasks:", error);
           if (isActive) setLoading(false);
@@ -282,23 +346,34 @@ const TaskList = () => {
 
   const fetchData = async () => {
     try {
-      // setLoading(true);
-
       const taskTypeMap: Record<string, string> = {
         "Go-To": "goto",
         Repeat: "repeat",
         Ideas: "ideas",
         Pack: "pack",
       };
-      const taskType = taskTypeMap[selectedTab] || "pack";
+      const taskType = taskTypeMap[selectedTab] || "goto";
 
+      // ---- Fetch user tasks ----
       const result = await fetchAndGroupTasks(
         taskType,
         {
-          days: selectedDaysSort, // "old-new" | "new-old"
-          effort: selectedEffortSort, // "low-high" | "high-low"
+          days: selectedDaysSort,
+          effort: selectedEffortSort,
           name: selectedNameSort,
-          // "a-z" | "z-a"
+        },
+        {
+          effort: selectedEffort,
+        }
+      );
+
+      // ---- Fetch global tasks ----
+      const globalResult = await fetchAndGlobalGroupTasks(
+        taskType,
+        {
+          days: selectedDaysSort,
+          effort: selectedEffortSort,
+          name: selectedNameSort,
         },
         {
           effort: selectedEffort,
@@ -307,6 +382,10 @@ const TaskList = () => {
 
       if (result) {
         setGroupData(result);
+        bottomFilterTaskSheetRef.current?.close();
+      }
+      if (globalResult) {
+        setGroupIdeasData(globalResult);
         bottomFilterTaskSheetRef.current?.close();
       }
 
@@ -321,6 +400,220 @@ const TaskList = () => {
     }
   };
 
+  const handleSearch = async () => {
+    try {
+      // setLoading(true);
+
+      const taskTypeMap: Record<string, string> = {
+        "Go-To": "goto",
+        Repeat: "repeat",
+        Ideas: "ideas",
+        Pack: "pack",
+      };
+      const taskType = taskTypeMap[selectedTab] || "goto";
+
+      const result = await fetchAndGroupSearchTasks(value);
+      console.log(result);
+      if (result) {
+        setSearchTasks(result);
+        bottomFilterTaskSheetRef.current?.close();
+      }
+
+      if (user && profile) {
+        const assignedTasks = await fetchSpruceTasksByHouseHoldId(
+          profile.household_id
+        );
+        if (assignedTasks) setMyTasks(assignedTasks.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching grouped or assigned tasks:", error);
+    }
+  };
+
+  const handleIdeasSearch = async () => {
+    try {
+      // setLoading(true);
+
+      const taskTypeMap: Record<string, string> = {
+        "Go-To": "goto",
+        Repeat: "repeat",
+        Ideas: "ideas",
+        Pack: "pack",
+      };
+      const taskType = taskTypeMap[selectedTab] || "goto";
+
+      const result = await fetchAndGroupGlobalSearchTasks(value);
+      console.log(result);
+      if (result) {
+        setGlobalSearchTasks(result);
+        bottomFilterTaskSheetRef.current?.close();
+      }
+
+      if (user && profile) {
+        const assignedTasks = await fetchSpruceTasksByHouseHoldId(
+          profile.household_id
+        );
+        if (assignedTasks) setMyTasks(assignedTasks.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching grouped or assigned tasks:", error);
+    }
+  };
+
+  const handleGotoTaskAssign = async (item: any, user: any, profile: any) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const success = await AddUserTaskToSpruce(
+      item.id,
+      user.id,
+      today,
+      profile.household_id
+    );
+    if (success) {
+      Snackbar.show({
+        text: "Task assigned successfully!",
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: "green",
+      });
+      fetchData();
+      // Optionally update myTasks locally
+    } else {
+      Snackbar.show({
+        text: "Failed to assign task.",
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: "red",
+      });
+    }
+  };
+  const hadleRepeatTaskAssign = async (item: any, user: any, profile: any) => {
+    try {
+      let repeatingDates: string[] = [];
+      if (item.task_repeat_days?.length > 0) {
+        const daysArray = item.task_repeat_days.map(({ day }: any) => day);
+        repeatingDates = generateRepeatingDatesUnified("DAY", {
+          days: daysArray,
+        });
+      } else if (item.task_repeat_weeks?.length > 0) {
+        const transformed = {
+          days: item.task_repeat_weeks.map((task: any) => task.day),
+          weekNumber: item.task_repeat_weeks[0]?.week_number ?? 1,
+        };
+        repeatingDates = generateRepeatingDatesUnified("WEEK", {
+          weekDays: transformed.days,
+          weekInterval: Number(transformed.weekNumber),
+        });
+      } else if (item.task_repeat_months?.length > 0) {
+        repeatingDates = generateMonthlyRepeatingDates(
+          Number(item.task_repeat_months.month_number),
+          item.task_repeat_months.day,
+          Number(item.task_repeat_months.dayNumber)
+        );
+      }
+
+      if (!repeatingDates || repeatingDates.length === 0) return;
+
+      // 2️⃣ Execute the tasks
+      (async () => {
+        setLoading(true);
+        for (const date of repeatingDates) {
+          await AddUserTaskToSpruce(
+            item.id,
+            user.id,
+            date,
+            profile?.household_id
+          );
+        }
+        setLoading(false);
+        console.log(
+          `Repeating schedule created (${repeatingDates.length} tasks)`
+        );
+      })();
+      Snackbar.show({
+        text: `Repeating schedule created (${repeatingDates.length} tasks).`,
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "green",
+      });
+
+      fetchData();
+    } catch (error) {
+      console.error("Error creating repeating tasks:", error);
+      Snackbar.show({
+        text: "Failed to create repeating tasks.",
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+    } finally {
+      // setLoading(false);
+    }
+  };
+
+  const handleRemoveGotoTask = async (item: any) => {
+    const success = await removeUserTasksById(item.id);
+    if (success) {
+      Snackbar.show({
+        text: "Task removed successfully!",
+        duration: 2000,
+        backgroundColor: "green",
+      });
+
+      // Update local state to remove the task instantly
+      setMyTasks((prev) =>
+        prev.filter((task) => task.user_task_id !== item.id)
+      );
+    } else {
+      Snackbar.show({
+        text: "Failed to remove task.",
+        duration: 2000,
+        backgroundColor: "red",
+      });
+    }
+  };
+
+  const handleGlobalTaskAssign = async (item: any, user: any, profile: any) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const success = await AddTaskToSpruce(
+      item.id,
+      user.id,
+      today,
+      profile.household_id
+    );
+    if (success) {
+      Snackbar.show({
+        text: "Task assigned successfully!",
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: "green",
+      });
+      fetchData();
+      // Optionally update myTasks locally
+    } else {
+      Snackbar.show({
+        text: "Failed to assign task.",
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: "red",
+      });
+    }
+  };
+  const handleRemoveGlobalTask = async (item: any) => {
+    const success = await removeTasksByGlobalId(item.id);
+    if (success) {
+      Snackbar.show({
+        text: "Task removed successfully!",
+        duration: 2000,
+        backgroundColor: "green",
+      });
+
+      // Update local state to remove the task instantly
+      fetchData();
+    } else {
+      Snackbar.show({
+        text: "Failed to remove task.",
+        duration: 2000,
+        backgroundColor: "red",
+      });
+    }
+  };
+  console.log("myTask", groupData);
   const renderButton = (
     label: string,
     selected: boolean,
@@ -353,21 +646,6 @@ const TaskList = () => {
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <MainLayout>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <ActivityIndicator size="large" color="#8C50FB" />
-        </View>
-      </MainLayout>
-    );
-  }
   return (
     <MainLayout>
       <Header
@@ -394,50 +672,82 @@ const TaskList = () => {
             user={user}
             setMyTasks={setMyTasks}
             profile={profile}
+            handleGotoTaskAssign={handleGotoTaskAssign}
+            handleRemoveGotoTask={handleRemoveGotoTask}
           />
           <TaskListTab
             hanldeFilterSheet={hanldeFilterSheet}
             navigation={navigation}
             bottomAddTaskSheetRef={bottomAddTaskSheetRef}
-            handleShuffle={() => {}}
+            handleShuffle={() => {
+              bottomSearchGotoTaskSheetRef.current?.expand();
+            }}
           />
         </>
       )}
       {selectedTab === "Repeat" && profile && (
-        <TaskAccordionWithFlatList
-          groupData={groupData}
-          myTasks={myTasks}
-          setMyTasks={setMyTasks}
-          user={user}
-          setLoading={setLoading}
-          profile={profile}
-        />
+        <>
+          <TaskAccordionWithFlatList
+            groupData={groupData}
+            myTasks={myTasks}
+            setMyTasks={setMyTasks}
+            user={user}
+            setLoading={setLoading}
+            profile={profile}
+            hadleRepeatTaskAssign={hadleRepeatTaskAssign}
+            loading={loading}
+          />
+          <TaskListTab
+            hanldeFilterSheet={hanldeFilterSheet}
+            navigation={navigation}
+            bottomAddTaskSheetRef={bottomAddTaskSheetRef}
+            handleShuffle={() => {
+              bottomSearchGotoTaskSheetRef.current?.expand();
+            }}
+          />
+        </>
       )}
       {selectedTab === "Ideas" && profile && (
-        <TaskSubList
-          selectedSubTab={selectedSubTab}
-          setSelectedSubTab={setSelectedSubTab}
-          myTasks={myTasks}
-          groupData={groupData}
-          roomList={roomList}
-          sortedTasks={sortedTasks}
-          user={user}
-          setMyTasks={setMyTasks}
-          profile={profile}
-        />
+        <>
+          <TaskSubList
+            selectedSubTab={selectedSubTab}
+            setSelectedSubTab={setSelectedSubTab}
+            myTasks={myTasks}
+            groupData={groupDataIdeas}
+            roomList={roomList}
+            sortedTasks={sortedIdeasTasks}
+            user={user}
+            setMyTasks={setMyTasks}
+            profile={profile}
+            handleGotoTaskAssign={handleGlobalTaskAssign}
+            handleRemoveGotoTask={handleRemoveGlobalTask}
+            type="Ideas"
+          />
+          <TaskListTab
+            hanldeFilterSheet={hanldeFilterSheet}
+            navigation={navigation}
+            bottomAddTaskSheetRef={bottomAddTaskSheetRef}
+            handleShuffle={() => {
+              bottomSearchIdeasTaskSheetRef.current?.expand();
+            }}
+          />
+        </>
       )}
       {selectedTab === "Packs" && profile && user && (
-        <PacksList
-          formattedData={formattedData}
-          selectedPack={selectedPack}
-          setSelectedPack={setSelectedPack}
-          gradientColors={gradientColors}
-          setMyTasks={setMyTasks}
-          myTasks={myTasks}
-          user={user}
-          profile={profile}
-        />
+        <>
+          <PacksList
+            formattedData={formattedData}
+            selectedPack={selectedPack}
+            setSelectedPack={setSelectedPack}
+            gradientColors={gradientColors}
+            setMyTasks={setMyTasks}
+            myTasks={myTasks}
+            user={user}
+            profile={profile}
+          />
+        </>
       )}
+
       <BottomSheet
         ref={bottomFilterTaskSheetRef}
         index={-1}
@@ -462,17 +772,28 @@ const TaskList = () => {
       >
         <BottomSheetView style={{ flex: 1 }}>
           {/* FILTER TITLE */}
-          <ScrollView>
+          <ScrollView style={{ marginHorizontal: 2 }}>
             <View
               style={{
                 borderBottomWidth: 0.2,
                 paddingBottom: 20,
                 borderColor: "rgba(0,0,0,0.5)",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
               <Text style={{ fontSize: 22, fontWeight: "300", marginLeft: 20 }}>
                 FILTER
               </Text>
+              <TouchableOpacity
+                style={{ marginRight: 20 }}
+                onPress={() => {
+                  bottomFilterTaskSheetRef.current?.close();
+                }}
+              >
+                <CrossIcon />
+              </TouchableOpacity>
             </View>
 
             {/* TYPE */}
@@ -491,11 +812,13 @@ const TaskList = () => {
                 </Text>
               </View>
               <View style={{ flexDirection: "row", flex: 2 }}>
-                {["CHILD", "ADULT", "BOTH"].map((type) =>
-                  renderButton(type, selectedType === type, () =>
-                    setSelectedType(type)
-                  )
-                )}
+                <ScrollView horizontal>
+                  {["CHILD", "ADULT", "BOTH"].map((type) =>
+                    renderButton(type, selectedType === type, () =>
+                      setSelectedType(type)
+                    )
+                  )}
+                </ScrollView>
               </View>
             </View>
 
@@ -515,27 +838,29 @@ const TaskList = () => {
                 </Text>
               </View>
               <View style={{ flexDirection: "row", flex: 2 }}>
-                {[1, 2, 3, 4].map((level) =>
-                  renderButton(
-                    level === 1
-                      ? "LOW"
-                      : level === 2
-                      ? "MED"
-                      : level === 3
-                      ? "HIGH"
-                      : "VERY HIGH",
-                    selectedEffort.includes(level), // check in array
-                    () => {
-                      if (selectedEffort.includes(level)) {
-                        setSelectedEffort(
-                          selectedEffort.filter((l) => l !== level)
-                        );
-                      } else {
-                        setSelectedEffort([...selectedEffort, level]);
+                <ScrollView horizontal>
+                  {[1, 2, 3, 4].map((level) =>
+                    renderButton(
+                      level === 1
+                        ? "LOW"
+                        : level === 2
+                        ? "MED"
+                        : level === 3
+                        ? "HIGH"
+                        : "VERY HIGH",
+                      selectedEffort.includes(level), // check in array
+                      () => {
+                        if (selectedEffort.includes(level)) {
+                          setSelectedEffort(
+                            selectedEffort.filter((l) => l !== level)
+                          );
+                        } else {
+                          setSelectedEffort([...selectedEffort, level]);
+                        }
                       }
-                    }
-                  )
-                )}
+                    )
+                  )}
+                </ScrollView>
               </View>
             </View>
 
@@ -675,6 +1000,107 @@ const TaskList = () => {
           </ScrollView>
         </BottomSheetView>
       </BottomSheet>
+
+      <BottomSheet
+        ref={bottomSearchGotoTaskSheetRef}
+        index={-1}
+        snapPoints={["60%"]}
+        enablePanDownToClose={true}
+        enableContentPanningGesture={true}
+        enableHandlePanningGesture={true}
+        backgroundStyle={{
+          borderTopLeftRadius: 50,
+          borderTopRightRadius: 50,
+          backgroundColor: "transparent",
+        }}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            opacity={0.7}
+            pressBehavior="close"
+          />
+        )}
+      >
+        <BottomSheetView style={{ flex: 1 }}>
+          {/* FILTER TITLE */}
+          <KeyboardAwareScrollView>
+            <SearchTaskList
+              myTasks={myTasks}
+              sortedTasks={searchTasks}
+              user={user}
+              setMyTasks={setMyTasks}
+              profile={profile}
+            />
+            <View style={styles.inputRow}>
+              <CustomTextInput
+                value={value ?? ""}
+                onChangeText={setValue}
+                containerStyle={styles.inputContainer}
+                inputStyle={styles.inputText}
+              />
+
+              <TransparetButton
+                label="Search"
+                onPress={handleSearch}
+                containerStyle={styles.addButton}
+                labelStyle={styles.addButtonText}
+              />
+            </View>
+          </KeyboardAwareScrollView>
+        </BottomSheetView>
+      </BottomSheet>
+      <BottomSheet
+        ref={bottomSearchIdeasTaskSheetRef}
+        index={-1}
+        snapPoints={["60%"]}
+        enablePanDownToClose={true}
+        enableContentPanningGesture={true}
+        enableHandlePanningGesture={true}
+        backgroundStyle={{
+          borderTopLeftRadius: 50,
+          borderTopRightRadius: 50,
+          backgroundColor: "transparent",
+        }}
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            opacity={0.7}
+            pressBehavior="close"
+          />
+        )}
+      >
+        <BottomSheetView style={{ flex: 1 }}>
+          {/* FILTER TITLE */}
+          <KeyboardAwareScrollView>
+            <SearchTaskList
+              myTasks={myTasks}
+              sortedTasks={searchGlobalTasks}
+              user={user}
+              setMyTasks={setMyTasks}
+              profile={profile}
+            />
+            <View style={styles.inputRow}>
+              <CustomTextInput
+                value={value ?? ""}
+                onChangeText={setValue}
+                containerStyle={styles.inputContainer}
+                inputStyle={styles.inputText}
+              />
+
+              <TransparetButton
+                label="Search"
+                onPress={handleIdeasSearch}
+                containerStyle={styles.addButton}
+                labelStyle={styles.addButtonText}
+              />
+            </View>
+          </KeyboardAwareScrollView>
+        </BottomSheetView>
+      </BottomSheet>
     </MainLayout>
   );
 };
@@ -717,4 +1143,35 @@ const styles = StyleSheet.create({
   },
   taskDesc: { color: "#444", fontSize: 14, marginTop: 4 },
   taskPoints: { color: "#888", fontSize: 12, marginTop: 6 },
+  addButton: {
+    backgroundColor: "rgba(152, 100, 225, 1)",
+    borderRadius: 10,
+    height: 40,
+    paddingHorizontal: 20,
+    marginLeft: 10,
+    justifyContent: "center",
+  },
+  addButtonText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 16,
+    paddingVertical: 10,
+  },
+  inputRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 40,
+  },
+  inputContainer: {
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "white",
+  },
+  inputText: {
+    paddingHorizontal: 20,
+    color: "rgba(54, 43, 50, 1)",
+    fontSize: 15,
+    fontWeight: "300",
+  },
 });

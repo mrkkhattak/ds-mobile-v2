@@ -15,7 +15,7 @@ export type CreateTaskFormValues = {
   room: string;
   type: string;
   repeat: boolean;
-  effort: string;
+  effort: number;
   repeatEvery?: "DAY" | "WEEK" | "MONTH" | string | undefined;
   days?: string[]; // e.g. ["M","T"]
   week?: WeekRepeat | null;

@@ -1,4 +1,8 @@
-import { SpruceTaskDetails } from "@/app/functions/functions";
+import {
+  AddTaskToSpruce,
+  removeTasksByGlobalId,
+  SpruceTaskDetails,
+} from "@/app/functions/functions";
 import RemoveIcon from "@/assets/images/icons/remove.svg";
 import React, { useRef, useState } from "react";
 import {
@@ -16,41 +20,19 @@ import AddIcon from "@/assets/images/icons/smallAddIcon.svg";
 import { UserProfile } from "@/app/types/types";
 import { User } from "@supabase/auth-js";
 import dayjs from "dayjs";
+import Snackbar from "react-native-snackbar";
 import LimeIcon from "../../assets/images/icons/Lime.svg";
 
 interface TaskSubListProps {
-  selectedSubTab: string;
-  setSelectedSubTab: (tab: string) => void;
   myTasks: SpruceTaskDetails[];
-  groupData: Record<string, any[]>;
-  roomList: {
-    label: String;
-    value: String;
-  }[];
   sortedTasks: any[];
   user: User | null;
   setMyTasks: React.Dispatch<React.SetStateAction<SpruceTaskDetails[]>>;
   profile: UserProfile;
   display?: string;
-  handleGotoTaskAssign: (item: any, user: any, profile: any) => Promise<void>;
-  handleRemoveGotoTask: (item: any) => Promise<void>;
-  type?: string;
 }
-const TaskSubList = (props: TaskSubListProps) => {
-  const {
-    selectedSubTab,
-    setSelectedSubTab,
-    myTasks,
-    groupData,
-    roomList,
-    sortedTasks,
-    user,
-    setMyTasks,
-    profile,
-    handleGotoTaskAssign,
-    handleRemoveGotoTask,
-    type = "goto",
-  } = props;
+const SearchTaskList = (props: TaskSubListProps) => {
+  const { myTasks, sortedTasks, user, setMyTasks, profile } = props;
   const scrollY = useRef(new Animated.Value(0)).current;
 
   // Screen and indicator sizes
@@ -59,38 +41,6 @@ const TaskSubList = (props: TaskSubListProps) => {
   const indicatorHeight = screenHeight * (screenHeight / contentHeight);
   return (
     <View style={{ marginTop: 30 }}>
-      {/* Sub Tabs */}
-      <FlatList
-        data={roomList}
-        horizontal
-        showsVerticalScrollIndicator={true}
-        showsHorizontalScrollIndicator={true}
-        keyExtractor={(item) => `${item.value}`}
-        contentContainerStyle={styles.subTabContainer}
-        renderItem={({ item }) => {
-          const isSelected = selectedSubTab === item.value;
-          return (
-            <TouchableOpacity
-              style={[
-                styles.subTabButton,
-                isSelected && styles.subTabButtonActive,
-              ]}
-              onPress={() => setSelectedSubTab(`${item.value}`)}
-              activeOpacity={0.7}
-            >
-              <Text
-                style={[
-                  styles.subTabLabel,
-                  isSelected && styles.subTabLabelActive,
-                ]}
-              >
-                {item.label.toLocaleUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          );
-        }}
-      />
-
       <View
         style={{
           marginTop: 30,
@@ -122,16 +72,9 @@ const TaskSubList = (props: TaskSubListProps) => {
                 const createdAt = dayjs(item.created_at);
                 const today = dayjs();
                 const diffDays = today.diff(createdAt, "day"); // difference in days
-                let isAssigned = false;
-
-                if (type === "goto") {
-                  isAssigned = myTasks.some(
-                    (task) => task.user_task_id === item.id
-                  );
-                } else {
-                  isAssigned = myTasks.some((task) => task.task_id === item.id);
-                }
-
+                const isAssigned = myTasks.some(
+                  (task) => task.task_id === item.id
+                );
                 return (
                   <View
                     style={
@@ -189,8 +132,57 @@ const TaskSubList = (props: TaskSubListProps) => {
                           </View>
                           {user && (
                             <TouchableOpacity
-                              onPress={() => {
-                                handleGotoTaskAssign(item, user, profile);
+                              onPress={async () => {
+                                const today = new Date()
+                                  .toISOString()
+                                  .split("T")[0];
+
+                                const success = await AddTaskToSpruce(
+                                  item.id,
+                                  user.id,
+                                  today,
+                                  profile.household_id
+                                );
+                                if (success) {
+                                  Snackbar.show({
+                                    text: "Task assigned successfully!",
+                                    duration: Snackbar.LENGTH_SHORT,
+                                    backgroundColor: "green",
+                                  });
+                                  // Optionally update myTasks locally
+                                  const newTask: SpruceTaskDetails = {
+                                    id: "", // you can update from returned data if needed
+                                    assigned_at: new Date().toISOString(),
+                                    updated_at: new Date().toISOString(),
+                                    assign_user_id: user.id,
+                                    assign_user_email: user.email || null,
+                                    owner_user_id: user.id,
+                                    owner_user_email: user.email || null,
+                                    task_id: item.id,
+                                    task_name: item.name,
+                                    description_us: item.description_us,
+                                    description_uk: item.description_uk,
+                                    description_row: item.description_row,
+                                    icon_name: item.icon_name,
+                                    child_friendly: item.child_friendly,
+                                    estimated_effort: item.estimated_effort,
+                                    points: item.points,
+                                    room: item.room,
+                                    category: item.category,
+                                    keywords: null,
+                                    display_names: null,
+                                    unique_completions: 0,
+                                    total_completions: 0,
+                                    effort_level: null,
+                                  };
+                                  setMyTasks((prev) => [...prev, newTask]);
+                                } else {
+                                  Snackbar.show({
+                                    text: "Failed to assign task.",
+                                    duration: Snackbar.LENGTH_SHORT,
+                                    backgroundColor: "red",
+                                  });
+                                }
                               }}
                             >
                               <AddIcon />
@@ -208,8 +200,30 @@ const TaskSubList = (props: TaskSubListProps) => {
                         >
                           {user && (
                             <TouchableOpacity
-                              onPress={() => {
-                                handleRemoveGotoTask(item);
+                              onPress={async () => {
+                                const success = await removeTasksByGlobalId(
+                                  item.id
+                                );
+                                if (success) {
+                                  Snackbar.show({
+                                    text: "Task removed successfully!",
+                                    duration: 2000,
+                                    backgroundColor: "green",
+                                  });
+
+                                  // Update local state to remove the task instantly
+                                  setMyTasks((prev) =>
+                                    prev.filter(
+                                      (task) => task.task_id !== item.id
+                                    )
+                                  );
+                                } else {
+                                  Snackbar.show({
+                                    text: "Failed to remove task.",
+                                    duration: 2000,
+                                    backgroundColor: "red",
+                                  });
+                                }
                               }}
                             >
                               <RemoveIcon />
@@ -267,7 +281,7 @@ const TaskSubList = (props: TaskSubListProps) => {
   );
 };
 
-export default TaskSubList;
+export default SearchTaskList;
 
 const styles = StyleSheet.create({
   subTabContainer: {

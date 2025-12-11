@@ -100,7 +100,6 @@ const index = () => {
   const fetchTasks = async () => {
     try {
       if (user && profile) {
-        const selectedDate = new Date();
         const { data, error } = await fetchSpruceTasksByHouseHoldId(
           profile?.household_id,
           selectedDate.toISOString().split("T")[0]
@@ -142,7 +141,7 @@ const index = () => {
 
       if (groupBy === "category") {
         // Fallback: category → room → Uncategorized
-        groupKey = task.category || task.user_task_room || "Uncategorized";
+        groupKey = task.category || task.user_task_category || "Uncategorized";
       } else if (groupBy === "person") {
         const profile = task.assign_user_profile;
         groupKey = profile
@@ -476,9 +475,11 @@ const index = () => {
 
         await CreateNewTask(data, household_id);
         await fetchTasks();
+        setEditTaskLoading(false);
       }
     }
     bottomSheetRef.current?.close();
+    setEditTaskLoading(false);
   };
 
   const handleAssingTaskToUser = async (taskId: string, userId: string) => {
@@ -635,18 +636,15 @@ const index = () => {
 
       const loadHomeScreenData = async () => {
         try {
-          // --- MEMBERS ---
           const memberRes = await getProfilesByHousehold(profile.household_id);
           if (isActive) {
             if (memberRes.data) setMember(memberRes.data);
             if (memberRes.error) showError(memberRes.error);
           }
 
-          // --- GLOBAL TASKS ---
           const taskRes = await getGlobalTasks();
           if (isActive && taskRes) setTasks(taskRes);
 
-          // --- DAILY TASKS (fetchTasks) ---
           await fetchTasks(); // NO more double-calls
         } catch (err: any) {
           if (isActive) showError(err.message);
@@ -712,19 +710,37 @@ const index = () => {
             today={today}
           />
         </View>
-
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            marginBottom: 10,
+            marginTop: 10,
+          }}
+        >
+          <SlideButton
+            label="Slide to start sprucing"
+            icon={<SlideIcon />}
+            onSlideComplete={() => navigation.navigate("SpruceScreen")}
+            width={Platform.OS === "android" ? 340 : 370}
+            textStyle={{
+              fontSize: 16,
+              fontWeight: "700",
+              textAlign: "center",
+            }}
+          />
+        </View>
         <BottomSheet
           ref={bottomAddTaskSheetRef}
           index={1}
-          snapPoints={["60%", "80%", "90%"]}
+          snapPoints={["50%", "60%", "80%", "90%"]}
           enablePanDownToClose={false}
           enableContentPanningGesture={true}
           enableHandlePanningGesture={true}
           backgroundStyle={{
             borderTopLeftRadius: 50,
             borderTopRightRadius: 50,
-
-            backgroundColor: "transparent",
+            backgroundColor: "white",
           }}
           backdropComponent={(props) => (
             <BottomSheetBackdrop
@@ -738,31 +754,12 @@ const index = () => {
           <BottomSheetView style={{ flex: 1 }}>
             <View
               style={{
-                justifyContent: "center",
-                alignItems: "center",
-                marginBottom: 10,
-              }}
-            >
-              <SlideButton
-                label="Slide to start sprucing"
-                icon={<SlideIcon />}
-                onSlideComplete={() => navigation.navigate("SpruceScreen")}
-                width={Platform.OS === "android" ? 340 : 370}
-                textStyle={{
-                  fontSize: 16,
-                  fontWeight: "700",
-                  textAlign: "center",
-                }}
-              />
-            </View>
-            <View
-              style={{
+                flex: 1,
                 backgroundColor: "white",
                 borderTopLeftRadius: 50,
                 borderTopRightRadius: 50,
               }}
             >
-              {/* MAIN CONTENT (scrollable list section) */}
               <View style={{ flex: 1 }}>
                 {/* HEADER */}
                 <View
@@ -824,7 +821,7 @@ const index = () => {
                   </View>
                 </View>
 
-                {/* TASK LIST — flex: 1 lets it fill space and push tab to bottom */}
+                {/* SCROLLABLE TASK LIST */}
                 <View style={{ flex: 1 }}>
                   <HomeTaskList
                     groupData={groupData}
@@ -840,12 +837,13 @@ const index = () => {
                     taskId={taskId}
                     setOpenModal={setOpenModal}
                     openModal={openModal}
-                    height={500}
+                    height={550}
                   />
                 </View>
               </View>
 
-              <View style={{ paddingBottom: 30 }}>
+              {/* FIXED TAB AT BOTTOM */}
+              <View style={{ height: 90 }}>
                 <Tab
                   navigation={navigation}
                   bottomAddTaskSheetRef={bottomAddTaskSheetRef}

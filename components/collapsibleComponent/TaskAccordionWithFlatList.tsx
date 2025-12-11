@@ -6,18 +6,13 @@ import Accordion from "react-native-collapsible/Accordion";
 import Snackbar from "react-native-snackbar";
 
 import {
-  AddTaskToSpruce,
-  removeTasksByGlobalId,
+  removeUserTasksById,
   SpruceTaskDetails,
 } from "@/app/functions/functions";
 import AddIcon from "@/assets/images/icons/smallAddIcon.svg";
 import DownArrowIcon from "@/assets/images/icons/Vector (5).svg";
 import UpArrowIcon from "@/assets/images/icons/Vector (6).svg";
 
-import {
-  generateMonthlyRepeatingDates,
-  generateRepeatingDatesUnified,
-} from "@/app/functions/commonFuntions";
 import { UserProfile } from "@/app/types/types";
 import { ScrollView } from "react-native-gesture-handler";
 import LimeIcon from "../../assets/images/icons/Lime.svg";
@@ -60,6 +55,8 @@ interface Props {
   user: { id: string; email?: string } | null;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   profile: UserProfile;
+  hadleRepeatTaskAssign: (item: any, user: any, profile: any) => Promise<void>;
+  loading: boolean;
 }
 
 const TaskAccordionWithFlatList: React.FC<Props> = ({
@@ -69,6 +66,8 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
   user,
   setLoading,
   profile,
+  loading,
+  hadleRepeatTaskAssign,
 }) => {
   const [activeSections, setActiveSections] = useState<number[]>([]);
 
@@ -76,7 +75,7 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
   const dailyTasks: Task[] = [];
   const weeklyTasks: Task[] = [];
   const monthlyTasks: Task[] = [];
-
+  console.log("groupData", groupData);
   Object.values(groupData).forEach((tasks) => {
     tasks.forEach((task) => {
       if (task.task_repeat_days?.length) dailyTasks.push(task);
@@ -108,7 +107,9 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
           const createdAt = dayjs(item.created_at);
           const today = dayjs();
           const diffDays = today.diff(createdAt, "day");
-          const isAssigned = myTasks.some((task) => task.task_id === item.id);
+          const isAssigned = myTasks.some(
+            (task) => task.user_task_id === item.id
+          );
 
           return (
             <View
@@ -153,90 +154,24 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
                     {diffDays} days ago
                   </Text>
 
-                  {user && (
-                    <TouchableOpacity
-                      onPress={async () => {
-                        try {
-                          let repeatingDates: string[] = [];
-                          if (item.task_repeat_days?.length > 0) {
-                            const daysArray = item.task_repeat_days.map(
-                              ({ day }: any) => day
-                            );
-                            repeatingDates = generateRepeatingDatesUnified(
-                              "DAY",
-                              { days: daysArray }
-                            );
-                          } else if (item.task_repeat_weeks?.length > 0) {
-                            const transformed = {
-                              days: item.task_repeat_weeks.map(
-                                (task: any) => task.day
-                              ),
-                              weekNumber:
-                                item.task_repeat_weeks[0]?.week_number ?? 1,
-                            };
-                            repeatingDates = generateRepeatingDatesUnified(
-                              "WEEK",
-                              {
-                                weekDays: transformed.days,
-                                weekInterval: Number(transformed.weekNumber),
-                              }
-                            );
-                          } else if (item.task_repeat_months?.length > 0) {
-                            repeatingDates = generateMonthlyRepeatingDates(
-                              Number(item.task_repeat_months.month_number),
-                              item.task_repeat_months.day,
-                              Number(item.task_repeat_months.dayNumber)
-                            );
-                          }
-
-                          if (!repeatingDates || repeatingDates.length === 0)
-                            return;
-
-                          // 2️⃣ Execute the tasks
-                          setLoading(true);
-                          (async () => {
-                            for (const date of repeatingDates) {
-                              await AddTaskToSpruce(
-                                item.id,
-                                user.id,
-                                date,
-                                profile?.household_id
-                              );
-                            }
-                            console.log(
-                              `Repeating schedule created (${repeatingDates.length} tasks)`
-                            );
-                          })();
-                          Snackbar.show({
-                            text: `Repeating schedule created (${repeatingDates.length} tasks).`,
-                            duration: Snackbar.LENGTH_LONG,
-                            backgroundColor: "green",
-                          });
-                        } catch (error) {
-                          console.error(
-                            "Error creating repeating tasks:",
-                            error
-                          );
-                          Snackbar.show({
-                            text: "Failed to create repeating tasks.",
-                            duration: Snackbar.LENGTH_LONG,
-                            backgroundColor: "red",
-                          });
-                        } finally {
-                          setLoading(false);
-                        }
-                      }}
-                    >
-                      <AddIcon />
-                    </TouchableOpacity>
-                  )}
+                  <>
+                    {user && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          hadleRepeatTaskAssign(item, user, profile);
+                        }}
+                      >
+                        <AddIcon />
+                      </TouchableOpacity>
+                    )}
+                  </>
                 </View>
               ) : (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   {user && (
                     <TouchableOpacity
                       onPress={async () => {
-                        const success = await removeTasksByGlobalId(item.id);
+                        const success = await removeUserTasksById(item.id);
                         if (success) {
                           Snackbar.show({
                             text: "Task removed successfully!",
@@ -244,7 +179,7 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
                             backgroundColor: "green",
                           });
                           setMyTasks((prev) =>
-                            prev.filter((task) => task.task_id !== item.id)
+                            prev.filter((task) => task.user_task_id !== item.id)
                           );
                         } else {
                           Snackbar.show({

@@ -546,7 +546,7 @@ const SpruceScreen = () => {
           <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
             <View style={{ zIndex: 100 }}>
               <Timer
-                time={`00:10`}
+                time={`${houseHold.spruce_time}`}
                 navigation={navigation}
                 bottomAddTaskSheetRef={bottomAddTaskSheetRef}
               />
@@ -782,7 +782,7 @@ const SpruceScreen = () => {
 
           <BottomSheet
             ref={bottomAddTaskSheetRef}
-            index={1} // hidden initially
+            index={-1} // hidden initially
             snapPoints={["20%"]}
             enablePanDownToClose
             backgroundStyle={styles.bottomSheetBackground}

@@ -102,7 +102,8 @@ export type SpruceTaskDetails = {
   user_task_repeat_every: string | null;
   user_task_created_at: string | null;
   user_task_updated_at: string | null;
-
+  user_task_repeat_type: string | null;
+  user_task_category: string | null;
   task_status: string | null;
 };
 
@@ -223,18 +224,33 @@ export type Profile = {
   updated_at: string;
 };
 
-export async function getGlobalTasks(): Promise<GlobalTask[]> {
-  const { data, error } = await supabase
+export async function getGlobalTasks(): Promise<any[]> {
+  // Fetch global tasks
+  const { data: globalTasks, error: globalError } = await supabase
     .from("global_tasks")
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching global tasks:", error.message);
-    throw error;
+  if (globalError) {
+    console.error("Error fetching global tasks:", globalError.message);
+    throw globalError;
   }
 
-  return data || [];
+  // Fetch user tasks
+  const { data: userTasks, error: userError } = await supabase
+    .from("user_task")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (userError) {
+    console.error("Error fetching user tasks:", userError.message);
+    throw userError;
+  }
+
+  // Merge both results
+  const combined = [...(globalTasks || []), ...(userTasks || [])];
+
+  return combined;
 }
 
 // export const fetchAndGroupTasks = async () => {
@@ -309,6 +325,7 @@ export async function getGlobalTasks(): Promise<GlobalTask[]> {
 // };
 export interface FilterOptions {
   effort?: number[]; // e.g., [1, 2] to show Low & Medium
+  search?: string;
 }
 
 export interface SortOptions {
@@ -317,7 +334,7 @@ export interface SortOptions {
   name?: "a-z" | "z-a";
 }
 
-export const fetchAndGroupTasks = async (
+export const fetchAndGlobalGroupTasks = async (
   taskType?: string,
   sortOptions?: SortOptions,
   filterOptions?: FilterOptions
@@ -339,9 +356,13 @@ export const fetchAndGroupTasks = async (
   }
 
   // Apply effort filter if provided
-  console.log("---s", filterOptions?.effort?.length);
+  // console.log("---s", filterOptions?.effort?.length);
   if (filterOptions?.effort?.length) {
     query = query.in("effort_level", filterOptions.effort);
+  }
+
+  if (filterOptions?.search && filterOptions.search.trim() !== "") {
+    query = query.ilike("name", `%${filterOptions.search}%`);
   }
 
   const { data, error } = await query;
@@ -390,6 +411,146 @@ export const fetchAndGroupTasks = async (
   });
 
   return groupedTasks;
+};
+export const fetchAndGroupGlobalSearchTasks = async (search: string) => {
+  let query = supabase
+    .from("global_tasks")
+    .select(
+      `
+      *,
+      task_repeat_days(*),
+      task_repeat_weeks(*),
+      task_repeat_months(*)
+    `
+    )
+    .order("category", { ascending: true });
+
+  // Apply effort filter if provided
+  // console.log("---s", filterOptions?.effort?.length);
+
+  if (search.trim() !== "") {
+    query = query.ilike("name", `%${search}%`);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching tasks:", error);
+    return {};
+  }
+
+  // Group by category
+  const groupedTasks: Record<string, any[]> = {};
+  // data.forEach((task) => {
+  //   const category = task.category || "Uncategorized";
+  //   if (!groupedTasks[category]) groupedTasks[category] = [];
+  //   groupedTasks[category].push(task);
+  // });
+
+  return data;
+};
+export const fetchAndGroupTasks = async (
+  taskType?: string,
+  sortOptions?: SortOptions,
+  filterOptions?: FilterOptions
+) => {
+  let query = supabase
+    .from("user_task")
+    .select(
+      `
+        *,
+        task_repeat_days(*),
+        task_repeat_weeks(*),
+        task_repeat_months(*)
+      `
+    )
+    .order("category", { ascending: true });
+
+  if (taskType) {
+    query = query.eq("repeat_type", taskType);
+  }
+
+  if (filterOptions?.effort?.length) {
+    query = query.in("effort", filterOptions.effort);
+  }
+
+  if (filterOptions?.search && filterOptions.search.trim() !== "") {
+    query = query.ilike("name", `%${filterOptions.search}%`);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching tasks:", error);
+    return {};
+  }
+
+  // Group by category
+  const groupedTasks: Record<string, any[]> = {};
+  data.forEach((task) => {
+    const category = task.category || task.room || "Uncategorized";
+    if (!groupedTasks[category]) groupedTasks[category] = [];
+    groupedTasks[category].push(task);
+  });
+
+  // Apply sorting within each category
+  Object.keys(groupedTasks).forEach((category) => {
+    groupedTasks[category].sort((a, b) => {
+      // Days sorting
+      if (sortOptions?.days) {
+        const diff =
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        if (sortOptions.days === "old-new") return diff;
+        if (sortOptions.days === "new-old") return -diff;
+      }
+
+      // Effort sorting
+      if (sortOptions?.effort) {
+        const diff = (a.effort ?? 0) - (b.effort ?? 0);
+        if (sortOptions.effort === "low-high") return diff;
+        if (sortOptions.effort === "high-low") return -diff;
+      }
+
+      // Name sorting
+      if (sortOptions?.name) {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        if (sortOptions.name === "a-z") return nameA.localeCompare(nameB);
+        if (sortOptions.name === "z-a") return nameB.localeCompare(nameA);
+      }
+
+      return 0;
+    });
+  });
+
+  return groupedTasks;
+};
+
+export const fetchAndGroupSearchTasks = async (search: string) => {
+  let query = supabase
+    .from("user_task")
+    .select(
+      `
+        *,
+        task_repeat_days(*),
+        task_repeat_weeks(*),
+        task_repeat_months(*)
+      `
+    )
+    .order("category", { ascending: true });
+
+  if (search.trim() !== "") {
+    query = query.ilike("name", `%${search}%`);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching tasks:", error);
+    return {};
+  }
+
+  return data;
 };
 export const fetchSpruceTasks = async (
   userId: string,
@@ -606,7 +767,7 @@ export const createTask = async (
     if (!userId) {
       return { error: "User not authenticated" };
     }
-
+    console.log(data);
     // Insert main task
     const { data: task, error: taskError } = await supabase
       .from("user_task")
@@ -616,9 +777,11 @@ export const createTask = async (
           name: data.name,
           room: data.room,
           type: data.type,
-          effort: parseInt(data.effort, 10),
+          effort: data.effort,
           repeat: data.repeat,
           repeat_every: data.repeatEvery,
+          repeat_type: data.repeat === true ? "repeat" : "goto",
+          category: data.room,
         },
       ])
       .select()
@@ -949,7 +1112,9 @@ export const fetchSpruceTasksByHouseHoldId = async (
           repeat_every,
           user_id,
           created_at,
-          updated_at
+          updated_at,
+          repeat_type,
+          category
         ),
         global_task:global_task_id (
           id,
@@ -1052,6 +1217,8 @@ export const fetchSpruceTasksByHouseHoldId = async (
       user_task_created_at: item.user_task?.created_at ?? null,
       user_task_updated_at: item.user_task?.updated_at ?? null,
       task_status: item.task_status,
+      user_task_repeat_type: item.user_task?.repeat_type,
+      user_task_category: item.user_task?.category,
     }));
 
     return { data: result };
