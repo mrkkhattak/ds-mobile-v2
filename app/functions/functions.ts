@@ -326,6 +326,7 @@ export async function getGlobalTasks(): Promise<any[]> {
 export interface FilterOptions {
   effort?: number[]; // e.g., [1, 2] to show Low & Medium
   search?: string;
+  type?: string;
 }
 
 export interface SortOptions {
@@ -468,6 +469,10 @@ export const fetchAndGroupTasks = async (
 
   if (taskType) {
     query = query.eq("repeat_type", taskType);
+  }
+
+  if (filterOptions?.type) {
+    query = query.eq("type", filterOptions.type);
   }
 
   if (filterOptions?.effort?.length) {

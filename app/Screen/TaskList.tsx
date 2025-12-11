@@ -219,6 +219,7 @@ const TaskList = () => {
               },
               {
                 effort: selectedEffort,
+                type: selectedType,
               }
             );
 
@@ -254,6 +255,7 @@ const TaskList = () => {
               },
               {
                 effort: selectedEffort,
+                type: selectedType,
               }
             );
 
@@ -364,6 +366,7 @@ const TaskList = () => {
         },
         {
           effort: selectedEffort,
+          type: selectedType,
         }
       );
 
@@ -377,6 +380,7 @@ const TaskList = () => {
         },
         {
           effort: selectedEffort,
+          type: selectedType,
         }
       );
 
