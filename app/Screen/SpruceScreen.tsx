@@ -79,10 +79,35 @@ const SpruceScreen = () => {
     { label: "Person", value: "person" },
   ]);
   const [totalDone, setTotalDone] = useState<number>(0);
+  const [totalTasks, setTotalTasks] = useState<number>(0);
+  const [totalPoints, setTotalPoints] = useState<number>(0);
+
   const [openSpruceModal, setOpenSpruceModal] = useState(false);
   const [countdown, setCountdown] = useState<number>(3);
   const [loadingCountdown, setLoadingCountdown] = useState(true); // true during countdown
+  const effortPoints = {
+    1: 5,
+    2: 10,
+    3: 15,
+    4: 20,
+    5: 25,
+  };
+  const calculateGroupedTaskPoints = (groupedTasks: any) => {
+    let total = 0;
 
+    Object.keys(groupedTasks).forEach((category) => {
+      groupedTasks[category].forEach((task: any) => {
+        if (task.task_status === "completed") {
+          total +=
+            effortPoints[
+              task.effort_level ? task.effort_level : task.user_task_effort
+            ] || 0;
+        }
+      });
+    });
+
+    return total;
+  };
   useEffect(() => {
     if (loadingCountdown) {
       const timer = setInterval(() => {
@@ -167,6 +192,7 @@ const SpruceScreen = () => {
         }
 
         if (data && Array.isArray(data)) {
+          console.log("data===>", data);
           const grouped = groupTasks(data, groupValue);
           setGroupData(grouped);
         }
@@ -185,25 +211,43 @@ const SpruceScreen = () => {
     }
   };
 
-  const groupTasks = (tasks: SpruceTaskDetails[], groupBy: GroupByOption) => {
-    return tasks.reduce((acc, task) => {
-      let groupKey: any;
+  const groupTasks = (tasks, groupBy) => {
+    const grouped = {};
 
-      if (groupBy === "category") {
-        // Fallback: category → room → Uncategorized
-        groupKey = task.category || task.user_task_room || "Uncategorized";
-      } else if (groupBy === "person") {
-        const profile = task.assign_user_profile;
-        groupKey = profile
-          ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
-            "Unassigned"
-          : "Unassigned";
+    tasks.forEach((task) => {
+      const isCompleted = task.task_status === "completed";
+
+      let groupKey;
+
+      // 1️⃣ Completed group
+      if (isCompleted) {
+        groupKey = "Completed";
       }
 
-      if (!acc[groupKey]) acc[groupKey] = [];
-      acc[groupKey].push(task);
-      return acc;
-    }, {} as Record<string, SpruceTaskDetails[]>);
+      // 2️⃣ Group by person
+      else if (groupBy === "person") {
+        const first = task.assign_user_profile?.first_name || "";
+        const last = task.assign_user_profile?.last_name || "";
+        const full = `${first} ${last}`.trim();
+
+        groupKey = full.length > 0 ? full : "Unassigned";
+      }
+
+      // 3️⃣ Group by category
+      else if (groupBy === "category") {
+        groupKey = task.category || task.room || "Uncategorized";
+      }
+
+      // 4️⃣ Default group
+      else {
+        groupKey = "Other";
+      }
+
+      if (!grouped[groupKey]) grouped[groupKey] = [];
+      grouped[groupKey].push(task);
+    });
+
+    return grouped;
   };
   const fetchHouseHold = async (profile: UserProfile) => {
     try {
@@ -302,7 +346,8 @@ const SpruceScreen = () => {
                     : task
               );
             });
-
+            const totalPoints = calculateGroupedTaskPoints(groupData);
+            setTotalPoints(totalPoints);
             return updatedGroupData;
           });
 
@@ -560,7 +605,14 @@ const SpruceScreen = () => {
           }
         });
       });
+      const temptotalTasks = Object.values(groupData).reduce(
+        (sum, tasks) => sum + tasks.length,
+        0
+      );
+      const totalPoints = calculateGroupedTaskPoints(groupData);
+      setTotalPoints(totalPoints);
       setTotalDone(completedCount);
+      setTotalTasks(temptotalTasks);
     }
   }, [groupData]);
 
@@ -590,10 +642,32 @@ const SpruceScreen = () => {
     bottomAddTaskSheetRef.current?.close();
     setOpenSpruceModal(true);
   };
-  const totalTasks = Object.values(groupData).reduce(
-    (sum, tasks) => sum + tasks.length,
-    0
+
+  const getSpruceMessage = (percentage: any) => {
+    let heading = "";
+    let subheading = "";
+    console.log("percentage", percentage);
+    if (percentage === 100) {
+      heading = "Perfect Spruce";
+      subheading = "You swept through those tasks like a pro";
+    } else if (percentage >= 70) {
+      heading = "Smart Spruce";
+      subheading = "You’ve made strong progress and your space is thanking you";
+    } else if (percentage >= 40) {
+      heading = "Nice Spruce";
+      subheading = "You’ve tackled a good share and it’s making a difference";
+    } else {
+      heading = "Great Start";
+      subheading = "You've set things in motion and every bit counts";
+    }
+
+    return { heading, subheading };
+  };
+
+  const { heading, subheading } = getSpruceMessage(
+    (totalDone / totalTasks) * 100
   );
+
   if (loadingCountdown) {
     return (
       <MainLayout>
@@ -622,7 +696,7 @@ const SpruceScreen = () => {
           <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
             <View style={{ zIndex: 0 }}>
               <Timer
-                time={`${houseHold.spruce_time}`}
+                time={`00:10`}
                 navigation={navigation}
                 bottomAddTaskSheetRef={bottomAddTaskSheetRef}
               />
@@ -818,7 +892,7 @@ const SpruceScreen = () => {
                     fontFamily: "Poppins",
                   }}
                 >
-                  Nice Spruce!
+                  {heading}
                 </MainHeading>
                 <SecondryHeading
                   style={{
@@ -830,7 +904,7 @@ const SpruceScreen = () => {
                     fontFamily: "Inter",
                   }}
                 >
-                  You’ve tackled a good share and it’s making a difference
+                  {subheading}
                 </SecondryHeading>
                 <View
                   style={{ justifyContent: "center", alignItems: "center" }}
@@ -857,7 +931,7 @@ const SpruceScreen = () => {
                     gradentStyle={{ borderRadius: 15 }}
                   />
                   <MainButton
-                    label={"0 points collected"}
+                    label={`${totalPoints} points collected`}
                     onPress={() => {
                       setOpenSpruceModal(false);
                       navigation.navigate("Home");

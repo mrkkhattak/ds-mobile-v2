@@ -10,9 +10,10 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3BE0969E6B75CA0198BC1046 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C258A0E0E4AD38B8B2B8A1FA /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		84BA87F16B2F2D6B8E074DA6 /* libPods-dailyspruce.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FF43FC13F6166C76ABE25E2 /* libPods-dailyspruce.a */; };
+		61568D182EEC3ABC005FBF06 /* whoosh.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 61568D172EEC3ABC005FBF06 /* whoosh.mp3 */; };
 		9AD67EAC72238096CC3CB261 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD59D19060F22917D3BA11C /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		DF6C6E704CC22B5BB33DF2DA /* libPods-dailyspruce.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B1EB4FEE1802AE8BC26C661 /* libPods-dailyspruce.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -21,9 +22,10 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = dailyspruce/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = dailyspruce/Info.plist; sourceTree = "<group>"; };
 		2AD59D19060F22917D3BA11C /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-dailyspruce/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		4FF43FC13F6166C76ABE25E2 /* libPods-dailyspruce.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-dailyspruce.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		53106DC8CBF90C92C3C52BE8 /* Pods-dailyspruce.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dailyspruce.release.xcconfig"; path = "Target Support Files/Pods-dailyspruce/Pods-dailyspruce.release.xcconfig"; sourceTree = "<group>"; };
-		A91CAF74D86EDB4DFF34428F /* Pods-dailyspruce.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dailyspruce.debug.xcconfig"; path = "Target Support Files/Pods-dailyspruce/Pods-dailyspruce.debug.xcconfig"; sourceTree = "<group>"; };
+		4996CD86145199BEE51B5A07 /* Pods-dailyspruce.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dailyspruce.release.xcconfig"; path = "Target Support Files/Pods-dailyspruce/Pods-dailyspruce.release.xcconfig"; sourceTree = "<group>"; };
+		4ECDD6E7689F2EA7871DA5C7 /* Pods-dailyspruce.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-dailyspruce.debug.xcconfig"; path = "Target Support Files/Pods-dailyspruce/Pods-dailyspruce.debug.xcconfig"; sourceTree = "<group>"; };
+		61568D172EEC3ABC005FBF06 /* whoosh.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = whoosh.mp3; sourceTree = "<group>"; };
+		7B1EB4FEE1802AE8BC26C661 /* libPods-dailyspruce.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-dailyspruce.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = dailyspruce/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		C258A0E0E4AD38B8B2B8A1FA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = dailyspruce/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -37,7 +39,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				84BA87F16B2F2D6B8E074DA6 /* libPods-dailyspruce.a in Frameworks */,
+				DF6C6E704CC22B5BB33DF2DA /* libPods-dailyspruce.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,6 +49,7 @@
 		13B07FAE1A68108700A75B9A /* dailyspruce */ = {
 			isa = PBXGroup;
 			children = (
+				61568D172EEC3ABC005FBF06 /* whoosh.mp3 */,
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* dailyspruce-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
@@ -62,7 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				4FF43FC13F6166C76ABE25E2 /* libPods-dailyspruce.a */,
+				7B1EB4FEE1802AE8BC26C661 /* libPods-dailyspruce.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -70,8 +73,8 @@
 		7F218F83861ECA90983D985F /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				A91CAF74D86EDB4DFF34428F /* Pods-dailyspruce.debug.xcconfig */,
-				53106DC8CBF90C92C3C52BE8 /* Pods-dailyspruce.release.xcconfig */,
+				4ECDD6E7689F2EA7871DA5C7 /* Pods-dailyspruce.debug.xcconfig */,
+				4996CD86145199BEE51B5A07 /* Pods-dailyspruce.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -138,14 +141,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "dailyspruce" */;
 			buildPhases = (
-				4DD61215CD7C89DE1D2F79F0 /* [CP] Check Pods Manifest.lock */,
+				2F76107BF907FDE7BF8AC819 /* [CP] Check Pods Manifest.lock */,
 				D5D92AE3571B145EDED45DD4 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
-				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				610D05C7F87A87E55CE3C702 /* [CP] Embed Pods Frameworks */,
-				4D86E846C3436B8DA7AC945A /* [CP] Copy Pods Resources */,
+				13B07F8E1A680F5B00A75B9A /* Resources */,
+				F1290386A0FC2F53983713C9 /* [CP] Embed Pods Frameworks */,
+				BAA55DAAA5BC11259CDB32A6 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -196,6 +199,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				3BE0969E6B75CA0198BC1046 /* PrivacyInfo.xcprivacy in Resources */,
+				61568D182EEC3ABC005FBF06 /* whoosh.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,7 +223,29 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
-		4D86E846C3436B8DA7AC945A /* [CP] Copy Pods Resources */ = {
+		2F76107BF907FDE7BF8AC819 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-dailyspruce-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		BAA55DAAA5BC11259CDB32A6 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -257,50 +283,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-dailyspruce/Pods-dailyspruce-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		4DD61215CD7C89DE1D2F79F0 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-dailyspruce-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		610D05C7F87A87E55CE3C702 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-dailyspruce/Pods-dailyspruce-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-dailyspruce/Pods-dailyspruce-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		D5D92AE3571B145EDED45DD4 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -325,6 +307,28 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-dailyspruce/expo-configure-project.sh\"\n";
 		};
+		F1290386A0FC2F53983713C9 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-dailyspruce/Pods-dailyspruce-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-dailyspruce/Pods-dailyspruce-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -342,7 +346,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A91CAF74D86EDB4DFF34428F /* Pods-dailyspruce.debug.xcconfig */;
+			baseConfigurationReference = 4ECDD6E7689F2EA7871DA5C7 /* Pods-dailyspruce.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -379,7 +383,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 53106DC8CBF90C92C3C52BE8 /* Pods-dailyspruce.release.xcconfig */;
+			baseConfigurationReference = 4996CD86145199BEE51B5A07 /* Pods-dailyspruce.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

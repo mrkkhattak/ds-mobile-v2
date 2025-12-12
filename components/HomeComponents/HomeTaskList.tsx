@@ -92,7 +92,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                   ...lableStyle,
                 }}
               >
-                {item === "completed_task"
+                {item === "Completed"
                   ? "completed task".toUpperCase()
                   : item.replace(/-/g, " ").toUpperCase()}
               </Text>
@@ -104,7 +104,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                 style={{
                   borderRadius: 30,
                   backgroundColor: "#FFFFFF",
-                  opacity: item === "completed_task" ? 0.5 : 1,
+                  opacity: item === "Completed" ? 0.5 : 1,
                 }}
                 renderItem={({ item: task }) => {
                   const selectedMemberObj = members.find(
@@ -215,7 +215,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                                       setTaskId(task.id);
                                     }}
                                     disabled={
-                                      item === "completed_task" ? true : false
+                                      item === "Completed" ? true : false
                                     }
                                   >
                                     <Avatar.Text
@@ -280,9 +280,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                                   onPress={() => {
                                     handleUpdateTaskStatus(task.id);
                                   }}
-                                  disabled={
-                                    item === "completed_task" ? true : false
-                                  }
+                                  disabled={item === "Completed" ? true : false}
                                 >
                                   {task.task_status === "pending" ? (
                                     icon

@@ -1335,8 +1335,7 @@ export async function completeSpruceTask(taskId: string) {
     }
 
     const { global_task_id, user_task_id } = spruceTask;
-    console.log("global_task_id", global_task_id);
-    console.log("spruceTask", spruceTask);
+
     // 2️⃣ Update spruce task status
     const { error: spruceUpdateError } = await supabase
       .from("spruce_tasks")
@@ -1351,20 +1350,20 @@ export async function completeSpruceTask(taskId: string) {
     }
 
     // 3️⃣ Update Global Task category if exists
-    if (global_task_id) {
-      await supabase
-        .from("global_tasks")
-        .update({ category: "completed_task" })
-        .eq("id", global_task_id);
-    }
+    // if (global_task_id) {
+    //   await supabase
+    //     .from("global_tasks")
+    //     .update({ category: "completed_task" })
+    //     .eq("id", global_task_id);
+    // }
 
     // 4️⃣ Update User Task room (or add field if needed)
-    if (user_task_id) {
-      await supabase
-        .from("user_task")
-        .update({ room: "completed_task" }) // customize if needed
-        .eq("id", user_task_id);
-    }
+    // if (user_task_id) {
+    //   await supabase
+    //     .from("user_task")
+    //     .update({ room: "completed_task" }) // customize if needed
+    //     .eq("id", user_task_id);
+    // }
 
     return { success: true, error: null };
   } catch (err: any) {
