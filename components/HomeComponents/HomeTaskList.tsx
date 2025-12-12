@@ -1,6 +1,12 @@
 import { SpruceTaskDetails } from "@/app/functions/functions";
 import { IconItem, Member } from "@/app/types/types";
-import { BathIcon, BayLeafIcon, ClothesHangerIcon, StarsIcon, VaccumCleaner } from "@/assets/taskIcons/TaskIcons";
+import {
+  BathIcon,
+  BayLeafIcon,
+  ClothesHangerIcon,
+  StarsIcon,
+  VaccumCleaner,
+} from "@/assets/taskIcons/TaskIcons";
 import React, { useMemo, useRef } from "react";
 import {
   FlatList,
@@ -44,7 +50,7 @@ interface HomeTaskListProps {
   handleOneOff: (task: SpruceTaskDetails) => Promise<"error" | "success">;
 }
 
-const icons:IconItem[] = [
+const icons: IconItem[] = [
   { id: 1, name: "bath", component: BathIcon },
   { id: 2, name: "bayLeaf", component: BayLeafIcon },
   { id: 3, name: "hanger", component: ClothesHangerIcon },
@@ -76,21 +82,20 @@ const HomeTaskList = (props: HomeTaskListProps) => {
   } = props;
   const swipeableRef = useRef<Swipeable>(null);
 
-
   const iconMap = useMemo(() => {
-  const map: Record<string, React.FC<any>> = {};
-  icons.forEach((icon) => {
-    map[icon.name] = icon.component;
-  });
-  return map;
-}, []);
+    const map: Record<string, React.FC<any>> = {};
+    icons.forEach((icon) => {
+      map[icon.name] = icon.component;
+    });
+    return map;
+  }, []);
 
-// simple function to get icon
+  // simple function to get icon
   const getIconByName = (iconName?: string) => {
-  console.log("iconName",iconName)
-  if (!iconName) return null;
-  return iconMap[iconName] || null;
-};
+    console.log("iconName", iconName);
+    if (!iconName) return null;
+    return iconMap[iconName] || null;
+  };
 
   return (
     <View
@@ -137,7 +142,7 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                     (member) => member.user_id === task.assign_user_id
                   );
                   const name = `${selectedMemberObj?.first_name} ${selectedMemberObj?.last_name}`;
-   const IconComponent = getIconByName(task.iconName);
+                  const IconComponent = getIconByName(task.user_task_icon);
                   return (
                     <View
                       style={{
@@ -184,8 +189,12 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                               gap: 10,
                             }}
                           >
-                        {IconComponent ? <IconComponent width={24} height={24} />:<StarsIcon/>}
-                          
+                            {IconComponent ? (
+                              <IconComponent width={24} height={24} />
+                            ) : (
+                              <StarsIcon />
+                            )}
+
                             {/* <View
                               style={{
                                 backgroundColor: "#E6E0F8",

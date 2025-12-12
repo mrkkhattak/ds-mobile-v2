@@ -105,6 +105,7 @@ export type SpruceTaskDetails = {
   user_task_repeat_type: string | null;
   user_task_category: string | null;
   task_status: string | null;
+  user_task_icon: string | null;
 };
 
 type CreateTaskResult = {
@@ -785,7 +786,7 @@ export const createTask = async (
     if (!userId) {
       return { error: "User not authenticated" };
     }
-    
+
     // Insert main task
     const { data: task, error: taskError } = await supabase
       .from("user_task")
@@ -801,7 +802,7 @@ export const createTask = async (
           repeat_type: data.repeat === true ? "repeat" : "goto",
           category: data.room,
           household_id: household_id,
-          icon_name:data.iconName
+          icon_name: data.iconName,
         },
       ])
       .select()
@@ -1166,6 +1167,7 @@ export const fetchSpruceTasksByHouseHoldId = async (
       { ascending: true }
     );
 
+    console.log("spruceData", spruceData);
     if (spruceError) {
       console.error("Error fetching spruce tasks:", spruceError.message);
       return { error: spruceError.message };
@@ -1238,6 +1240,7 @@ export const fetchSpruceTasksByHouseHoldId = async (
       task_status: item.task_status,
       user_task_repeat_type: item.user_task?.repeat_type,
       user_task_category: item.user_task?.category,
+      user_task_icon: item.user_task?.icon_name,
     }));
 
     return { data: result };

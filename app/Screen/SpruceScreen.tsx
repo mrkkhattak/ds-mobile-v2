@@ -696,7 +696,7 @@ const SpruceScreen = () => {
           <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
             <View style={{ zIndex: 0 }}>
               <Timer
-                time={`00:10`}
+                time={`${houseHold.spruce_time}`}
                 navigation={navigation}
                 bottomAddTaskSheetRef={bottomAddTaskSheetRef}
               />
