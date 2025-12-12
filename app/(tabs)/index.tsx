@@ -256,7 +256,7 @@ const index = () => {
 
   const fetchTask = async (taskId: string) => {
     const { data, error } = await getTaskById(taskId);
-
+   
     if (error) {
       Snackbar.show({
         text: error,
@@ -286,6 +286,7 @@ const index = () => {
         day: data?.repeat_monthly[0]?.day || "",
         month: `${data?.repeat_monthly[0]?.month_number}`,
       },
+      iconName:data?.icon_name
     });
     bottomSheetRef.current?.expand();
     // setTask(data);

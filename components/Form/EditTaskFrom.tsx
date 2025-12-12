@@ -10,11 +10,12 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
 import { Controller, Resolver, useForm } from "react-hook-form";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { ActivityIndicator } from "react-native-paper";
 import Snackbar from "react-native-snackbar";
+import IconSelector from "../ui/IconSelector";
 
 interface CreateTaskFormProps {
   onSubmit: (formData: CreateTaskFormValues, household_id: string) => void;
@@ -25,6 +26,7 @@ interface CreateTaskFormProps {
 
 const EditTaskForm = (props: CreateTaskFormProps) => {
   const { onSubmit, defalutValues, profile, editTaskloading } = props;
+  console.log("defalutValues",defalutValues)
   const [open, setOpen] = useState(false);
   const [openWeek, setOpenWeek] = useState(false);
   const [openDayNumber, setOpenDayNumber] = useState(false);
@@ -58,6 +60,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
         day: "",
         month: "",
       },
+      iconName:defalutValues?.iconName
     },
   });
   console.log("errors", errors);
@@ -106,7 +109,11 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
   ];
 
   const repeatEveryField = watch("repeatEvery");
-
+  const handleSelect = (iconName:string) => {
+    console.log("icon", iconName)
+    setValue("iconName",iconName)
+  }
+  const [showIcons,setShowIcons]=useState(false)
   useEffect(() => {
     if (repeatEveryField === "DAY") {
       setValue("week", { day: [], weekNumber: "" });
@@ -146,7 +153,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
     else if (newProgress <= 60) effortValue = 3;
     else if (newProgress <= 80) effortValue = 4;
     else effortValue = 5;
-
+console.log("effortValue",effortValue)
     // Update your react-hook-form value
     setValue("effort", effortValue);
   };
@@ -169,7 +176,11 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
       }
     }, [profile])
   );
-
+  useEffect(() => {
+    if (defalutValues?.iconName) {
+    setShowIcons(true)
+  }
+},[defalutValues?.iconName])
   return (
     <>
       <KeyboardAwareScrollView
@@ -223,11 +234,12 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
           }}
         >
           {/* Row 1: Name + Input */}
-          <View
+           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               marginBottom: 16,
+              flex:1
             }}
           >
             <Text
@@ -237,16 +249,21 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                 fontSize: 20,
                 lineHeight: 22,
                 width: 80, // fixed width to align with other labels
+               
               }}
             >
               NAME
             </Text>
-
             <View
+              style={{flex:1}}
+            >
+              <View
               style={{
                 flex: 1,
                 flexDirection: "row",
                 alignItems: "center",
+                  marginBottom: 4,
+                
               }}
             >
               <Controller
@@ -268,7 +285,6 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                         height: 49,
                         borderRadius: 10,
                         paddingHorizontal: 16,
-                        paddingBottom: 15,
                       }}
                       inputStyle={{
                         fontSize: 16,
@@ -290,10 +306,13 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
                   </View>
                 )}
               />
-              <StartIcon style={{ marginLeft: 10 }} />
-            </View>
+       <TouchableOpacity onPress={()=>setShowIcons(!showIcons)}>    <StartIcon style={{ marginLeft: 10 } } /></TouchableOpacity>
+              </View>
+              {showIcons && <View style={{ width: "100%" }}> <IconSelector selectedValue={defalutValues?.iconName} handleSelect={handleSelect} /></View>}
+                 
+</View>
+            
           </View>
-
           {/* Row 2: ROOM + Dropdown */}
           <View
             style={{

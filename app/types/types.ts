@@ -9,6 +9,12 @@ type MonthRepeat = {
   month: string;
 };
 
+
+export type IconItem = {
+  id: number; // optional frontend ID
+  name: string; // unique key for DB
+  component: React.FC<any>; // React component for the icon
+};
 export type CreateTaskFormValues = {
   id?: string | undefined;
   name: string;
@@ -21,6 +27,7 @@ export type CreateTaskFormValues = {
   week?: WeekRepeat | null;
   month?: MonthRepeat | null;
   assign?: string;
+  iconName?:string
 };
 
 export type TablisntType = {

@@ -16,6 +16,7 @@ interface ProgressTrackerCardProps {
   progress: number;
   onProgressChange: (newProgress: number) => void;
 }
+const steps = 5; // 1 to 5 points
 
 const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
   progress,
@@ -36,14 +37,24 @@ const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
       },
     })
   ).current;
+// const dashSteps = [1, 4]; // only show vertical dashes at these steps
+const handleTouch = (evt: GestureResponderEvent) => {
+  if (trackWidth.current === 0) return;
 
-  const handleTouch = (evt: GestureResponderEvent) => {
-    if (trackWidth.current === 0) return;
-    const touchX = evt.nativeEvent.locationX; // X relative to the track
-    let newProgress = Math.round((touchX / trackWidth.current) * 100);
-    newProgress = Math.max(0, Math.min(100, newProgress));
-    onProgressChange(newProgress);
-  };
+  const touchX = evt.nativeEvent.locationX;
+
+  // Convert to 0–1 range
+  let ratio = touchX / trackWidth.current;
+  ratio = Math.max(0, Math.min(1, ratio));
+
+  // Snap to nearest step (0 to steps)
+  const step = Math.round(ratio * steps); // 0,1,2,3,4,5
+
+  // Convert step back to progress %
+  const newProgress = (step / steps) * 100;
+console.log("newProgress",newProgress)
+  onProgressChange(newProgress);
+};
 
   const getLevelColor = (
     level: "Low" | "Medium" | "High" | string
@@ -95,7 +106,21 @@ const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
           {...panResponder.panHandlers}
           ref={trackRef}
           onLayout={(e) => (trackWidth.current = e.nativeEvent.layout.width)}
-        >
+        > 
+   {/* {dashSteps.map((pos, index) => (
+    <View
+      key={index}
+      style={[
+        styles.dash,
+        {
+          left: trackWidth.current
+            ? (trackWidth.current / (steps - 1)) * pos - 1 // -1 to center 2px dash
+            : 0,
+        },
+      ]}
+    />
+  ))} */}
+          
           <View style={styles.progressTrack}>
             <LinearGradient
               colors={["#16C5E0", "#8DE016"]} // gradient colors
@@ -180,6 +205,31 @@ const styles = StyleSheet.create({
   textYellow: { color: "#ca8a04", fontWeight: "bold" },
   textGreen: { color: "#16a34a", fontWeight: "bold" },
   textGray: { color: "#9ca3af" },
+  dashesRow: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  height: "100%",
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  paddingHorizontal: 2,
+  pointerEvents: "none", // so touches pass through
+},
+
+dash: {
+  position: "absolute",
+  top: 0,
+  width: 2,
+  height: "100%",
+  backgroundColor: "#000", // black dash
+  zIndex: 1, // ensure it floats above the gradient
+},
+
+dashActive: {
+  backgroundColor: "#000", // black dash
+},
 });
 
 export default ProgressTrackerCard;

@@ -785,7 +785,7 @@ export const createTask = async (
     if (!userId) {
       return { error: "User not authenticated" };
     }
-    console.log(data);
+    
     // Insert main task
     const { data: task, error: taskError } = await supabase
       .from("user_task")
@@ -801,6 +801,7 @@ export const createTask = async (
           repeat_type: data.repeat === true ? "repeat" : "goto",
           category: data.room,
           household_id: household_id,
+          icon_name:data.iconName
         },
       ])
       .select()
@@ -1112,8 +1113,7 @@ export const fetchSpruceTasksByHouseHoldId = async (
     let query = supabase
       .from("spruce_tasks")
       .select(
-        `
-        id,
+        `id,
         assign_user_id,
         user_id,
         user_task_id,
@@ -1133,7 +1133,7 @@ export const fetchSpruceTasksByHouseHoldId = async (
           created_at,
           updated_at,
           repeat_type,
-          category
+          category,icon_name
         ),
         global_task:global_task_id (
           id,

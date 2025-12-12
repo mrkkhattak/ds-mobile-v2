@@ -31,6 +31,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { Avatar } from "react-native-paper";
 import Snackbar from "react-native-snackbar";
 import Memberlist from "../HomeComponents/Memberlist";
+import IconSelector from "../ui/IconSelector";
 
 interface CreateTaskFormProps {
   onSubmit: (
@@ -77,10 +78,10 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
       repeatEvery: "DAY",
       days: [],
       week: { day: [], weekNumber: "" },
-      month: { dayNumber: undefined, day: undefined, month: undefined },
+      month: { dayNumber: undefined, day: undefined, month: undefined },iconName:""
     },
   });
-
+const [showIcons,setShowIcons]=useState(false)
   const daysShort = ["M", "TU", "W", "TH", "F", "S", "SU"];
   const weekNumberItems = [
     { label: "1 weeks", value: "1" },
@@ -167,7 +168,10 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
       onSuccess?.();
     }
   };
-
+  const handleSelect = (iconName:string) => {
+    console.log("icon", iconName)
+    setValue("iconName",iconName)
+}
   const handleEffortChange = (newProgress: number) => {
     // Map 0-100 to 1-5
     let effortValue = 1;
@@ -176,7 +180,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
     else if (newProgress <= 60) effortValue = 3;
     else if (newProgress <= 80) effortValue = 4;
     else effortValue = 5;
-
+console.log("new effeor",effortValue)
     // Update your react-hook-form value
     setValue("effort", effortValue);
   };
@@ -341,6 +345,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
               flexDirection: "row",
               alignItems: "center",
               marginBottom: 16,
+              flex:1
             }}
           >
             <Text
@@ -350,16 +355,21 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
                 fontSize: 20,
                 lineHeight: 22,
                 width: 80, // fixed width to align with other labels
+               
               }}
             >
               NAME
             </Text>
-
             <View
+              style={{flex:1}}
+            >
+              <View
               style={{
                 flex: 1,
                 flexDirection: "row",
                 alignItems: "center",
+                  marginBottom: 4,
+                
               }}
             >
               <Controller
@@ -401,11 +411,16 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
                     )}
                   </View>
                 )}
-              />
-              <StartIcon style={{ marginLeft: 10 }} />
-            </View>
+                />
+                <TouchableOpacity onPress={()=>setShowIcons(!showIcons)}>    <StartIcon style={{ marginLeft: 10 } } /></TouchableOpacity>
+          
+              </View>
+           {showIcons &&<View style={{ width: "100%" }}> <IconSelector handleSelect={handleSelect} /></View>}   
+                 
+</View>
+            
           </View>
-
+    
           {/* Row 2: ROOM + Dropdown */}
           <View
             style={{
