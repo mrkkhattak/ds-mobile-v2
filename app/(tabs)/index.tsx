@@ -31,7 +31,7 @@ import {
   getUserProfile,
   GlobalTask,
   removeTaskFromSpruce,
-  SpruceTaskDetails,
+  SpruceTaskDetails
 } from "../functions/functions";
 
 import EditBottomSheet from "@/components/BottomSheets/EditBottomSheet";
@@ -553,6 +553,7 @@ const index = () => {
     // check if a task already exists
     const exists = selected?.name.toLowerCase() === value.toLowerCase();
 
+
     if (exists) {
       const today = new Date().toISOString().split("T")[0];
       const success = await AddTaskToSpruce(
@@ -572,15 +573,57 @@ const index = () => {
         setValue("");
       }
     } else {
+      const nullFields = [
+  "id","assigned_at","updated_at","scheduled_date","task_id",
+  "icon_name","owner_user_id","owner_user_email","assign_user_id",
+  "assign_user_email","assign_user_profile","points","effort_level",
+  "estimated_effort","total_completions","unique_completions",
+  "child_friendly","keywords","display_names","description_row",
+  "description_uk","description_us","user_task_id",
+  "user_task_created_at","user_task_updated_at","user_task_user_id",
+  "user_task_type","user_task_effort","user_task_repeat_every"
+];
+
+// create an object with all null fields
+const nullObj = nullFields.reduce((acc, key) => {
+  acc[key] = null;
+  return acc;
+}, {});
+
+// create your temp task
+const tempTask = {
+  task_name: value,
+  user_task_name: value,
+  category: "Misc",
+  room: "Misc",
+  user_task_room: "Misc",
+  task_status: "pending",
+  user_task_repeat: false,
+  ...nullObj
+};
+     
+// append inside groupData state
+setGroupData(prev => {
+  // If "Misc" group exists, append the task; otherwise create it
+  return {
+    ...prev,
+    Misc: prev.Misc ? [...prev.Misc, tempTask] : [tempTask],
+  };
+});
       // otherwise add the new task
-      console.log("Task added:", value);
+      // console.log("Task added:", value);
+      // navigation.navigate("BottomSheetScreen", {
+      //   taskName: value,
+      // });
+    
+    }
+  };
+  const handleSaveTask = () => {
+    console.log("value",value)
       navigation.navigate("BottomSheetScreen", {
         taskName: value,
       });
-      setValue("");
-    }
-  };
-
+}
   const handleShuffle = () => {
     if (!groupData) return;
     if (members.length === 0) return;
@@ -655,14 +698,15 @@ const index = () => {
       loadHomeScreenData();
 
       // polling
-      interval = setInterval(loadHomeScreenData, 5000);
+      // interval = setInterval(loadHomeScreenData, 5000);
 
       return () => {
         isActive = false;
-        clearInterval(interval);
+        // clearInterval(interval);
       };
     }, [profile, selectedDate, groupValue])
   );
+  console.log("new value",value)
   useEffect(() => {
     if (groupData) {
       let completedCount = 0;
@@ -838,6 +882,7 @@ const index = () => {
                     setOpenModal={setOpenModal}
                     openModal={openModal}
                     height={550}
+                    handleSaveTask={handleSaveTask}
                   />
                 </View>
               </View>

@@ -248,6 +248,7 @@ interface CustomButtonProps {
   onPress: () => void;
   viewStyle?: ViewStyle;
   textStyle?: TextStyle;
+  bgColor?:string
 }
 
 export const CustomButton: React.FC<CustomButtonProps> = ({
@@ -255,6 +256,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
   onPress,
   viewStyle,
   textStyle,
+  bgColor="#6915E0",
 }) => {
   return (
     <TouchableOpacity
@@ -264,7 +266,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
         {
           width: 68,
           height: 35,
-          backgroundColor: "#6915E0",
+          backgroundColor: bgColor,
           borderRadius: 40,
           padding: 10,
           justifyContent: "center",

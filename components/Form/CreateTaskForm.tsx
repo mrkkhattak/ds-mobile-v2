@@ -178,6 +178,14 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
     setValue("effort", effortValue);
   };
 
+  const handleNew =async ( data: CreateTaskFormValues,
+    household_id: string) => {
+    const result = await onSubmit(data, household_id);
+    if (result) {
+      reset()
+    }
+  
+}
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -289,15 +297,19 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
               justifyContent: "space-between",
             }}
           >
+           
+            <CustomButton
+              bgColor="#6915E066"
+              label="New"
+             onPress={handleSubmit((data) => {
+                handleNew(data, profile.household_id);
+              })}
+            />
             <CustomButton
               label="Save"
               onPress={handleSubmit((data) => {
                 handleInternalSubmit(data, profile.household_id);
               })}
-            />
-            <CustomButton
-              label="Close"
-              onPress={handleClose}
               viewStyle={{ marginLeft: 5 }}
             />
           </View>

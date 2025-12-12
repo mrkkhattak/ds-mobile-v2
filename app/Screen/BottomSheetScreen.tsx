@@ -91,7 +91,7 @@ const BottomSheetScreen = () => {
   ): Promise<"success" | "error"> => {
     try {
       setLoading(true);
-
+      console.log("formdata",formData)
       let repeatingDates: string[] = [];
       if (formData.repeatEvery === "DAY") {
         repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
@@ -111,7 +111,7 @@ const BottomSheetScreen = () => {
       }
 
       const result = await createTask(formData);
-
+console.log("result",result)
       if (result.error) {
         Snackbar.show({
           text: result.error,

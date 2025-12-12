@@ -1,4 +1,8 @@
-import React, { useRef } from "react";
+import { AddUserTaskToSpruce, createTask, SpruceTaskDetails } from "@/app/functions/functions";
+import { Member } from "@/app/types/types";
+import { useAuthStore } from "@/store/authstore";
+import { useUserProfileStore } from "@/store/userProfileStore";
+import React, { useRef, useState } from "react";
 import {
   FlatList,
   Image,
@@ -8,18 +12,15 @@ import {
   Text,
   TextStyle,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { ScrollView, Swipeable } from "react-native-gesture-handler";
-import { MainHeading, SecondryHeading } from "../ui/Heading";
-
-import { Member } from "@/app/types/types";
-import { useUserProfileStore } from "@/store/userProfileStore";
 import { Avatar } from "react-native-paper";
 import Snackbar from "react-native-snackbar";
 import CheckIcon from "../../assets/images/icons/check.svg";
 import LimeIcon from "../../assets/images/icons/Lime.svg";
 import { SecondaryButton } from "../ui/Buttons";
+import { MainHeading, SecondryHeading } from "../ui/Heading";
 import Memberlist from "./Memberlist";
 
 interface HomeTaskListProps {
@@ -40,6 +41,7 @@ interface HomeTaskListProps {
   icon?: React.ReactNode;
   height?: number;
   handleUpdateTaskStatus?: (taskId: string) => Promise<void>;
+  handleSaveTask:()=>void
 }
 const HomeTaskList = (props: HomeTaskListProps) => {
   const {
@@ -59,11 +61,133 @@ const HomeTaskList = (props: HomeTaskListProps) => {
     lableStyle,
     icon,
     handleUpdateTaskStatus,
-    height = "100%",
+    height = "100%",handleSaveTask
   } = props;
   const swipeableRef = useRef<Swipeable>(null);
   const { profile, setProfile, updateProfile } = useUserProfileStore();
+  console.log("grouptdata", groupData)
+   const user = useAuthStore((s) => s.user);
+  const [loading, setLoading] = useState<Boolean>(true);
+  const handleOneOff = async (task:SpruceTaskDetails) => {
+  console.log("task",task)
+    try {
+      console.log("task",task)
+      setLoading(true);
+const extracted = {
+  id: task.id ?? undefined,                      // null → undefined
+  name: task.user_task_name || task.task_name ||"",   // pick whichever exists
+  room: task.user_task_room || task.room ||"",
+  type: task.user_task_type  || "",  // fallback empty string
+  repeat: task.user_task_repeat ?? false,
+  effort: task.user_task_effort ?? 1,
+  repeatEvery:"None",category:task.category
+};
+      // let repeatingDates: string[] = [];
+      // if (task?.user_task_repeat_type === "DAY") {
+      //   repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+      //     days: formData.days,
+      //   });
+      // } else if (task.user_task_repeat_type === "WEEK") {
+      //   repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+      //     weekDays: formData.week?.day,
+      //     weekInterval: Number(formData.week?.weekNumber),
+      //   });
+      // } else if (formData.repeatEvery === "MONTH") {
+      //   repeatingDates = generateMonthlyRepeatingDates(
+      //     Number(formData.month?.month),
+      //     `${formData.month?.day}`,
+      //     Number(formData.month?.dayNumber)
+      //   );
+      // }
 
+      const result = await createTask(extracted);
+console.log("result",result)
+      if (result.error) {
+        Snackbar.show({
+          text: result.error,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "red",
+        });
+        setLoading(false);
+        return "error";
+      }
+      console.log("taskid=====>",result.data.id,user?.id,profile?.household_id)
+      const taskId = result.data.id;
+      const userId = user?.id;
+
+      if (!userId) {
+        setLoading(false);
+        return "error";
+      }
+
+              const today = new Date().toISOString().split("T")[0];
+        await AddUserTaskToSpruce(
+          taskId,
+          userId,
+          today,
+         profile?.household_id ||"",
+          task.assign_user_id||""
+        );
+
+        Snackbar.show({
+          text: "Task created successfully!",
+          duration: Snackbar.LENGTH_SHORT,
+          backgroundColor: "green",
+        });
+        return "success";
+
+//       if (formData.repeat && repeatingDates.length > 0) {
+//         (async () => {
+//           for (const date of repeatingDates) {
+//             await AddUserTaskToSpruce(
+//               taskId,
+//               userId,
+//               date,
+//               household_id,
+//               formData.assign
+//             );
+//           }
+//           console.log(
+//             `Repeating schedule created (${repeatingDates.length} tasks)`
+//           );
+//         })();
+
+//         Snackbar.show({
+//           text: `Repeating schedule created (${repeatingDates.length} tasks).`,
+//           duration: Snackbar.LENGTH_LONG,
+//           backgroundColor: "green",
+//         });
+//         return "success";
+//       } else {
+//         const today = new Date().toISOString().split("T")[0];
+//         await AddUserTaskToSpruce(
+//           taskId,
+//           userId,
+//           today,
+//           household_id,
+//           formData.assign
+//         );
+
+//         Snackbar.show({
+//           text: "Task created successfully!",
+//           duration: Snackbar.LENGTH_SHORT,
+//           backgroundColor: "green",
+//         });
+//         return "success";
+//       }
+    } catch (err: any) {
+      Snackbar.show({
+        text: err.message || "Something went wrong",
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+      return "error";
+    } finally {
+      setLoading(false);
+      return "success";
+    }
+  
+  }
   return (
     <View
       style={{
@@ -145,7 +269,6 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                             flexDirection: "row",
                             alignItems: "center",
                             justifyContent: "space-between",
-
                             padding: 16,
                           }}
                         >
@@ -182,78 +305,96 @@ const HomeTaskList = (props: HomeTaskListProps) => {
                             </Text>
                           </View>
                           {/* Right side: effort icons + avatar */}
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            {Array.from({
-                              length: Math.min(3, Math.ceil(task.points / 30)),
-                            }).map((_, i) => (
-                              <LimeIcon key={i} />
-                            ))}
-                            {selectedMemberObj ? (
-                              <TouchableOpacity
-                                onPress={() => {
-                                  setOpenModal(true);
-                                  setTaskId(task.id);
-                                }}
-                                disabled={
-                                  item === "completed_task" ? true : false
-                                }
-                              >
-                                <Avatar.Text
-                                  size={44}
-                                  label={name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")
-                                    .toUpperCase()}
-                                  style={{
-                                    backgroundColor: "#6915E0",
-                                  }}
-                                />
-                              </TouchableOpacity>
-                            ) : (
-                              <TouchableOpacity
-                                onPress={() => {
-                                  setOpenModal(true);
-                                  setTaskId(task.id);
-                                }}
-                              >
-                                <Image
-                                  source={require("../../assets/images/addUser.png")}
-                                  style={{
-                                    width: 44,
-                                    height: 44,
-                                    borderRadius: 17,
-                                    marginLeft: 4,
-                                  }}
-                                />
-                              </TouchableOpacity>
-                            )}
-                            {icon &&
-                              handleUpdateTaskStatus &&
-                              task.assign_user_id && (
+                    
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                              }}
+                            >      {task?.category !== "Misc" ?
+                              <View   style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                               gap:2
+                              }}>
+                              {Array.from({
+                                length: Math.min(3, Math.ceil(task.points / 30)),
+                              }).map((_, i) => (
+                                <LimeIcon key={i} />
+                              ))}
+                              {selectedMemberObj ? (
                                 <TouchableOpacity
-                                  style={{ marginLeft: 10, marginTop: 5 }}
                                   onPress={() => {
-                                    handleUpdateTaskStatus(task.id);
+                                    setOpenModal(true);
+                                    setTaskId(task.id);
                                   }}
                                   disabled={
                                     item === "completed_task" ? true : false
                                   }
                                 >
-                                  {task.task_status === "pending" ? (
-                                    icon
-                                  ) : (
-                                    <CheckIcon height={44} width={44} />
-                                  )}
+                                  <Avatar.Text
+                                    size={44}
+                                    label={name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                      .toUpperCase()}
+                                    style={{
+                                      backgroundColor: "#6915E0",
+                                    }}
+                                  />
                                 </TouchableOpacity>
-                              )}
-                          </View>
+                              ) : (
+                                <TouchableOpacity
+                                  onPress={() => {
+                                    setOpenModal(true);
+                                    setTaskId(task.id);
+                                  }}
+                                >
+                                  <Image
+                                    source={require("../../assets/images/addUser.png")}
+                                    style={{
+                                      width: 44,
+                                      height: 44,
+                                      borderRadius: 17,
+                                      marginLeft: 4,
+                                    }}
+                                  />
+                                </TouchableOpacity>
+                                )}
+                                </View>:null}
+                      {task?.category === "Misc" ? (
+  <View style={styles.container}>
+    <TouchableOpacity style={styles.button} onPress={() => handleOneOff(task)}>
+      <Text style={styles.buttonText}>One-Off</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.button} onPress={handleSaveTask}>
+      <Text style={styles.buttonText}>Save Task</Text>
+    </TouchableOpacity>
+  </View>
+) : null}
+                              {icon &&
+                                handleUpdateTaskStatus &&
+                                task.assign_user_id && (
+                                  <TouchableOpacity
+                                    style={{ marginLeft: 10, marginTop: 5 }}
+                                    onPress={() => {
+                                      handleUpdateTaskStatus(task.id);
+                                    }}
+                                    disabled={
+                                      item === "completed_task" ? true : false
+                                    }
+                                  >
+                                    {task.task_status === "pending" ? (
+                                      icon
+                                    ) : (
+                                      <CheckIcon height={44} width={44} />
+                                    )}
+                                  </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
                       </Swipeable>
                     </View>
@@ -363,4 +504,27 @@ const HomeTaskList = (props: HomeTaskListProps) => {
 
 export default HomeTaskList;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row", // place buttons in a row
+    justifyContent: "space-between",
+    marginHorizontal: 20,
+    marginVertical: 10,
+  },
+  button: {
+   
+    backgroundColor: "#D9D9D933", // your requested bg color
+    paddingVertical: 10,
+    marginHorizontal: 5,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal:5
+  },
+  buttonText: {
+    color: "#000",
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+});
+

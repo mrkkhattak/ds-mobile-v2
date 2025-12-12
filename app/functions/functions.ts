@@ -768,7 +768,7 @@ export const createTask = async (
   try {
     const userResponse = await supabase.auth.getUser();
     const userId = userResponse.data.user?.id;
-
+console.log("data",data)
     if (!userId) {
       return { error: "User not authenticated" };
     }
