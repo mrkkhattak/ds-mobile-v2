@@ -26,12 +26,13 @@ import {
   deleteTaskById,
   fetchSpruceTasksByHouseHoldId,
   getGlobalTasks,
+  getHouseholdById,
   getProfilesByHousehold,
   getTaskById,
   getUserProfile,
   GlobalTask,
   removeTaskFromSpruce,
-  SpruceTaskDetails
+  SpruceTaskDetails,
 } from "../functions/functions";
 
 import EditBottomSheet from "@/components/BottomSheets/EditBottomSheet";
@@ -104,7 +105,7 @@ const index = () => {
           profile?.household_id,
           selectedDate.toISOString().split("T")[0]
         );
-
+        console.log("data====>", data);
         if (error) {
           Snackbar.show({
             text: error,
@@ -335,79 +336,80 @@ const index = () => {
   ) => {
     try {
       // setLoading(true);
-
-      let repeatingDates: string[] = [];
-      if (formData.repeatEvery === "DAY") {
-        repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
-          days: formData.days,
-        });
-      } else if (formData.repeatEvery === "WEEK") {
-        repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
-          weekDays: formData.week?.day,
-          weekInterval: Number(formData.week?.weekNumber),
-        });
-      } else if (formData.repeatEvery === "MONTH") {
-        repeatingDates = generateMonthlyRepeatingDates(
-          Number(formData.month?.month),
-          `${formData.month?.day}`,
-          Number(formData.month?.dayNumber)
-        );
-      }
-
-      const result = await createTask(formData);
-
-      if (result.error) {
-        Snackbar.show({
-          text: result.error,
-          duration: Snackbar.LENGTH_LONG,
-          backgroundColor: "red",
-        });
-        setLoading(false);
-        return;
-      }
-
-      const taskId = result.data.id;
-      const userId = user?.id;
-
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
-
-      // === Insert into spruce_tasks ===
-      if (formData.repeat && repeatingDates.length > 0) {
-        // Insert each repeating entry with its own scheduled date
-        (async () => {
-          for (const date of repeatingDates) {
-            await AddUserTaskToSpruce(
-              taskId,
-              userId,
-              date,
-              household_id,
-              formData.assign
-            );
-          }
-          console.log(
-            `Repeating schedule created (${repeatingDates.length} tasks)`
+      if (profile) {
+        let repeatingDates: string[] = [];
+        if (formData.repeatEvery === "DAY") {
+          repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+            days: formData.days,
+          });
+        } else if (formData.repeatEvery === "WEEK") {
+          repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+            weekDays: formData.week?.day,
+            weekInterval: Number(formData.week?.weekNumber),
+          });
+        } else if (formData.repeatEvery === "MONTH") {
+          repeatingDates = generateMonthlyRepeatingDates(
+            Number(formData.month?.month),
+            `${formData.month?.day}`,
+            Number(formData.month?.dayNumber)
           );
-        })();
+        }
 
-        Snackbar.show({
-          text: `Repeating schedule created (${repeatingDates.length} tasks).`,
-          duration: Snackbar.LENGTH_LONG,
-          backgroundColor: "green",
-        });
-      } else {
-        // Single one-time task (use today as scheduled date)
-        const today = new Date().toISOString().split("T")[0];
-        await AddUserTaskToSpruce(taskId, userId, today, household_id);
+        const result = await createTask(formData, profile?.household_id);
 
-        Snackbar.show({
-          text: "Task Updated successfully!",
-          duration: Snackbar.LENGTH_SHORT,
-          backgroundColor: "green",
-        });
-        // await fetchTasks();
+        if (result.error) {
+          Snackbar.show({
+            text: result.error,
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "red",
+          });
+          setLoading(false);
+          return;
+        }
+
+        const taskId = result.data.id;
+        const userId = user?.id;
+
+        if (!userId) {
+          setLoading(false);
+          return;
+        }
+
+        // === Insert into spruce_tasks ===
+        if (formData.repeat && repeatingDates.length > 0) {
+          // Insert each repeating entry with its own scheduled date
+          (async () => {
+            for (const date of repeatingDates) {
+              await AddUserTaskToSpruce(
+                taskId,
+                userId,
+                date,
+                household_id,
+                formData.assign
+              );
+            }
+            console.log(
+              `Repeating schedule created (${repeatingDates.length} tasks)`
+            );
+          })();
+
+          Snackbar.show({
+            text: `Repeating schedule created (${repeatingDates.length} tasks).`,
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "green",
+          });
+        } else {
+          // Single one-time task (use today as scheduled date)
+          const today = new Date().toISOString().split("T")[0];
+          await AddUserTaskToSpruce(taskId, userId, today, household_id);
+
+          Snackbar.show({
+            text: "Task Updated successfully!",
+            duration: Snackbar.LENGTH_SHORT,
+            backgroundColor: "green",
+          });
+          // await fetchTasks();
+        }
       }
 
       // navigation.navigate("Library");
@@ -428,6 +430,7 @@ const index = () => {
   ) => {
     const taskId: string | undefined = task?.id;
     setEditTaskLoading(true);
+    console.log(data);
 
     const { success, error } = await deleteSpruceTasksByUserTaskId(
       taskId ?? ""
@@ -553,7 +556,6 @@ const index = () => {
     // check if a task already exists
     const exists = selected?.name.toLowerCase() === value.toLowerCase();
 
-
     if (exists) {
       const today = new Date().toISOString().split("T")[0];
       const success = await AddTaskToSpruce(
@@ -574,56 +576,77 @@ const index = () => {
       }
     } else {
       const nullFields = [
-  "id","assigned_at","updated_at","scheduled_date","task_id",
-  "icon_name","owner_user_id","owner_user_email","assign_user_id",
-  "assign_user_email","assign_user_profile","points","effort_level",
-  "estimated_effort","total_completions","unique_completions",
-  "child_friendly","keywords","display_names","description_row",
-  "description_uk","description_us","user_task_id",
-  "user_task_created_at","user_task_updated_at","user_task_user_id",
-  "user_task_type","user_task_effort","user_task_repeat_every"
-];
+        "id",
+        "assigned_at",
+        "updated_at",
+        "scheduled_date",
+        "task_id",
+        "icon_name",
+        "owner_user_id",
+        "owner_user_email",
+        "assign_user_id",
+        "assign_user_email",
+        "assign_user_profile",
+        "points",
+        "effort_level",
+        "estimated_effort",
+        "total_completions",
+        "unique_completions",
+        "child_friendly",
+        "keywords",
+        "display_names",
+        "description_row",
+        "description_uk",
+        "description_us",
+        "user_task_id",
+        "user_task_created_at",
+        "user_task_updated_at",
+        "user_task_user_id",
+        "user_task_type",
+        "user_task_effort",
+        "user_task_repeat_every",
+      ];
 
-// create an object with all null fields
-const nullObj = nullFields.reduce((acc, key) => {
-  acc[key] = null;
-  return acc;
-}, {});
+      // create an object with all null fields
+      const nullObj = nullFields.reduce((acc, key) => {
+        acc[key] = null;
+        return acc;
+      }, {});
 
-// create your temp task
-const tempTask = {
-  task_name: value,
-  user_task_name: value,
-  category: "Misc",
-  room: "Misc",
-  user_task_room: "Misc",
-  task_status: "pending",
-  user_task_repeat: false,
-  ...nullObj
-};
-     
-// append inside groupData state
-setGroupData(prev => {
-  // If "Misc" group exists, append the task; otherwise create it
-  return {
-    ...prev,
-    Misc: prev.Misc ? [...prev.Misc, tempTask] : [tempTask],
-  };
-});
+      // create your temp task
+      const tempTask = {
+        task_name: value,
+        user_task_name: value,
+        category: "Misc",
+        room: "Misc",
+        user_task_room: "Misc",
+        task_status: "pending",
+        user_task_repeat: false,
+        ...nullObj,
+      };
+
+      // append inside groupData state
+      setGroupData((prev) => {
+        // If "Misc" group exists, append the task; otherwise create it
+        return {
+          ...prev,
+          Misc: prev.Misc ? [...prev.Misc, tempTask] : [tempTask],
+        };
+      });
       // otherwise add the new task
       // console.log("Task added:", value);
       // navigation.navigate("BottomSheetScreen", {
       //   taskName: value,
       // });
-    
     }
+    bottomAddTaskSheetRef.current?.close();
   };
   const handleSaveTask = () => {
-    console.log("value",value)
-      navigation.navigate("BottomSheetScreen", {
-        taskName: value,
-      });
-}
+    console.log("value", value);
+    navigation.navigate("BottomSheetScreen", {
+      taskName: value,
+    });
+  };
   const handleShuffle = () => {
     if (!groupData) return;
     if (members.length === 0) return;
@@ -638,6 +661,92 @@ setGroupData(prev => {
     });
   };
 
+  const handleOneOff = async (task: SpruceTaskDetails) => {
+    try {
+      console.log("task", task);
+
+      // setLoading(true);
+      const extracted = {
+        id: task.id ?? undefined, // null → undefined
+        name: task.user_task_name || task.task_name || "", // pick whichever exists
+        room: task.user_task_room || task.room || "",
+        type: task.user_task_type || "", // fallback empty string
+        repeat: task.user_task_repeat ?? false,
+        effort: 1,
+        repeatEvery: "DAY",
+        category: task.category,
+      };
+      // let repeatingDates: string[] = [];
+      // if (task?.user_task_repeat_type === "DAY") {
+      //   repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+      //     days: formData.days,
+      //   });
+      // } else if (task.user_task_repeat_type === "WEEK") {
+      //   repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
+      //     weekDays: formData.week?.day,
+      //     weekInterval: Number(formData.week?.weekNumber),
+      //   });
+      // } else if (formData.repeatEvery === "MONTH") {
+      //   repeatingDates = generateMonthlyRepeatingDates(
+      //     Number(formData.month?.month),
+      //     `${formData.month?.day}`,
+      //     Number(formData.month?.dayNumber)
+      //   );
+      // }
+
+      const result = await createTask(extracted, profile?.household_id);
+      console.log("result", result);
+      if (result.error) {
+        Snackbar.show({
+          text: result.error,
+          duration: Snackbar.LENGTH_LONG,
+          backgroundColor: "red",
+        });
+        setLoading(false);
+        return "error";
+      }
+      console.log(
+        "taskid=====>",
+        result.data.id,
+        user?.id,
+        profile?.household_id
+      );
+      const taskId = result.data.id;
+      const userId = user?.id;
+
+      if (!userId) {
+        setLoading(false);
+        return "error";
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+      const result3 = await AddUserTaskToSpruce(
+        taskId,
+        userId,
+        today,
+        profile?.household_id
+      );
+      console.log("result3", result3);
+      Snackbar.show({
+        text: "Task created successfully!",
+        duration: Snackbar.LENGTH_SHORT,
+        backgroundColor: "green",
+      });
+      fetchTasks();
+
+      return "success";
+    } catch (err: any) {
+      Snackbar.show({
+        text: err.message || "Something went wrong",
+        duration: Snackbar.LENGTH_LONG,
+        backgroundColor: "red",
+      });
+      return "error";
+    } finally {
+      setLoading(false);
+      return "success";
+    }
+  };
   const showError = (message: string) => {
     console.log(message);
     Snackbar.show({
@@ -685,7 +794,7 @@ setGroupData(prev => {
             if (memberRes.error) showError(memberRes.error);
           }
 
-          const taskRes = await getGlobalTasks();
+          const taskRes = await getGlobalTasks(profile.household_id);
           if (isActive && taskRes) setTasks(taskRes);
 
           await fetchTasks(); // NO more double-calls
@@ -706,7 +815,7 @@ setGroupData(prev => {
       };
     }, [profile, selectedDate, groupValue])
   );
-  console.log("new value",value)
+  console.log("new value", value);
   useEffect(() => {
     if (groupData) {
       let completedCount = 0;
@@ -720,6 +829,29 @@ setGroupData(prev => {
       setTotalDone(completedCount);
     }
   }, [groupData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (profile) {
+        (async () => {
+          const result = await getHouseholdById(profile?.household_id);
+          if ("error" in result) {
+            Snackbar.show({
+              text: result.error,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          } else {
+            // setHouse(result);
+            // setWeekValue(result.data.weekofstart);
+            setGroupValue(result.data.groupbyweek);
+
+            console.log("Fetched rooms:", result);
+          }
+        })();
+      }
+    }, [profile])
+  );
   if (loading) {
     return (
       <MainLayout>
@@ -883,6 +1015,7 @@ setGroupData(prev => {
                     openModal={openModal}
                     height={550}
                     handleSaveTask={handleSaveTask}
+                    handleOneOff={handleOneOff}
                   />
                 </View>
               </View>

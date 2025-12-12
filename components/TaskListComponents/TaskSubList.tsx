@@ -69,6 +69,7 @@ const TaskSubList = (props: TaskSubListProps) => {
         contentContainerStyle={styles.subTabContainer}
         renderItem={({ item }) => {
           const isSelected = selectedSubTab === item.value;
+
           return (
             <TouchableOpacity
               style={[
@@ -123,7 +124,6 @@ const TaskSubList = (props: TaskSubListProps) => {
                 const today = dayjs();
                 const diffDays = today.diff(createdAt, "day"); // difference in days
                 let isAssigned = false;
-
                 if (type === "goto") {
                   isAssigned = myTasks.some(
                     (task) => task.user_task_id === item.id
@@ -170,10 +170,15 @@ const TaskSubList = (props: TaskSubListProps) => {
                           }}
                         >
                           <View>
-                            <View style={{ flexDirection: "row" }}>
-                              <LimeIcon />
-                              <LimeIcon />
-                              <LimeIcon />
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                              }}
+                            >
+                              {[...Array(item.effort)].map((_, i) => (
+                                <LimeIcon key={i} />
+                              ))}
                             </View>
                             <Text
                               style={{

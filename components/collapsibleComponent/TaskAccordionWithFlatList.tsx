@@ -137,11 +137,9 @@ const TaskAccordionWithFlatList: React.FC<Props> = ({
 
               {!isAssigned ? (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={{ flexDirection: "row", marginRight: 10 }}>
-                    <LimeIcon />
-                    <LimeIcon />
-                    <LimeIcon />
-                  </View>
+                  {[...Array(item.effort)].map((_, i) => (
+                    <LimeIcon key={i} />
+                  ))}
                   <Text
                     style={{
                       color: "#5D0FD5",

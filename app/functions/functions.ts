@@ -224,7 +224,7 @@ export type Profile = {
   updated_at: string;
 };
 
-export async function getGlobalTasks(): Promise<any[]> {
+export async function getGlobalTasks(householdId: string): Promise<any[]> {
   // Fetch global tasks
   const { data: globalTasks, error: globalError } = await supabase
     .from("global_tasks")
@@ -236,10 +236,11 @@ export async function getGlobalTasks(): Promise<any[]> {
     throw globalError;
   }
 
-  // Fetch user tasks
+  // Fetch user tasks filtered by household
   const { data: userTasks, error: userError } = await supabase
     .from("user_task")
     .select("*")
+    .eq("household_id", householdId)
     .order("created_at", { ascending: false });
 
   if (userError) {
@@ -453,7 +454,8 @@ export const fetchAndGroupGlobalSearchTasks = async (search: string) => {
 export const fetchAndGroupTasks = async (
   taskType?: string,
   sortOptions?: SortOptions,
-  filterOptions?: FilterOptions
+  filterOptions?: FilterOptions,
+  householdId?: string
 ) => {
   let query = supabase
     .from("user_task")
@@ -467,6 +469,9 @@ export const fetchAndGroupTasks = async (
     )
     .order("category", { ascending: true });
 
+  if (householdId) {
+    query = query.eq("household_id", householdId);
+  }
   if (taskType) {
     query = query.eq("repeat_type", taskType);
   }
@@ -531,7 +536,10 @@ export const fetchAndGroupTasks = async (
   return groupedTasks;
 };
 
-export const fetchAndGroupSearchTasks = async (search: string) => {
+export const fetchAndGroupSearchTasks = async (
+  search: string,
+  householdId?: string
+) => {
   let query = supabase
     .from("user_task")
     .select(
@@ -543,6 +551,10 @@ export const fetchAndGroupSearchTasks = async (search: string) => {
       `
     )
     .order("category", { ascending: true });
+
+  if (householdId) {
+    query = query.eq("household_id", householdId);
+  }
 
   if (search.trim() !== "") {
     query = query.ilike("name", `%${search}%`);
@@ -763,12 +775,13 @@ export const removeTaskFromSpruce = async ({
 };
 
 export const createTask = async (
-  data: CreateTaskFormValues
+  data: CreateTaskFormValues,
+  household_id: string
 ): Promise<CreateTaskResult> => {
   try {
     const userResponse = await supabase.auth.getUser();
     const userId = userResponse.data.user?.id;
-console.log("data",data)
+    console.log("data", data);
     if (!userId) {
       return { error: "User not authenticated" };
     }
@@ -787,6 +800,7 @@ console.log("data",data)
           repeat_every: data.repeatEvery,
           repeat_type: data.repeat === true ? "repeat" : "goto",
           category: data.room,
+          household_id: household_id,
         },
       ])
       .select()
@@ -1464,35 +1478,177 @@ export const fetchPreMadePacksWithGlobalTasks = async (): Promise<{
   }
 };
 
-export const fetchRooms = async (): Promise<
-  { label: string; value: string }[] | { error: string }
-> => {
+export const fetchRooms = async (
+  householdId: string
+): Promise<{ label: string; value: string }[] | { error: string }> => {
   try {
-    const { data, error } = await supabase
+    // 1. Fetch GLOBAL rooms
+    const { data: globalRooms, error: globalErr } = await supabase
       .from("rooms")
       .select("name_us")
       .eq("active", true)
       .order("display_order", { ascending: true });
 
-    if (error) throw error;
+    if (globalErr) throw globalErr;
 
-    if (!data || !Array.isArray(data)) {
-      throw new Error("Invalid data format");
-    }
+    // 2. Fetch HOUSEHOLD rooms
+    const { data: householdRooms, error: householdErr } = await supabase
+      .from("household_rooms")
+      .select("*")
+      .eq("active", true)
+      .eq("household_id", householdId)
+      .order("display_order", { ascending: true });
 
-    const roomOptions = data.map((room) => {
-      if (!room.name_us) {
-        throw new Error("Missing name_us in room data");
-      }
+    if (householdErr) throw householdErr;
 
-      return {
-        label: room.name_us,
-        value: room.name_us.replace(/\s+/g, "-"),
-      };
-    });
+    // 3. Merge both arrays
+    const combined: any = [...(globalRooms || []), ...(householdRooms || [])];
+
+    // 4. Convert to options format
+    console.log(combined);
+    const roomOptions = combined.map((room: any) => ({
+      label: room.name_us,
+      value: room.name_us.replace(/\s+/g, "-"),
+      houseRoom: room.household_id ? true : false,
+      id: room.id,
+    }));
 
     return roomOptions;
   } catch (err: any) {
     return { error: err.message || "Unknown error" };
+  }
+};
+
+export async function createHouseholdRoom(roomData: {
+  householdId: string;
+  name_us: string;
+  name_uk?: string;
+  name_row?: string;
+  icon?: string;
+  display_order?: number;
+  active?: boolean;
+}) {
+  try {
+    const { householdId, ...fields } = roomData;
+
+    const { data, error } = await supabase
+      .from("household_rooms")
+      .insert([
+        {
+          household_id: householdId,
+          name_us: fields.name_us,
+          name_uk: fields.name_uk ?? fields.name_us,
+          name_row: fields.name_row ?? fields.name_us,
+          icon: fields.icon ?? "home",
+          display_order: fields.display_order ?? 0,
+          active: fields.active ?? true,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return data;
+  } catch (err: any) {
+    console.error("Error creating household room:", err.message);
+    return { error: err.message };
+  }
+}
+
+interface UpdateHouseholdRoomProps {
+  roomId: string;
+  householdId?: string; // optional if you want to update the household relation
+  name_us?: string;
+  name_uk?: string;
+  name_row?: string;
+  icon?: string;
+  display_order?: number;
+  active?: boolean;
+}
+
+export const updateHouseholdRoom = async ({
+  roomId,
+  householdId,
+  name_us,
+  name_uk,
+  name_row,
+  icon,
+  display_order,
+  active,
+}: UpdateHouseholdRoomProps) => {
+  try {
+    const updateData: Record<string, any> = {};
+
+    if (householdId !== undefined) updateData.household_id = householdId;
+    if (name_us !== undefined) updateData.name_us = name_us;
+    if (name_uk !== undefined) updateData.name_uk = name_uk;
+    if (name_row !== undefined) updateData.name_row = name_row;
+    if (icon !== undefined) updateData.icon = icon;
+    if (display_order !== undefined) updateData.display_order = display_order;
+    if (active !== undefined) updateData.active = active;
+
+    const { data, error } = await supabase
+      .from("household_rooms")
+      .update(updateData)
+      .eq("id", roomId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating household room:", error.message);
+      return { error: error.message };
+    }
+
+    return { data };
+  } catch (err: any) {
+    console.error("Unexpected error updating household room:", err);
+    return { error: err.message || "Unknown error" };
+  }
+};
+
+export const updateHouseholdSettings = async (
+  householdId: string,
+  updates: {
+    groupbyweek?: string;
+    weekofstart?: string;
+  }
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { error } = await supabase
+      .from("households")
+      .update({
+        ...(updates.groupbyweek && { groupbyweek: updates.groupbyweek }),
+        ...(updates.weekofstart && { weekofstart: updates.weekofstart }),
+      })
+      .eq("id", householdId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+};
+
+export const getHouseholdById = async (
+  householdId: string
+): Promise<{ data?: any; error?: string }> => {
+  try {
+    const { data, error } = await supabase
+      .from("households")
+      .select("*")
+      .eq("id", householdId)
+      .single();
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { data };
+  } catch (err: any) {
+    return { error: err.message };
   }
 };

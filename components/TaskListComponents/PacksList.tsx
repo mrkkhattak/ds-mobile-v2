@@ -319,10 +319,15 @@ const PacksList = (props: PackListProps) => {
                       }}
                     >
                       <View>
-                        <View style={{ flexDirection: "row" }}>
-                          <LimeIcon />
-                          <LimeIcon />
-                          <LimeIcon />
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          {[...Array(item.effort_level)].map((_, i) => (
+                            <LimeIcon key={i} />
+                          ))}
                         </View>
                         <Text
                           style={{

@@ -91,7 +91,7 @@ const BottomSheetScreen = () => {
   ): Promise<"success" | "error"> => {
     try {
       setLoading(true);
-      console.log("formdata",formData)
+      console.log("formdata", formData);
       let repeatingDates: string[] = [];
       if (formData.repeatEvery === "DAY") {
         repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
@@ -110,8 +110,8 @@ const BottomSheetScreen = () => {
         );
       }
 
-      const result = await createTask(formData);
-console.log("result",result)
+      const result = await createTask(formData, profile?.household_id);
+
       if (result.error) {
         Snackbar.show({
           text: result.error,
@@ -151,6 +151,7 @@ console.log("result",result)
           duration: Snackbar.LENGTH_LONG,
           backgroundColor: "green",
         });
+
         return "success";
       } else {
         const today = new Date().toISOString().split("T")[0];
@@ -167,6 +168,7 @@ console.log("result",result)
           duration: Snackbar.LENGTH_SHORT,
           backgroundColor: "green",
         });
+
         return "success";
       }
     } catch (err: any) {

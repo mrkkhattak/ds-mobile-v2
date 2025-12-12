@@ -12,7 +12,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Image,
   Modal,
@@ -34,6 +33,7 @@ import {
   completeSpruceTask,
   fetchHouseholdById,
   fetchSpruceTasksByHouseHoldId,
+  getHouseholdById,
   getProfilesByHousehold,
   getTaskById,
   getUserProfile,
@@ -80,7 +80,36 @@ const SpruceScreen = () => {
   ]);
   const [totalDone, setTotalDone] = useState<number>(0);
   const [openSpruceModal, setOpenSpruceModal] = useState(false);
+  const [countdown, setCountdown] = useState<number>(3);
+  const [loadingCountdown, setLoadingCountdown] = useState(true); // true during countdown
 
+  useEffect(() => {
+    if (loadingCountdown) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setLoadingCountdown(false); // countdown finished
+            // fetchInitialData(); // start loading tasks and household
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [loadingCountdown]);
+
+  // const fetchInitialData = async () => {
+  //   if (!profile) return;
+  //   setLoading(true);
+
+  //   await fetchHouseHold(profile); // fetch household
+  //   await fetchTasks(); // fetch tasks
+
+  //   setLoading(false);
+  // };
   const fetchTask = async (taskId: string) => {
     const { data, error } = await getTaskById(taskId);
 
@@ -203,7 +232,7 @@ const SpruceScreen = () => {
   };
   const handleAssingTaskToUser = async (taskId: string, userId: string) => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const result = await assignUserToTask(taskId, userId);
 
       if (result) {
@@ -256,7 +285,7 @@ const SpruceScreen = () => {
 
   const handleUpdateTaskStatus = async (taskId: string) => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const result = await completeSpruceTask(taskId);
 
       if (result) {
@@ -319,7 +348,7 @@ const SpruceScreen = () => {
       return;
     }
 
-    setLoading(true);
+    // setLoading(true);
 
     const success = await removeTaskFromSpruce({ id });
 
@@ -409,7 +438,7 @@ const SpruceScreen = () => {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-      setLoading(true);
+      // setLoading(true);
 
       fetchTasks();
 
@@ -461,7 +490,7 @@ const SpruceScreen = () => {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-      let interval: NodeJS.Timeout;
+      // let interval: NodeJS.Timeout;
 
       const fetchProfiles = async () => {
         if (!profile) return;
@@ -496,11 +525,11 @@ const SpruceScreen = () => {
       fetchProfiles();
 
       // Poll every 5 seconds
-      interval = setInterval(fetchProfiles, 5000);
+      // interval = setInterval(fetchProfiles, 5000);
 
       return () => {
         isActive = false;
-        clearInterval(interval);
+        // clearInterval(interval);
       };
     }, [profile])
   );
@@ -535,16 +564,63 @@ const SpruceScreen = () => {
     }
   }, [groupData]);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (profile) {
+        (async () => {
+          const result = await getHouseholdById(profile?.household_id);
+          if ("error" in result) {
+            Snackbar.show({
+              text: result.error,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          } else {
+            // setHouse(result);
+            // setWeekValue(result.data.weekofstart);
+            setGroupValue(result.data.groupbyweek);
+
+            console.log("Fetched rooms:", result);
+          }
+        })();
+      }
+    }, [profile])
+  );
   const handleendSprucing = () => {
     bottomAddTaskSheetRef.current?.close();
     setOpenSpruceModal(true);
   };
+  const totalTasks = Object.values(groupData).reduce(
+    (sum, tasks) => sum + tasks.length,
+    0
+  );
+  if (loadingCountdown) {
+    return (
+      <MainLayout>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text
+            style={{
+              fontSize: 250,
+              fontWeight: "bold",
+              fontFamily: "Poppins",
+              color: "white",
+            }}
+          >
+            {countdown > 0 ? countdown : "Go!"}
+          </Text>
+        </View>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout color1="rgba(22, 197, 224, 1)" color2="rgba(141, 224, 22, 1)">
       {houseHold && groupData && (
         <View style={{ flex: 1, position: "relative" }}>
           <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
-            <View style={{ zIndex: 100 }}>
+            <View style={{ zIndex: 0 }}>
               <Timer
                 time={`${houseHold.spruce_time}`}
                 navigation={navigation}
@@ -561,119 +637,145 @@ const SpruceScreen = () => {
                 setItems={setCategory}
               />
             </View>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                top: 120,
-                marginHorizontal: 20,
+
+            <BottomSheet
+              ref={bottomAddTaskSheetRef}
+              index={1}
+              snapPoints={["50%", "60%", "80%", "90%"]}
+              enablePanDownToClose={false}
+              enableContentPanningGesture={true}
+              enableHandlePanningGesture={true}
+              backgroundStyle={{
+                borderTopLeftRadius: 50,
+                borderTopRightRadius: 50,
+                backgroundColor: "transparent",
               }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  borderWidth: 0.5,
-                  borderRadius: 20,
-                  paddingLeft: 20,
-
-                  height: 30,
-                  width: 180,
-                }}
-              >
-                <Text
-                  style={{
-                    fontWeight: "400",
-                    fontFamily: "Inter",
-                    fontSize: 12,
-                    lineHeight: 30,
-                    color: "rgba(86, 123, 32, 1)",
-                  }}
-                >
-                  Group:
-                </Text>
-                <DropDownPicker
-                  open={openGroupDropdown}
-                  value={groupValue}
-                  items={category}
-                  setOpen={setOpenGroupDropDown}
-                  setValue={setGroupValue}
-                  setItems={setCategory}
-                  containerStyle={{
-                    maxWidth: 120,
-                    maxHeight: 50,
-                    paddingRight: 10,
-                  }}
-                  style={{
-                    backgroundColor: "trasnparent",
-                    borderWidth: 0,
-                  }}
-                  dropDownContainerStyle={{
-                    backgroundColor: "trasnparent",
-                  }}
-                  textStyle={{ fontSize: 12, color: "rgba(86, 123, 32, 1)" }}
+              backdropComponent={(props) => (
+                <BottomSheetBackdrop
+                  {...props}
+                  appearsOnIndex={0}
+                  disappearsOnIndex={-1}
+                  opacity={0}
                 />
-              </View>
-
-              {groupData && Object.keys(groupData).length > 0 && (
-                <Text
-                  style={{
-                    paddingTop: 10,
-                    fontWeight: "400",
-                    fontFamily: "Inter",
-                    fontSize: 20,
-                    lineHeight: 30,
-                    color: "rgba(86, 123, 32, 1)",
-                  }}
-                >
-                  {totalDone}/{Object.keys(groupData).length} Done
-                </Text>
               )}
-            </View>
-            {loading ? (
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <ActivityIndicator size="large" color="#8C50FB" />
-              </View>
-            ) : (
-              <View style={{ flex: 1, justifyContent: "flex-end", zIndex: 0 }}>
-                <HomeTaskList
-                  groupData={groupData}
-                  renderLeftActions={renderLeftActions}
-                  renderRightActions={renderRightActions}
-                  fetchTask={fetchTask}
-                  handleDeleteTask={handleDeleteTask}
-                  members={members}
-                  setSelectedMember={setSelectedMember}
-                  selectedMember={selectedMember}
-                  handleAssingTaskToUser={handleAssingTaskToUser}
-                  handleUpdateTaskStatus={handleUpdateTaskStatus}
-                  setTaskId={setTaskId}
-                  taskId={taskId}
-                  setOpenModal={setOpenModal}
-                  openModal={openModal}
-                  lableStyle={{
-                    color: "#567B20",
-                    fontWeight: "700",
-                    fontSize: 12,
-                    marginVertical: 5,
+            >
+              <BottomSheetView style={{ flex: 1 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+
+                    marginHorizontal: 20,
                   }}
-                  height={310}
-                  icon={
-                    <Image
-                      source={require("../../assets/images/RectangleIcon.png")}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      borderWidth: 0.5,
+                      borderRadius: 20,
+                      paddingLeft: 20,
+
+                      height: 30,
+                      width: 180,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontWeight: "400",
+                        fontFamily: "Inter",
+                        fontSize: 12,
+                        lineHeight: 30,
+                        color: "rgba(86, 123, 32, 1)",
+                      }}
+                    >
+                      Group:
+                    </Text>
+                    <DropDownPicker
+                      open={openGroupDropdown}
+                      value={groupValue}
+                      items={category}
+                      setOpen={setOpenGroupDropDown}
+                      setValue={setGroupValue}
+                      setItems={setCategory}
+                      containerStyle={{
+                        maxWidth: 120,
+                        maxHeight: 50,
+                        paddingRight: 10,
+                      }}
+                      style={{
+                        backgroundColor: "trasnparent",
+                        borderWidth: 0,
+                      }}
+                      dropDownContainerStyle={{
+                        backgroundColor: "trasnparent",
+                      }}
+                      textStyle={{
+                        fontSize: 12,
+                        color: "rgba(86, 123, 32, 1)",
+                      }}
                     />
-                  }
-                />
-              </View>
-            )}
+                  </View>
+
+                  {groupData && totalTasks > 0 && (
+                    <Text
+                      style={{
+                        paddingTop: 10,
+                        fontWeight: "400",
+                        fontFamily: "Inter",
+                        fontSize: 20,
+                        lineHeight: 30,
+                        color: "rgba(86, 123, 32, 1)",
+                      }}
+                    >
+                      {totalDone}/{totalTasks} Done
+                    </Text>
+                  )}
+                </View>
+                <View
+                  style={{ flex: 1, justifyContent: "flex-end", zIndex: 0 }}
+                >
+                  <HomeTaskList
+                    groupData={groupData}
+                    renderLeftActions={renderLeftActions}
+                    renderRightActions={renderRightActions}
+                    fetchTask={fetchTask}
+                    handleDeleteTask={handleDeleteTask}
+                    members={members}
+                    setSelectedMember={setSelectedMember}
+                    selectedMember={selectedMember}
+                    handleAssingTaskToUser={handleAssingTaskToUser}
+                    handleUpdateTaskStatus={handleUpdateTaskStatus}
+                    setTaskId={setTaskId}
+                    taskId={taskId}
+                    setOpenModal={setOpenModal}
+                    openModal={openModal}
+                    lableStyle={{
+                      color: "#567B20",
+                      fontWeight: "700",
+                      fontSize: 12,
+                      marginVertical: 5,
+                    }}
+                    height={900}
+                    icon={
+                      <Image
+                        source={require("../../assets/images/RectangleIcon.png")}
+                      />
+                    }
+                    handleSaveTask={function (): void {
+                      throw new Error("Function not implemented.");
+                    }}
+                    handleOneOff={function (
+                      task: SpruceTaskDetails
+                    ): Promise<"error" | "success"> {
+                      throw new Error("Function not implemented.");
+                    }}
+                  />
+                </View>
+              </BottomSheetView>
+            </BottomSheet>
           </View>
 
           <Modal
@@ -834,7 +936,9 @@ const SpruceScreen = () => {
                 >
                   <MainButton
                     label={"Keep sprucing"}
-                    onPress={handleendSprucing}
+                    onPress={() => {
+                      bottomAddTaskSheetRef.current?.close();
+                    }}
                     color1={"rgba(142, 45, 226, 1)"}
                     color2={"rgba(74, 0, 224, 1)"}
                     style={{

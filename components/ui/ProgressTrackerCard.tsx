@@ -82,7 +82,9 @@ const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
               ]}
             >
               {Array.from({ length: count }).map((_, idx) => (
-                <LimeIcon key={idx} />
+                <>
+                  <LimeIcon key={idx} />
+                </>
               ))}
             </View>
           ))}

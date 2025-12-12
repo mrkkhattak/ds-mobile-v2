@@ -199,77 +199,80 @@ const TaskList = () => {
 
       const fetchData = async () => {
         try {
-          // setLoading(true);
-          if (selectedTab === "Ideas") {
-            const taskTypeMap: Record<string, string> = {
-              "Go-To": "goto",
-              Repeat: "repeat",
-              Ideas: "ideas",
-              Pack: "pack",
-            };
-            const taskType = taskTypeMap[selectedTab] || "pack";
+          if (profile) {
+            // setLoading(true);
+            if (selectedTab === "Ideas") {
+              const taskTypeMap: Record<string, string> = {
+                "Go-To": "goto",
+                Repeat: "repeat",
+                Ideas: "ideas",
+                Pack: "pack",
+              };
+              const taskType = taskTypeMap[selectedTab] || "pack";
 
-            const result = await fetchAndGlobalGroupTasks(
-              "ideas",
-              {
-                days: selectedDaysSort, // "old-new" | "new-old"
-                effort: selectedEffortSort, // "low-high" | "high-low"
-                name: selectedNameSort,
-                // "a-z" | "z-a"
-              },
-              {
-                effort: selectedEffort,
-                type: selectedType,
-              }
-            );
-
-            console.log("reslut", result);
-
-            if (isActive && result) setGroupIdeasData(result);
-
-            if (user && profile) {
-              const assignedTasks = await fetchSpruceTasksByHouseHoldId(
-                profile.household_id
+              const result = await fetchAndGlobalGroupTasks(
+                "ideas",
+                {
+                  days: selectedDaysSort, // "old-new" | "new-old"
+                  effort: selectedEffortSort, // "low-high" | "high-low"
+                  name: selectedNameSort,
+                  // "a-z" | "z-a"
+                },
+                {
+                  effort: selectedEffort,
+                  type: selectedType,
+                }
               );
-              if (isActive && assignedTasks)
-                setMyTasks(assignedTasks.data || []);
-            }
 
-            if (isActive) setLoading(false);
-          } else {
-            const taskTypeMap: Record<string, string> = {
-              "Go-To": "goto",
-              Repeat: "repeat",
-              Ideas: "ideas",
-              Pack: "pack",
-            };
-            const taskType = taskTypeMap[selectedTab] || "pack";
+              console.log("reslut", result);
 
-            const result = await fetchAndGroupTasks(
-              taskType,
-              {
-                days: selectedDaysSort, // "old-new" | "new-old"
-                effort: selectedEffortSort, // "low-high" | "high-low"
-                name: selectedNameSort,
-                // "a-z" | "z-a"
-              },
-              {
-                effort: selectedEffort,
-                type: selectedType,
+              if (isActive && result) setGroupIdeasData(result);
+
+              if (user && profile) {
+                const assignedTasks = await fetchSpruceTasksByHouseHoldId(
+                  profile.household_id
+                );
+                if (isActive && assignedTasks)
+                  setMyTasks(assignedTasks.data || []);
               }
-            );
 
-            if (isActive && result) setGroupData(result);
+              if (isActive) setLoading(false);
+            } else {
+              const taskTypeMap: Record<string, string> = {
+                "Go-To": "goto",
+                Repeat: "repeat",
+                Ideas: "ideas",
+                Pack: "pack",
+              };
+              const taskType = taskTypeMap[selectedTab] || "pack";
 
-            if (user && profile) {
-              const assignedTasks = await fetchSpruceTasksByHouseHoldId(
-                profile.household_id
+              const result = await fetchAndGroupTasks(
+                taskType,
+                {
+                  days: selectedDaysSort, // "old-new" | "new-old"
+                  effort: selectedEffortSort, // "low-high" | "high-low"
+                  name: selectedNameSort,
+                  // "a-z" | "z-a"
+                },
+                {
+                  effort: selectedEffort,
+                  type: selectedType,
+                },
+                profile?.household_id
               );
-              if (isActive && assignedTasks)
-                setMyTasks(assignedTasks.data || []);
-            }
 
-            if (isActive) setLoading(false);
+              if (isActive && result) setGroupData(result);
+
+              if (user && profile) {
+                const assignedTasks = await fetchSpruceTasksByHouseHoldId(
+                  profile.household_id
+                );
+                if (isActive && assignedTasks)
+                  setMyTasks(assignedTasks.data || []);
+              }
+
+              if (isActive) setLoading(false);
+            }
           }
         } catch (error) {
           console.error("Error fetching grouped or assigned tasks:", error);
@@ -325,20 +328,22 @@ const TaskList = () => {
   );
   useFocusEffect(
     useCallback(() => {
-      (async () => {
-        const result = await fetchRooms();
-        if ("error" in result) {
-          Snackbar.show({
-            text: result.error,
-            duration: 2000,
-            backgroundColor: "red",
-          });
-        } else {
-          setRoomList(result);
-          setSelectedSubTab(result[0].value);
-          console.log("Fetched rooms:", result);
-        }
-      })();
+      if (profile) {
+        (async () => {
+          const result = await fetchRooms(profile?.household_id);
+          if ("error" in result) {
+            Snackbar.show({
+              text: result.error,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          } else {
+            setRoomList(result);
+            setSelectedSubTab(result[0].value);
+            console.log("Fetched rooms:", result);
+          }
+        })();
+      }
     }, [profile])
   );
   const formattedData = formatDataForUI(packs);
@@ -367,7 +372,8 @@ const TaskList = () => {
         {
           effort: selectedEffort,
           type: selectedType,
-        }
+        },
+        profile?.household_id
       );
 
       // ---- Fetch global tasks ----
@@ -416,7 +422,10 @@ const TaskList = () => {
       };
       const taskType = taskTypeMap[selectedTab] || "goto";
 
-      const result = await fetchAndGroupSearchTasks(value);
+      const result = await fetchAndGroupSearchTasks(
+        value,
+        profile?.household_id
+      );
       console.log(result);
       if (result) {
         setSearchTasks(result);

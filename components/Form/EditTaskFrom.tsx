@@ -60,7 +60,7 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
       },
     },
   });
-
+  console.log("errors", errors);
   const daysShort = ["M", "TU", "W", "TH", "F", "S", "SU"];
   const weekNumberItems = [
     { label: "1 weeks", value: "1" },
@@ -153,18 +153,20 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
 
   useFocusEffect(
     useCallback(() => {
-      (async () => {
-        const result = await fetchRooms();
-        if ("error" in result) {
-          Snackbar.show({
-            text: result.error,
-            duration: 2000,
-            backgroundColor: "red",
-          });
-        } else {
-          setItems(result);
-        }
-      })();
+      if (profile) {
+        (async () => {
+          const result = await fetchRooms(profile.household_id);
+          if ("error" in result) {
+            Snackbar.show({
+              text: result.error,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          } else {
+            setItems(result);
+          }
+        })();
+      }
     }, [profile])
   );
 

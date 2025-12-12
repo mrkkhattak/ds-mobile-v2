@@ -12,6 +12,7 @@ import ProgressTrackerCard from "@/components/ui/ProgressTrackerCard";
 import { SegmentedControl } from "@/components/ui/SegmentContainer";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useFocusEffect } from "@react-navigation/native";
+import { useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Controller, Resolver, useForm } from "react-hook-form";
 import {
@@ -43,6 +44,7 @@ interface CreateTaskFormProps {
 }
 
 const CreateTaskForm = (props: CreateTaskFormProps) => {
+  const navigation = useNavigation();
   const { onSubmit, profile, onSuccess, taskName, handleClose } = props;
   const [open, setOpen] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -69,8 +71,8 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
     defaultValues: {
       name: `${taskName}`,
       room: undefined,
-      type: "BOTH",
-      effort: 0,
+      type: "ADULT",
+      effort: 1,
       repeat: false,
       repeatEvery: "DAY",
       days: [],
@@ -161,6 +163,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
         week: watch("week"),
         assign: watch("assign"),
       });
+      navigation.navigate("TaskLibrary");
       onSuccess?.();
     }
   };
@@ -178,14 +181,25 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
     setValue("effort", effortValue);
   };
 
-  const handleNew =async ( data: CreateTaskFormValues,
-    household_id: string) => {
+  const handleNew = async (
+    data: CreateTaskFormValues,
+    household_id: string
+  ) => {
     const result = await onSubmit(data, household_id);
-    if (result) {
-      reset()
+    if (result === "success") {
+      reset({
+        name: "",
+        room: undefined,
+        type: "ADULT",
+        effort: 1,
+        repeat: false,
+        repeatEvery: "DAY",
+        days: [],
+        week: { day: [], weekNumber: "" },
+        month: { dayNumber: undefined, day: undefined, month: undefined },
+      });
     }
-  
-}
+  };
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -243,18 +257,20 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
 
   useFocusEffect(
     useCallback(() => {
-      (async () => {
-        const result = await fetchRooms();
-        if ("error" in result) {
-          Snackbar.show({
-            text: result.error,
-            duration: 2000,
-            backgroundColor: "red",
-          });
-        } else {
-          setItems(result);
-        }
-      })();
+      if (profile) {
+        (async () => {
+          const result = await fetchRooms(profile.household_id);
+          if ("error" in result) {
+            Snackbar.show({
+              text: result.error,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          } else {
+            setItems(result);
+          }
+        })();
+      }
     }, [profile])
   );
 
@@ -297,11 +313,10 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
               justifyContent: "space-between",
             }}
           >
-           
             <CustomButton
-              bgColor="#6915E066"
+              bgColor="#6915E0"
               label="New"
-             onPress={handleSubmit((data) => {
+              onPress={handleSubmit((data) => {
                 handleNew(data, profile.household_id);
               })}
             />
