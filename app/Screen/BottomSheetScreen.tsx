@@ -91,7 +91,6 @@ const BottomSheetScreen = () => {
   ): Promise<"success" | "error"> => {
     try {
       setLoading(true);
-      console.log("formdata", formData);
       let repeatingDates: string[] = [];
       if (formData.repeatEvery === "DAY") {
         repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
@@ -158,7 +157,7 @@ const BottomSheetScreen = () => {
         await AddUserTaskToSpruce(
           taskId,
           userId,
-          today,
+          route.params.selectedData,
           household_id,
           formData.assign
         );

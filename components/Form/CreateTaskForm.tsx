@@ -78,10 +78,11 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
       repeatEvery: "DAY",
       days: [],
       week: { day: [], weekNumber: "" },
-      month: { dayNumber: undefined, day: undefined, month: undefined },iconName:""
+      month: { dayNumber: undefined, day: undefined, month: undefined },
+      iconName: "",
     },
   });
-const [showIcons,setShowIcons]=useState(false)
+  const [showIcons, setShowIcons] = useState(false);
   const daysShort = ["M", "TU", "W", "TH", "F", "S", "SU"];
   const weekNumberItems = [
     { label: "1 weeks", value: "1" },
@@ -150,7 +151,6 @@ const [showIcons,setShowIcons]=useState(false)
     household_id: string
   ) => {
     const result = await onSubmit(data, household_id);
-    console.log("result", result);
     if (result === "success") {
       reset({
         name: "",
@@ -168,10 +168,9 @@ const [showIcons,setShowIcons]=useState(false)
       onSuccess?.();
     }
   };
-  const handleSelect = (iconName:string) => {
-    console.log("icon", iconName)
-    setValue("iconName",iconName)
-}
+  const handleSelect = (iconName: string) => {
+    setValue("iconName", iconName);
+  };
   const handleEffortChange = (newProgress: number) => {
     // Map 0-100 to 1-5
     let effortValue = 1;
@@ -180,7 +179,6 @@ const [showIcons,setShowIcons]=useState(false)
     else if (newProgress <= 60) effortValue = 3;
     else if (newProgress <= 80) effortValue = 4;
     else effortValue = 5;
-console.log("new effeor",effortValue)
     // Update your react-hook-form value
     setValue("effort", effortValue);
   };
@@ -345,7 +343,7 @@ console.log("new effeor",effortValue)
               flexDirection: "row",
               alignItems: "center",
               marginBottom: 16,
-              flex:1
+              flex: 1,
             }}
           >
             <Text
@@ -355,72 +353,73 @@ console.log("new effeor",effortValue)
                 fontSize: 20,
                 lineHeight: 22,
                 width: 80, // fixed width to align with other labels
-               
               }}
             >
               NAME
             </Text>
-            <View
-              style={{flex:1}}
-            >
+            <View style={{ flex: 1 }}>
               <View
-              style={{
-                flex: 1,
-                flexDirection: "row",
-                alignItems: "center",
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
                   marginBottom: 4,
-                
-              }}
-            >
-              <Controller
-                control={control}
-                name="name"
-                render={({
-                  field: { onChange, onBlur, value },
-                  fieldState: { error },
-                }) => (
-                  <View style={{ flex: 1 }}>
-                    <CustomTextInput
-                      value={value}
-                      onChangeText={onChange}
-                      placeholder="Enter task name"
-                      containerStyle={{
-                        borderColor: error ? "red" : "#ccc",
-                        backgroundColor: "#fff",
-                        flex: 1,
-                        height: 49,
-                        borderRadius: 10,
-                        paddingHorizontal: 16,
-                      }}
-                      inputStyle={{
-                        fontSize: 16,
-                        color: "#333",
-                      }}
-                    />
-                    {error && (
-                      <Text
-                        style={{
-                          color: "red",
-                          fontSize: 12,
-                          marginTop: 4,
-                          fontFamily: "Inter",
+                }}
+              >
+                <Controller
+                  control={control}
+                  name="name"
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <View style={{ flex: 1 }}>
+                      <CustomTextInput
+                        value={value}
+                        onChangeText={onChange}
+                        placeholder="Enter task name"
+                        containerStyle={{
+                          borderColor: error ? "red" : "#ccc",
+                          backgroundColor: "#fff",
+                          flex: 1,
+                          height: 49,
+                          borderRadius: 10,
+                          paddingHorizontal: 16,
                         }}
-                      >
-                        {error.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
+                        inputStyle={{
+                          fontSize: 16,
+                          color: "#333",
+                        }}
+                      />
+                      {error && (
+                        <Text
+                          style={{
+                            color: "red",
+                            fontSize: 12,
+                            marginTop: 4,
+                            fontFamily: "Inter",
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </View>
+                  )}
                 />
-                <TouchableOpacity onPress={()=>setShowIcons(!showIcons)}>    <StartIcon style={{ marginLeft: 10 } } /></TouchableOpacity>
-          
+                <TouchableOpacity onPress={() => setShowIcons(!showIcons)}>
+                  {" "}
+                  <StartIcon style={{ marginLeft: 10 }} />
+                </TouchableOpacity>
               </View>
-           {showIcons &&<View style={{ width: "100%" }}> <IconSelector handleSelect={handleSelect} /></View>}   
-                 
-</View>
-            
+              {showIcons && (
+                <View style={{ width: "100%" }}>
+                  {" "}
+                  <IconSelector handleSelect={handleSelect} />
+                </View>
+              )}
+            </View>
           </View>
-    
+
           {/* Row 2: ROOM + Dropdown */}
           <View
             style={{

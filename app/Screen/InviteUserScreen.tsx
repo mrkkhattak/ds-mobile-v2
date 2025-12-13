@@ -106,7 +106,6 @@ const InviteUserScreen = () => {
       );
 
       if (error) {
-        console.log("Edge function error:", error);
         Snackbar.show({
           text: error.message,
           duration: Snackbar.LENGTH_LONG,
@@ -115,7 +114,6 @@ const InviteUserScreen = () => {
         return;
       }
 
-      console.log("inviteData", JSON.parse(inviteData));
       const invitedData = JSON.parse(inviteData);
       if (invitedData.success === false) {
         Snackbar.show({
@@ -132,7 +130,6 @@ const InviteUserScreen = () => {
         navigation.navigate("Settings");
       }
     } catch (err: any) {
-      console.log("Submit error:", err);
       Snackbar.show({
         text: err.message || "Something went wrong",
         duration: Snackbar.LENGTH_LONG,

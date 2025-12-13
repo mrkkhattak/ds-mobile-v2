@@ -92,7 +92,6 @@ const HomeTaskList = (props: HomeTaskListProps) => {
 
   // simple function to get icon
   const getIconByName = (iconName?: string) => {
-    console.log("iconName", iconName);
     if (!iconName) return null;
     return iconMap[iconName] || null;
   };

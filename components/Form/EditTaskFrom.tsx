@@ -26,7 +26,6 @@ interface CreateTaskFormProps {
 
 const EditTaskForm = (props: CreateTaskFormProps) => {
   const { onSubmit, defalutValues, profile, editTaskloading } = props;
-  console.log("defalutValues",defalutValues)
   const [open, setOpen] = useState(false);
   const [openWeek, setOpenWeek] = useState(false);
   const [openDayNumber, setOpenDayNumber] = useState(false);
@@ -60,10 +59,9 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
         day: "",
         month: "",
       },
-      iconName:defalutValues?.iconName
+      iconName: defalutValues?.iconName,
     },
   });
-  console.log("errors", errors);
   const daysShort = ["M", "TU", "W", "TH", "F", "S", "SU"];
   const weekNumberItems = [
     { label: "1 weeks", value: "1" },
@@ -109,11 +107,10 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
   ];
 
   const repeatEveryField = watch("repeatEvery");
-  const handleSelect = (iconName:string) => {
-    console.log("icon", iconName)
-    setValue("iconName",iconName)
-  }
-  const [showIcons,setShowIcons]=useState(false)
+  const handleSelect = (iconName: string) => {
+    setValue("iconName", iconName);
+  };
+  const [showIcons, setShowIcons] = useState(false);
   useEffect(() => {
     if (repeatEveryField === "DAY") {
       setValue("week", { day: [], weekNumber: "" });
@@ -153,7 +150,6 @@ const EditTaskForm = (props: CreateTaskFormProps) => {
     else if (newProgress <= 60) effortValue = 3;
     else if (newProgress <= 80) effortValue = 4;
     else effortValue = 5;
-console.log("effortValue",effortValue)
     // Update your react-hook-form value
     setValue("effort", effortValue);
   };
@@ -178,9 +174,9 @@ console.log("effortValue",effortValue)
   );
   useEffect(() => {
     if (defalutValues?.iconName) {
-    setShowIcons(true)
-  }
-},[defalutValues?.iconName])
+      setShowIcons(true);
+    }
+  }, [defalutValues?.iconName]);
   return (
     <>
       <KeyboardAwareScrollView
@@ -234,12 +230,12 @@ console.log("effortValue",effortValue)
           }}
         >
           {/* Row 1: Name + Input */}
-           <View
+          <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               marginBottom: 16,
-              flex:1
+              flex: 1,
             }}
           >
             <Text
@@ -249,69 +245,74 @@ console.log("effortValue",effortValue)
                 fontSize: 20,
                 lineHeight: 22,
                 width: 80, // fixed width to align with other labels
-               
               }}
             >
               NAME
             </Text>
-            <View
-              style={{flex:1}}
-            >
+            <View style={{ flex: 1 }}>
               <View
-              style={{
-                flex: 1,
-                flexDirection: "row",
-                alignItems: "center",
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
                   marginBottom: 4,
-                
-              }}
-            >
-              <Controller
-                control={control}
-                name="name"
-                render={({
-                  field: { onChange, onBlur, value },
-                  fieldState: { error },
-                }) => (
-                  <View style={{ flex: 1 }}>
-                    <CustomTextInput
-                      value={value}
-                      onChangeText={onChange}
-                      placeholder="Enter task name"
-                      containerStyle={{
-                        borderColor: error ? "red" : "#ccc",
-                        backgroundColor: "#fff",
-                        flex: 1,
-                        height: 49,
-                        borderRadius: 10,
-                        paddingHorizontal: 16,
-                      }}
-                      inputStyle={{
-                        fontSize: 16,
-                        color: "#333",
-                      }}
-                    />
-                    {error && (
-                      <Text
-                        style={{
-                          color: "red",
-                          fontSize: 12,
-                          marginTop: 4,
-                          fontFamily: "Inter",
+                }}
+              >
+                <Controller
+                  control={control}
+                  name="name"
+                  render={({
+                    field: { onChange, onBlur, value },
+                    fieldState: { error },
+                  }) => (
+                    <View style={{ flex: 1 }}>
+                      <CustomTextInput
+                        value={value}
+                        onChangeText={onChange}
+                        placeholder="Enter task name"
+                        containerStyle={{
+                          borderColor: error ? "red" : "#ccc",
+                          backgroundColor: "#fff",
+                          flex: 1,
+                          height: 49,
+                          borderRadius: 10,
+                          paddingHorizontal: 16,
                         }}
-                      >
-                        {error.message}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              />
-       <TouchableOpacity onPress={()=>setShowIcons(!showIcons)}>    <StartIcon style={{ marginLeft: 10 } } /></TouchableOpacity>
+                        inputStyle={{
+                          fontSize: 16,
+                          color: "#333",
+                        }}
+                      />
+                      {error && (
+                        <Text
+                          style={{
+                            color: "red",
+                            fontSize: 12,
+                            marginTop: 4,
+                            fontFamily: "Inter",
+                          }}
+                        >
+                          {error.message}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                />
+                <TouchableOpacity onPress={() => setShowIcons(!showIcons)}>
+                  {" "}
+                  <StartIcon style={{ marginLeft: 10 }} />
+                </TouchableOpacity>
               </View>
-              {showIcons && <View style={{ width: "100%" }}> <IconSelector selectedValue={defalutValues?.iconName} handleSelect={handleSelect} /></View>}
-                 
-</View>
-            
+              {showIcons && (
+                <View style={{ width: "100%" }}>
+                  {" "}
+                  <IconSelector
+                    selectedValue={defalutValues?.iconName}
+                    handleSelect={handleSelect}
+                  />
+                </View>
+              )}
+            </View>
           </View>
           {/* Row 2: ROOM + Dropdown */}
           <View

@@ -15,9 +15,16 @@ interface TimerProps {
   time: string;
   navigation: NavigationProp;
   bottomAddTaskSheetRef: React.RefObject<BottomSheetMethods | null>;
+  setFinalTimeLeft: React.Dispatch<React.SetStateAction<undefined>>;
+  finalTimeLeft: undefined;
 }
 
-const Timer = ({ time, navigation, bottomAddTaskSheetRef }: TimerProps) => {
+const Timer = ({
+  time,
+  navigation,
+  bottomAddTaskSheetRef,
+  setFinalTimeLeft,
+}: TimerProps) => {
   const [timeLeft, setTimeLeft] = useState(time);
   const [isFinished, setIsFinished] = useState(false);
   const [isEnded, setIsEnded] = useState(false); // user pressed End or Dismiss
@@ -79,6 +86,7 @@ const Timer = ({ time, navigation, bottomAddTaskSheetRef }: TimerProps) => {
   const handleEnd = () => {
     setIsEnded(true);
     stopSound();
+    setFinalTimeLeft(timeLeft);
     bottomAddTaskSheetRef.current?.expand();
   };
 

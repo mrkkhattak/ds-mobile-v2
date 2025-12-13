@@ -76,7 +76,6 @@ const Settings = () => {
 
   const [WeekValue, setWeekValue] = useState<"sunday" | "monday">("monday");
   const [house, setHouse] = useState<any>();
-  console.log("house", house);
   const hanldeSpruceLenght = async (lenght: string) => {
     try {
       if (houseHold && profile) {
@@ -210,8 +209,6 @@ const Settings = () => {
         });
       } else {
         setRoomList(result);
-
-        console.log("Fetched rooms:", result);
       }
     }
   };
@@ -247,7 +244,6 @@ const Settings = () => {
     if (result.error) {
       console.error("Failed to update room:", result.error);
     } else {
-      console.log("Updated room successfully:", result.data);
       setEditingRoomId(null);
       setValue("");
       getRooms();
@@ -281,8 +277,6 @@ const Settings = () => {
             });
           } else {
             setRoomList(result);
-
-            console.log("Fetched rooms:", result);
           }
         })();
       }
@@ -304,14 +298,11 @@ const Settings = () => {
             setHouse(result);
             setWeekValue(result.data.weekofstart);
             setGroupValue(result.data.groupbyweek);
-
-            console.log("Fetched rooms:", result);
           }
         })();
       }
     }, [profile])
   );
-  console.log("rooms", roomList);
   if (isLoading) {
     return (
       <MainLayout>

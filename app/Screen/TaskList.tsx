@@ -73,8 +73,6 @@ const TaskList = () => {
     null
   );
 
-  console.log("====>", selectedEffort);
-
   const { profile, setProfile, updateProfile } = useUserProfileStore();
   const bottomAddTaskSheetRef = useRef<BottomSheet>(null);
   const bottomFilterTaskSheetRef = useRef<BottomSheet>(null);
@@ -224,8 +222,6 @@ const TaskList = () => {
                 }
               );
 
-              console.log("reslut", result);
-
               if (isActive && result) setGroupIdeasData(result);
 
               if (user && profile) {
@@ -340,7 +336,6 @@ const TaskList = () => {
           } else {
             setRoomList(result);
             setSelectedSubTab(result[0].value);
-            console.log("Fetched rooms:", result);
           }
         })();
       }
@@ -426,7 +421,6 @@ const TaskList = () => {
         value,
         profile?.household_id
       );
-      console.log(result);
       if (result) {
         setSearchTasks(result);
         bottomFilterTaskSheetRef.current?.close();
@@ -456,7 +450,6 @@ const TaskList = () => {
       const taskType = taskTypeMap[selectedTab] || "goto";
 
       const result = await fetchAndGroupGlobalSearchTasks(value);
-      console.log(result);
       if (result) {
         setGlobalSearchTasks(result);
         bottomFilterTaskSheetRef.current?.close();
@@ -626,7 +619,6 @@ const TaskList = () => {
       });
     }
   };
-  console.log("myTask", groupData);
   const renderButton = (
     label: string,
     selected: boolean,

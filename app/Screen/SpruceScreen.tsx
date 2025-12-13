@@ -8,7 +8,7 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { useFocusEffect } from "@react-navigation/native";
+import { RouteProp, useFocusEffect, useRoute } from "@react-navigation/native";
 import { useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -31,6 +31,7 @@ import EditIcon from "../../assets/images/icons/Edit task.svg";
 import {
   assignUserToTask,
   completeSpruceTask,
+  endSpruceAndMovePendingTasks,
   fetchHouseholdById,
   fetchSpruceTasksByHouseHoldId,
   getHouseholdById,
@@ -40,6 +41,7 @@ import {
   Household,
   removeTaskFromSpruce,
   SpruceTaskDetails,
+  updateSweepById,
 } from "../functions/functions";
 import { HomeStackParamList } from "../types/navigator_type";
 import {
@@ -53,9 +55,11 @@ type NavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
   "SpruceScreen"
 >;
+type SpruceScreenRouteProp = RouteProp<HomeStackParamList, "SpruceScreen">;
 type GroupByOption = "category" | "person";
 const SpruceScreen = () => {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<SpruceScreenRouteProp>();
   const { signOut } = useAuthStore();
   const { profile, setProfile, updateProfile } = useUserProfileStore();
   const [loading, setLoading] = useState<boolean>(false);
@@ -81,6 +85,7 @@ const SpruceScreen = () => {
   const [totalDone, setTotalDone] = useState<number>(0);
   const [totalTasks, setTotalTasks] = useState<number>(0);
   const [totalPoints, setTotalPoints] = useState<number>(0);
+  const [finalTimeLeft, setFinalTimeLeft] = useState(undefined);
 
   const [openSpruceModal, setOpenSpruceModal] = useState(false);
   const [countdown, setCountdown] = useState<number>(3);
@@ -177,7 +182,7 @@ const SpruceScreen = () => {
         const selectedDate = new Date();
         const { data, error } = await fetchSpruceTasksByHouseHoldId(
           profile?.household_id,
-          selectedDate.toISOString().split("T")[0]
+          route.params.selectedData
         );
 
         if (error) {
@@ -192,7 +197,6 @@ const SpruceScreen = () => {
         }
 
         if (data && Array.isArray(data)) {
-          console.log("data===>", data);
           const grouped = groupTasks(data, groupValue);
           setGroupData(grouped);
         }
@@ -480,6 +484,13 @@ const SpruceScreen = () => {
     );
   };
 
+  const showError = (message: string) => {
+    Snackbar.show({
+      text: message,
+      duration: Snackbar.LENGTH_LONG,
+      backgroundColor: "red",
+    });
+  };
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -597,7 +608,6 @@ const SpruceScreen = () => {
   useEffect(() => {
     if (groupData) {
       let completedCount = 0;
-      console.log(groupData);
       Object.values(groupData).forEach((roomTasks: any) => {
         roomTasks.forEach((task: any) => {
           if (task.task_status === "completed") {
@@ -638,15 +648,53 @@ const SpruceScreen = () => {
       }
     }, [profile])
   );
-  const handleendSprucing = () => {
-    bottomAddTaskSheetRef.current?.close();
-    setOpenSpruceModal(true);
+  const handleendSprucing = async () => {
+    try {
+      if (route.params.sweepId) {
+        const result = await updateSweepById(route.params.sweepId, {
+          spruce_score: (totalDone / totalTasks) * 100,
+          time: finalTimeLeft,
+        });
+        if (result.error) {
+          showError(result.error);
+        }
+        if (result.success) {
+          bottomAddTaskSheetRef.current?.close();
+          setOpenSpruceModal(true);
+        }
+      }
+    } catch (error: any) {
+      showError(error?.message);
+    }
+  };
+
+  const handleEndSpureAndMoveTask = async () => {
+    try {
+      if (profile) {
+        const result = await endSpruceAndMovePendingTasks(
+          profile?.household_id,
+          route.params.selectedData
+        );
+        if (result.error) {
+          showError(result.error);
+        }
+        if (result.success) {
+          Snackbar.show({
+            text: `${result.movedCount} tasks moved to tomorrow`,
+            duration: Snackbar.LENGTH_LONG,
+            backgroundColor: "green",
+          });
+          handleendSprucing();
+        }
+      }
+    } catch (error: any) {
+      showError(error.message);
+    }
   };
 
   const getSpruceMessage = (percentage: any) => {
     let heading = "";
     let subheading = "";
-    console.log("percentage", percentage);
     if (percentage === 100) {
       heading = "Perfect Spruce";
       subheading = "You swept through those tasks like a pro";
@@ -699,6 +747,8 @@ const SpruceScreen = () => {
                 time={`${houseHold.spruce_time}`}
                 navigation={navigation}
                 bottomAddTaskSheetRef={bottomAddTaskSheetRef}
+                setFinalTimeLeft={setFinalTimeLeft}
+                finalTimeLeft={finalTimeLeft}
               />
 
               <FamiyImageLayer
@@ -1030,7 +1080,7 @@ const SpruceScreen = () => {
                   />
                   <MainButton
                     label={"End spruce & move remaining tasks to tomorrow"}
-                    onPress={handleendSprucing}
+                    onPress={handleEndSpureAndMoveTask}
                     color1={"rgba(142, 45, 226, 1)"}
                     color2={"rgba(74, 0, 224, 1)"}
                     style={{

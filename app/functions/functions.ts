@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
+import dayjs from "dayjs";
 import { CreateTaskFormValues } from "../types/types";
+
 export interface GlobalTask {
   id: string;
   name: string;
@@ -782,7 +784,6 @@ export const createTask = async (
   try {
     const userResponse = await supabase.auth.getUser();
     const userId = userResponse.data.user?.id;
-    console.log("data", data);
     if (!userId) {
       return { error: "User not authenticated" };
     }
@@ -1167,7 +1168,6 @@ export const fetchSpruceTasksByHouseHoldId = async (
       { ascending: true }
     );
 
-    console.log("spruceData", spruceData);
     if (spruceError) {
       console.error("Error fetching spruce tasks:", spruceError.message);
       return { error: spruceError.message };
@@ -1259,7 +1259,6 @@ export const removeTasksByGlobalId = async (
       return false;
     }
 
-    console.log(globalTaskId, "globalTaskId");
     const { error } = await supabase
       .from("spruce_tasks")
       .delete()
@@ -1286,7 +1285,6 @@ export const removeUserTasksById = async (
       return false;
     }
 
-    console.log(userTaskId, "userTaskId");
     const { error } = await supabase
       .from("spruce_tasks")
       .delete()
@@ -1507,7 +1505,6 @@ export const fetchRooms = async (
     const combined: any = [...(globalRooms || []), ...(householdRooms || [])];
 
     // 4. Convert to options format
-    console.log(combined);
     const roomOptions = combined.map((room: any) => ({
       label: room.name_us,
       value: room.name_us.replace(/\s+/g, "-"),
@@ -1652,5 +1649,235 @@ export const getHouseholdById = async (
     return { data };
   } catch (err: any) {
     return { error: err.message };
+  }
+};
+
+export const createOrUpdateSweepWithTasks = async (
+  userId: string,
+  targetDate: string, // "YYYY-MM-DD"
+  tasks: any[] // array of spruce_task IDs
+): Promise<{ success: boolean; sweepId?: string; error?: string }> => {
+  try {
+    if (!userId || !targetDate) {
+      return { success: false, error: "Missing userId or targetDate" };
+    }
+
+    /* 1️⃣ Check if sweep exists for user & date */
+    const { data: existingSweep, error: checkError } = await supabase
+      .from("sweeps")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("sweep_date", targetDate)
+      .maybeSingle();
+
+    if (checkError) return { success: false, error: checkError.message };
+
+    let sweepId: string;
+
+    if (existingSweep) {
+      // Sweep exists → reuse it
+      sweepId = existingSweep.id;
+    } else {
+      // Sweep does not exist → create it
+      const { data: newSweep, error: sweepError } = await supabase
+        .from("sweeps")
+        .insert({ user_id: userId, sweep_date: targetDate })
+        .select("id")
+        .single();
+
+      if (sweepError || !newSweep) {
+        return {
+          success: false,
+          error: sweepError?.message || "Failed to create sweep",
+        };
+      }
+
+      sweepId = newSweep.id;
+    }
+
+    /* 2️⃣ Insert tasks into sweep_tasks */
+
+    if (Array.isArray(tasks) && tasks.length > 0) {
+      // 1️⃣ Delete old tasks for this sweep
+      const { error: deleteError } = await supabase
+        .from("sweep_tasks")
+        .delete()
+        .eq("sweep_id", sweepId);
+
+      if (deleteError) return { success: false, error: deleteError.message };
+
+      // 2️⃣ Insert new tasks
+      const sweepTasks = tasks.map((spruceTask) => ({
+        sweep_id: sweepId,
+        spruce_task_id: spruceTask.id,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("sweep_tasks")
+        .insert(sweepTasks);
+
+      if (insertError) return { success: false, error: insertError.message };
+    }
+
+    return { success: true, sweepId };
+  } catch (err: any) {
+    console.error("createOrUpdateSweepWithTasks error:", err);
+    return { success: false, error: err?.message || "Unexpected error" };
+  }
+};
+
+export const getSweepByDate = async (
+  userId: string,
+  sweepDate: string // format "YYYY/MM/DD" or "YYYY-MM-DD"
+): Promise<{
+  success: boolean;
+  sweep?: any;
+  tasks?: any[];
+  error?: string;
+}> => {
+  try {
+    if (!userId || !sweepDate) {
+      return { success: false, error: "Missing userId or sweepDate" };
+    }
+
+    // 1️⃣ Fetch the sweep
+    const { data: sweep, error: sweepError } = await supabase
+      .from("sweeps")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("sweep_date", sweepDate)
+      .maybeSingle();
+
+    if (sweepError) {
+      return { success: false, error: sweepError.message };
+    }
+
+    if (!sweep) {
+      return { success: true, sweep: null, tasks: [] }; // No sweep for that date
+    }
+
+    const sweepId = sweep.id;
+
+    // 2️⃣ Fetch related tasks
+    const { data: tasks, error: tasksError } = await supabase
+      .from("sweep_tasks")
+      .select("*, spruce_task_id(*)") // include task details if needed
+      .eq("sweep_id", sweepId);
+
+    if (tasksError) {
+      return { success: false, error: tasksError.message };
+    }
+
+    return { success: true, sweep, tasks: tasks || [] };
+  } catch (err: any) {
+    console.error("Error fetching sweep:", err);
+    return { success: false, error: err.message || "Unknown error occurred" };
+  }
+};
+
+export const getAllSweeps = async (
+  userId: string
+): Promise<{
+  success: boolean;
+  sweeps?: any[];
+  error?: string;
+}> => {
+  try {
+    if (!userId) {
+      return { success: false, error: "Missing userId" };
+    }
+
+    // 1️⃣ Fetch all sweeps for the user
+    const { data: sweeps, error: sweepsError } = await supabase
+      .from("sweeps")
+      .select("*, sweep_tasks(*, spruce_task_id(*))") // include related tasks
+      .eq("user_id", userId)
+      .order("sweep_date", { ascending: true }); // optional: order by date
+
+    if (sweepsError) {
+      return { success: false, error: sweepsError.message };
+    }
+
+    return { success: true, sweeps: sweeps || [] };
+  } catch (err: any) {
+    console.error("Error fetching sweeps:", err);
+    return { success: false, error: err.message || "Unknown error occurred" };
+  }
+};
+
+export const updateSweepById = async (
+  sweepId: string,
+  updates: { time?: string; spruce_score?: number }
+): Promise<{ success: boolean; sweep?: any; error?: string }> => {
+  try {
+    if (!sweepId || (!updates.time && updates.spruce_score === undefined)) {
+      return { success: false, error: "Missing sweepId or fields to update" };
+    }
+
+    const { data: updatedSweep, error } = await supabase
+      .from("sweeps")
+      .update({
+        ...updates, // { time, spruce_score }
+      })
+      .eq("id", sweepId)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, sweep: updatedSweep };
+  } catch (err: any) {
+    console.error("Error updating sweep:", err);
+    return { success: false, error: err.message || "Unknown error occurred" };
+  }
+};
+
+export const endSpruceAndMovePendingTasks = async (
+  householdId: string,
+  selectedDate: string // format: "YYYY-MM-DD"
+): Promise<{ success: boolean; movedCount?: number; error?: string }> => {
+  try {
+    if (!householdId || !selectedDate) {
+      return { success: false, error: "Missing householdId or selectedDate" };
+    }
+
+    const tomorrow = dayjs(selectedDate).add(1, "day").format("YYYY-MM-DD");
+
+    // 1️⃣ Get pending tasks for household ON selected date
+    const { data: pendingTasks, error: fetchError } = await supabase
+      .from("spruce_tasks")
+      .select("id")
+      .eq("household_id", householdId)
+      .eq("task_status", "pending")
+      .eq("scheduled_date", selectedDate);
+
+    if (fetchError) {
+      return { success: false, error: fetchError.message };
+    }
+
+    if (!pendingTasks || pendingTasks.length === 0) {
+      return { success: true, movedCount: 0 };
+    }
+
+    const taskIds = pendingTasks.map((t) => t.id);
+
+    // 2️⃣ Move ONLY those tasks to tomorrow
+    const { error: updateError } = await supabase
+      .from("spruce_tasks")
+      .update({
+        scheduled_date: tomorrow,
+      })
+      .in("id", taskIds);
+
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+
+    return { success: true, movedCount: taskIds.length };
+  } catch (err: any) {
+    console.error("End spruce error:", err);
+    return { success: false, error: err.message || "Unknown error" };
   }
 };

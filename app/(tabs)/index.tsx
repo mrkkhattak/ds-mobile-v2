@@ -21,6 +21,7 @@ import {
   AddTaskToSpruce,
   AddUserTaskToSpruce,
   assignUserToTask,
+  createOrUpdateSweepWithTasks,
   createTask,
   deleteSpruceTasksByUserTaskId,
   deleteTaskById,
@@ -28,6 +29,7 @@ import {
   getGlobalTasks,
   getHouseholdById,
   getProfilesByHousehold,
+  getSweepByDate,
   getTaskById,
   getUserProfile,
   GlobalTask,
@@ -50,6 +52,7 @@ import Tab from "@/components/BottomTab/Tab";
 import HomeTaskList from "@/components/HomeComponents/HomeTaskList";
 import { SlideButton } from "@/components/ui/Buttons";
 import { useUserProfileStore } from "@/store/userProfileStore";
+import dayjs from "dayjs";
 import { ActivityIndicator } from "react-native-paper";
 import SlideIcon from "../../assets/images/icons/arrow.svg";
 import {
@@ -71,9 +74,7 @@ const index = () => {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["40%", "80%"], []);
   const user = useAuthStore((s) => s.user);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined | any>(
-    new Date()
-  );
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isToday, setIsToday] = useState<Boolean>(false);
   const [groupData, setGroupData] = useState<any>();
   const today = new Date();
@@ -97,7 +98,10 @@ const index = () => {
     "category"
   );
 
+  const [spurceTasks, setSpruceTask] = useState<any[]>();
+
   const [totalDone, setTotalDone] = useState<number>(0);
+  const [sweep, setSweep] = useState<any>();
   const fetchTasks = async () => {
     try {
       if (user && profile) {
@@ -105,7 +109,6 @@ const index = () => {
           profile?.household_id,
           selectedDate.toISOString().split("T")[0]
         );
-        console.log("data====>", data);
         if (error) {
           Snackbar.show({
             text: error,
@@ -116,7 +119,7 @@ const index = () => {
           setLoading(false);
           return;
         }
-
+        setSpruceTask(data);
         if (data && Array.isArray(data)) {
           const grouped = groupTasks(data, groupValue);
           setGroupData(grouped);
@@ -256,7 +259,7 @@ const index = () => {
 
   const fetchTask = async (taskId: string) => {
     const { data, error } = await getTaskById(taskId);
-   
+
     if (error) {
       Snackbar.show({
         text: error,
@@ -286,51 +289,12 @@ const index = () => {
         day: data?.repeat_monthly[0]?.day || "",
         month: `${data?.repeat_monthly[0]?.month_number}`,
       },
-      iconName:data?.icon_name
+      iconName: data?.icon_name,
     });
     bottomSheetRef.current?.expand();
     // setTask(data);
   };
 
-  // const fetchTasks = async () => {
-  //   try {
-  //     if (!user || !profile) return;
-
-  //     const { data, error } = await fetchSpruceTasksByHouseHoldId(
-  //       profile.household_id,
-  //       selectedDate.toISOString().split("T")[0]
-  //     );
-
-  //     if (error) {
-  //       Snackbar.show({
-  //         text: error,
-  //         duration: Snackbar.LENGTH_LONG,
-  //         backgroundColor: "red",
-  //       });
-  //       console.log("Error loading tasks:", error);
-  //       return;
-  //     }
-
-  //     if (Array.isArray(data)) {
-  //       const grouped = data.reduce((acc: any, task: any) => {
-  //         const groupKey: any =
-  //           task.category || task.user_task_room || "Uncategorized";
-  //         if (!acc[groupKey]) acc[groupKey] = [];
-  //         acc[groupKey].push(task);
-  //         return acc;
-  //       }, {});
-  //       setGroupData(grouped);
-  //     }
-  //   } catch (err: any) {
-  //     console.log("err", err);
-  //     Snackbar.show({
-  //       text: err.message || "Failed to load tasks",
-  //       duration: Snackbar.LENGTH_LONG,
-  //       backgroundColor: "red",
-  //     });
-  //     console.log("Error loading tasks:", err);
-  //   }
-  // };
   const CreateNewTask = async (
     formData: CreateTaskFormValues,
     household_id: string
@@ -402,7 +366,12 @@ const index = () => {
         } else {
           // Single one-time task (use today as scheduled date)
           const today = new Date().toISOString().split("T")[0];
-          await AddUserTaskToSpruce(taskId, userId, today, household_id);
+          await AddUserTaskToSpruce(
+            taskId,
+            userId,
+            selectedDate.toISOString().split("T")[0],
+            household_id
+          );
 
           Snackbar.show({
             text: "Task Updated successfully!",
@@ -431,7 +400,6 @@ const index = () => {
   ) => {
     const taskId: string | undefined = task?.id;
     setEditTaskLoading(true);
-    console.log(data);
 
     const { success, error } = await deleteSpruceTasksByUserTaskId(
       taskId ?? ""
@@ -490,8 +458,6 @@ const index = () => {
     try {
       // setLoading(true);
       const result = await assignUserToTask(taskId, userId);
-      console.log("taskId", taskId);
-      console.log("userId", userId);
 
       if (result) {
         if (result.data) {
@@ -523,7 +489,6 @@ const index = () => {
         }
 
         if (result.error) {
-          console.log(result);
           Snackbar.show({
             text: result.error,
             duration: Snackbar.LENGTH_LONG,
@@ -562,7 +527,7 @@ const index = () => {
       const success = await AddTaskToSpruce(
         selected.id,
         user.id,
-        today,
+        selectedDate.toISOString().split("T")[0],
         profile.household_id
       );
       if (success) {
@@ -580,7 +545,7 @@ const index = () => {
         "id",
         "assigned_at",
         "updated_at",
-        "scheduled_date",
+
         "task_id",
         "icon_name",
         "owner_user_id",
@@ -623,6 +588,8 @@ const index = () => {
         user_task_room: "Misc",
         task_status: "pending",
         user_task_repeat: false,
+        scheduled_date: selectedDate.toISOString().split("T")[0],
+
         ...nullObj,
       };
 
@@ -643,9 +610,9 @@ const index = () => {
     bottomAddTaskSheetRef.current?.close();
   };
   const handleSaveTask = () => {
-    console.log("value", value);
     navigation.navigate("BottomSheetScreen", {
       taskName: value,
+      selectedData: selectedDate.toISOString().split("T")[0],
     });
   };
   const handleShuffle = () => {
@@ -664,8 +631,6 @@ const index = () => {
 
   const handleOneOff = async (task: SpruceTaskDetails) => {
     try {
-      console.log("task", task);
-
       // setLoading(true);
       const extracted = {
         id: task.id ?? undefined, // null → undefined
@@ -677,26 +642,8 @@ const index = () => {
         repeatEvery: "DAY",
         category: task.category,
       };
-      // let repeatingDates: string[] = [];
-      // if (task?.user_task_repeat_type === "DAY") {
-      //   repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
-      //     days: formData.days,
-      //   });
-      // } else if (task.user_task_repeat_type === "WEEK") {
-      //   repeatingDates = generateRepeatingDatesUnified(formData.repeatEvery, {
-      //     weekDays: formData.week?.day,
-      //     weekInterval: Number(formData.week?.weekNumber),
-      //   });
-      // } else if (formData.repeatEvery === "MONTH") {
-      //   repeatingDates = generateMonthlyRepeatingDates(
-      //     Number(formData.month?.month),
-      //     `${formData.month?.day}`,
-      //     Number(formData.month?.dayNumber)
-      //   );
-      // }
 
       const result = await createTask(extracted, profile?.household_id);
-      console.log("result", result);
       if (result.error) {
         Snackbar.show({
           text: result.error,
@@ -706,12 +653,7 @@ const index = () => {
         setLoading(false);
         return "error";
       }
-      console.log(
-        "taskid=====>",
-        result.data.id,
-        user?.id,
-        profile?.household_id
-      );
+
       const taskId = result.data.id;
       const userId = user?.id;
 
@@ -724,10 +666,10 @@ const index = () => {
       const result3 = await AddUserTaskToSpruce(
         taskId,
         userId,
-        today,
+        selectedDate.toISOString().split("T")[0],
+
         profile?.household_id
       );
-      console.log("result3", result3);
       Snackbar.show({
         text: "Task created successfully!",
         duration: Snackbar.LENGTH_SHORT,
@@ -748,8 +690,34 @@ const index = () => {
       return "success";
     }
   };
+
+  const hanldeComplete = async () => {
+    try {
+      const date = selectedDateRef.current;
+      const data = spurceTasksRef.current;
+      const currentSweep = sweepRef.current;
+
+      if (!date || !data || !user) return;
+
+      const result = await createOrUpdateSweepWithTasks(
+        user.id,
+        dayjs(date).format("YYYY/MM/DD"),
+        data
+      );
+      if (result.error) {
+        showError(result.error);
+      }
+      if (result.success) {
+        navigation.navigate("SpruceScreen", {
+          sweepId: currentSweep ? currentSweep.id : result.sweepId,
+          selectedData: selectedDate.toISOString().split("T")[0],
+        });
+      }
+    } catch (error: any) {
+      showError(error.message);
+    }
+  };
   const showError = (message: string) => {
-    console.log(message);
     Snackbar.show({
       text: message,
       duration: Snackbar.LENGTH_LONG,
@@ -816,7 +784,6 @@ const index = () => {
       };
     }, [profile, selectedDate, groupValue])
   );
-  console.log("new value", value);
   useEffect(() => {
     if (groupData) {
       let completedCount = 0;
@@ -846,13 +813,45 @@ const index = () => {
             // setHouse(result);
             // setWeekValue(result.data.weekofstart);
             setGroupValue(result.data.groupbyweek);
-
-            console.log("Fetched rooms:", result);
           }
         })();
       }
     }, [profile])
   );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        (async () => {
+          const result = await getSweepByDate(
+            user.id,
+            dayjs(selectedDate).format("YYYY/MM/DD")
+          );
+          if ("error" in result) {
+            Snackbar.show({
+              text: result.error,
+              duration: 2000,
+              backgroundColor: "red",
+            });
+          } else {
+            // setHouse(result);
+            // setWeekValue(result.data.weekofstart);
+
+            setSweep(result.sweep);
+          }
+        })();
+      }
+    }, [selectedDate])
+  );
+  const selectedDateRef = useRef<Date | null>(selectedDate);
+  const spurceTasksRef = useRef<any | null>(spurceTasks);
+  const sweepRef = useRef<any | null>(sweep);
+
+  useEffect(() => {
+    selectedDateRef.current = selectedDate;
+    spurceTasksRef.current = spurceTasks;
+    sweepRef.current = sweep;
+  }, [selectedDate, spurceTasks, sweep]);
   if (loading) {
     return (
       <MainLayout>
@@ -880,6 +879,7 @@ const index = () => {
               navigation.navigate("MainMenu");
             }}
           />
+
           <CalenderStripComponet
             navigation={navigation}
             selectedDate={selectedDate}
@@ -895,10 +895,15 @@ const index = () => {
             marginTop: 10,
           }}
         >
+          {/* <TouchableOpacity
+            onPress={() => {
+              hanldeComplete(selectedDate);
+            }}
+          > */}
           <SlideButton
             label="Slide to start sprucing"
             icon={<SlideIcon />}
-            onSlideComplete={() => navigation.navigate("SpruceScreen")}
+            onSlideComplete={hanldeComplete}
             width={Platform.OS === "android" ? 340 : 370}
             textStyle={{
               fontSize: 16,
@@ -906,6 +911,7 @@ const index = () => {
               textAlign: "center",
             }}
           />
+          {/* </TouchableOpacity> */}
         </View>
         <BottomSheet
           ref={bottomAddTaskSheetRef}

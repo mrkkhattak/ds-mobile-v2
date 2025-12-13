@@ -25,7 +25,6 @@ const EditBottomSheet = (props: EditBottomSheetProps) => {
     profile,
     editTaskloading,
   } = props;
-  console.log("edittak",task)
   return (
     <BottomSheet
       ref={bottomSheetRef}
