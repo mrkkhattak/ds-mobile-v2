@@ -28,6 +28,8 @@ export type HomeStackParamList = {
     sweepId: undefined;
     selectedData: string;
   };
+
+  FlashBack: undefined;
   BottomSheetScreen: {
     taskName?: String;
     selectedData?: string;

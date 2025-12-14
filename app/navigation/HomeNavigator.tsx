@@ -4,6 +4,7 @@ import index from "../(tabs)";
 import BottomSheetScreen from "../Screen/BottomSheetScreen";
 import CreateHouseholdScreen from "../Screen/CreateHouseHoldScreen";
 import CreateNewPasswordScreen from "../Screen/CreateNewPasswordScreen";
+import FlashbackScreen from "../Screen/FlashbackScreen";
 import InviteUserScreen from "../Screen/InviteUserScreen";
 import MainMenu from "../Screen/MainMenu";
 import ProfileScreen from "../Screen/ProfileScreen";
@@ -24,6 +25,8 @@ const HomeNavigator = () => {
       <Stack.Screen name="TaskLibrary" component={TaskList} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="Settings" component={Settings} />
+
+      <Stack.Screen name="FlashBack" component={FlashbackScreen} />
       <Stack.Screen
         name="CreateHouseholdScreen"
         component={CreateHouseholdScreen}

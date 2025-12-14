@@ -109,7 +109,7 @@ const BottomSheetScreen = () => {
         );
       }
 
-      const result = await createTask(formData, profile?.household_id);
+      const result = await createTask(formData, profile?.household_id||"");
 
       if (result.error) {
         Snackbar.show({

@@ -1,7 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+import isoWeek from "dayjs/plugin/isoWeek";
 import { CreateTaskFormValues } from "../types/types";
-
+dayjs.extend(isoWeek);
 export interface GlobalTask {
   id: string;
   name: string;
@@ -1250,6 +1252,105 @@ export const fetchSpruceTasksByHouseHoldId = async (
   }
 };
 
+export const fetchSpruceTasksByAssignedUserId = async (
+  assignedUserId: string,
+  scheduledDate?: string
+): Promise<{
+  data?: SpruceTaskDetails[];
+  totalEffortPoints?: number;
+  error?: string;
+}> => {
+  try {
+    if (!assignedUserId) {
+      return { error: "Missing assignedUserId" };
+    }
+
+    let query = supabase
+      .from("spruce_tasks")
+      .select(
+        `id,
+         assign_user_id,
+         user_id,
+         user_task_id,
+         scheduled_date,
+         created_at,
+         updated_at,
+         task_status,
+         user_task:user_task_id (
+           id,
+           name,
+           room,
+           type,
+           effort,
+           repeat,
+           repeat_every,
+           user_id,
+           created_at,
+           updated_at,
+           repeat_type,
+           category,
+           icon_name
+         ),
+         global_task:global_task_id (
+           id,
+           name,
+           description_us,
+           description_uk,
+           description_row,
+           icon_name,
+           child_friendly,
+           estimated_effort,
+           points,
+           room,
+           category,
+           keywords,
+           display_names,
+           unique_completions,
+           total_completions,
+           effort_level
+         )`
+      )
+      .eq("assign_user_id", assignedUserId)
+      .eq("task_status", "completed");
+
+    // Optional date filter
+    if (scheduledDate) {
+      query = query.eq("scheduled_date", scheduledDate);
+    }
+
+    const { data, error } = await query;
+    console.log("data===>", data);
+    if (error) {
+      console.error("Supabase error:", error);
+      return { error: error.message };
+    }
+
+    // Effort → Points
+    const effortToPoints = (effort?: number | null): number =>
+      effort ? effort * 5 : 0;
+
+    const totalEffortPoints = (data ?? []).reduce((total, task) => {
+      if (task.user_task) {
+        return total + effortToPoints(task.user_task.effort);
+      }
+
+      if (task.global_task) {
+        return total + effortToPoints(task.global_task.effort_level);
+      }
+
+      return total;
+    }, 0);
+
+    return {
+      data: data as SpruceTaskDetails[],
+      totalEffortPoints,
+    };
+  } catch (err: any) {
+    console.error("Unexpected error:", err);
+    return { error: err.message || "Something went wrong" };
+  }
+};
+
 export const removeTasksByGlobalId = async (
   globalTaskId: string
 ): Promise<boolean> => {
@@ -1879,5 +1980,347 @@ export const endSpruceAndMovePendingTasks = async (
   } catch (err: any) {
     console.error("End spruce error:", err);
     return { success: false, error: err.message || "Unknown error" };
+  }
+};
+
+export const getLongestSweepStreak = async (userId: string) => {
+  // 1️⃣ Fetch all sweep dates for the user
+  console.log("user_id", userId);
+  const { data, error } = await supabase
+    .from("sweeps")
+    .select("sweep_date")
+    .eq("user_id", userId)
+    .order("sweep_date", { ascending: true });
+
+  console.log("datasweeps", data);
+  if (error) {
+    console.error("Error fetching sweeps:", error);
+    return 0;
+  }
+
+  if (!data || data.length === 0) return 0;
+
+  // 2️⃣ Convert sweep_date strings to Date objects
+  const dates = data
+    .map((row) => {
+      const [year, month, day] = row.sweep_date.split("/").map(Number);
+      return new Date(year, month - 1, day); // JS months are 0-indexed
+    })
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  // 2️⃣ Remove duplicates
+  const uniqueDates = Array.from(new Set(dates.map((d) => d.getTime()))).map(
+    (t) => new Date(t)
+  );
+
+  // 3️⃣ Calculate longest consecutive streak
+  let longestStreak = 1;
+  let currentStreak = 1;
+
+  for (let i = 1; i < uniqueDates.length; i++) {
+    const diffTime = uniqueDates[i].getTime() - uniqueDates[i - 1].getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); // round to avoid float issues
+
+    if (diffDays === 1) {
+      currentStreak += 1;
+      if (currentStreak > longestStreak) longestStreak = currentStreak;
+    } else {
+      currentStreak = 1;
+    }
+  }
+  return longestStreak;
+};
+
+export const getTotalSweepTime = async (userId: string) => {
+  try {
+    // Fetch all time entries for the user
+    const { data, error } = await supabase
+      .from("sweeps")
+      .select("time")
+      .eq("user_id", userId);
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      return "0 mins"; // no sweeps found
+    }
+
+    // Convert time strings to total minutes and sum them
+    const totalMinutes = data.reduce((sum, sweep) => {
+      const [mins, secs] = sweep.time.split(":").map(Number);
+      return sum + mins + secs / 60;
+    }, 0);
+
+    // Format result
+    const formattedTime =
+      totalMinutes < 59
+        ? `${Math.round(totalMinutes)} mins`
+        : `${(totalMinutes / 60).toFixed(2)} hrs`;
+    console.log("formattedTime", formattedTime);
+    return formattedTime;
+  } catch (err) {
+    console.error("Error calculating total sweep time:", err);
+    return null;
+  }
+};
+
+export const fetchSpruceTasksLast7Days = async (
+  assignedUserId: string
+): Promise<{
+  data?: SpruceTaskDetails[];
+  dailyScores?: {
+    day: string; // Sun, Mon, Tue...
+    value: number;
+    tasksCompleted: number;
+  }[];
+  error?: string;
+}> => {
+  try {
+    if (!assignedUserId) {
+      return { error: "Missing assignedUserId" };
+    }
+
+    const sevenDaysAgo = dayjs()
+      .subtract(6, "day")
+      .startOf("day")
+      .format("YYYY-MM-DD");
+    const today = dayjs().endOf("day").format("YYYY-MM-DD");
+
+    const { data, error } = await supabase
+      .from("spruce_tasks")
+      .select(
+        `id,
+         assign_user_id,
+         user_id,
+         user_task_id,
+         scheduled_date,
+         created_at,
+         updated_at,
+         task_status,
+         user_task:user_task_id (
+           id,
+           name,
+           room,
+           type,
+           effort,
+           repeat,
+           repeat_every,
+           user_id,
+           created_at,
+           updated_at,
+           repeat_type,
+           category,
+           icon_name
+         ),
+         global_task:global_task_id (
+           id,
+           name,
+           description_us,
+           description_uk,
+           description_row,
+           icon_name,
+           child_friendly,
+           estimated_effort,
+           points,
+           room,
+           category,
+           keywords,
+           display_names,
+           unique_completions,
+           total_completions,
+           effort_level
+         )`
+      )
+      .eq("assign_user_id", assignedUserId)
+      .eq("task_status", "completed")
+      .gte("scheduled_date", sevenDaysAgo)
+      .lte("scheduled_date", today)
+      .order("scheduled_date", { ascending: true });
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return { error: error.message };
+    }
+
+    // Helper: convert effort to points
+    const effortToPoints = (effort?: number | null): number =>
+      effort ? effort * 5 : 0;
+
+    const tasks = data ?? [];
+
+    // Generate daily scores for all 7 days
+    const dailyScores = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = dayjs().subtract(i, "day");
+      const dayLabel = date.format("ddd"); // Sun, Mon, Tue
+      const dayTasks = tasks.filter(
+        (task) =>
+          dayjs(task.scheduled_date).format("YYYY-MM-DD") ===
+          date.format("YYYY-MM-DD")
+      );
+
+      const totalPoints = dayTasks.reduce((total, task) => {
+        if (task.user_task)
+          return total + effortToPoints(task.user_task.effort);
+        if (task.global_task)
+          return total + effortToPoints(task.global_task.effort_level);
+        return total;
+      }, 0);
+
+      dailyScores.push({
+        day: dayLabel,
+        value: dayTasks.length > 0 ? totalPoints / dayTasks.length : 0,
+        tasksCompleted: dayTasks.length,
+      });
+    }
+
+    return {
+      data: tasks as SpruceTaskDetails[],
+      dailyScores,
+    };
+  } catch (err: any) {
+    console.error("Unexpected error:", err);
+    return { error: err.message || "Something went wrong" };
+  }
+};
+
+dayjs.extend(isBetween); // extend dayjs with the plugin
+export const fetchSpruceTasksLast6Weeks = async (
+  assignedUserId: string
+): Promise<
+  | { week: string; averageScore: number; tasksCompleted: number }[]
+  | { error: string }
+> => {
+  try {
+    if (!assignedUserId) return { error: "Missing assignedUserId" };
+
+    const sixWeeksAgo = dayjs()
+      .subtract(5, "week")
+      .startOf("isoWeek")
+      .format("YYYY-MM-DD");
+    const today = dayjs().endOf("day").format("YYYY-MM-DD");
+
+    const { data, error } = await supabase
+      .from("spruce_tasks")
+      .select(
+        `id, scheduled_date, task_status,
+         user_task:user_task_id (effort),
+         global_task:global_task_id (effort_level)`
+      )
+      .eq("assign_user_id", assignedUserId)
+      .eq("task_status", "completed")
+      .gte("scheduled_date", sixWeeksAgo)
+      .lte("scheduled_date", today);
+
+    if (error) return { error: error.message };
+
+    const effortToPoints = (effort?: number | null) =>
+      effort ? effort * 5 : 0;
+    const tasks = data ?? [];
+
+    const last6Weeks: {
+      week: string;
+      averageScore: number;
+      tasksCompleted: number;
+    }[] = [];
+
+    for (let i = 0; i < 6; i++) {
+      const weekStart = dayjs().subtract(i, "week").startOf("isoWeek");
+      const weekEnd = dayjs().subtract(i, "week").endOf("isoWeek");
+
+      const weekTasks = tasks.filter((task: any) => {
+        const taskDate = dayjs(task.scheduled_date);
+        return taskDate.isBetween(weekStart, weekEnd, "day", "[]");
+      });
+
+      const totalPoints = weekTasks.reduce((total, task) => {
+        if (task.user_task)
+          return total + effortToPoints(task.user_task.effort);
+        if (task.global_task)
+          return total + effortToPoints(task.global_task.effort_level);
+        return total;
+      }, 0);
+
+      last6Weeks.unshift({
+        week: `Week ${6 - i}`,
+        averageScore: weekTasks.length ? totalPoints / weekTasks.length : 0,
+        tasksCompleted: weekTasks.length,
+      });
+    }
+
+    return last6Weeks;
+  } catch (err: any) {
+    return { error: err.message || "Something went wrong" };
+  }
+};
+
+export const fetchSpruceTasksLast6Months = async (
+  assignedUserId: string
+): Promise<
+  | { month: string; averageScore: number; tasksCompleted: number }[]
+  | { error: string }
+> => {
+  try {
+    if (!assignedUserId) return { error: "Missing assignedUserId" };
+
+    const sixMonthsAgo = dayjs()
+      .subtract(5, "month")
+      .startOf("month")
+      .format("YYYY-MM-DD");
+    const today = dayjs().endOf("day").format("YYYY-MM-DD");
+
+    const { data, error } = await supabase
+      .from("spruce_tasks")
+      .select(
+        `id, scheduled_date, task_status,
+         user_task:user_task_id (effort),
+         global_task:global_task_id (effort_level)`
+      )
+      .eq("assign_user_id", assignedUserId)
+      .eq("task_status", "completed")
+      .gte("scheduled_date", sixMonthsAgo)
+      .lte("scheduled_date", today);
+
+    if (error) return { error: error.message };
+
+    const effortToPoints = (effort?: number | null) =>
+      effort ? effort * 5 : 0;
+    const tasks = data ?? [];
+
+    const last6Months: {
+      month: string;
+      averageScore: number;
+      tasksCompleted: number;
+    }[] = [];
+
+    for (let i = 0; i < 6; i++) {
+      const monthStart = dayjs().subtract(i, "month").startOf("month");
+      const monthEnd = dayjs().subtract(i, "month").endOf("month");
+
+      const monthTasks = tasks.filter((task: any) => {
+        const taskDate = dayjs(task.scheduled_date);
+        return taskDate.isBetween(monthStart, monthEnd, "day", "[]");
+      });
+
+      const totalPoints = monthTasks.reduce((total, task) => {
+        if (task.user_task)
+          return total + effortToPoints(task.user_task.effort);
+        if (task.global_task)
+          return total + effortToPoints(task.global_task.effort_level);
+        return total;
+      }, 0);
+
+      last6Months.unshift({
+        month: monthStart.format("MMM"), // Jul, Aug, etc.
+        averageScore: monthTasks.length ? totalPoints / monthTasks.length : 0,
+        tasksCompleted: monthTasks.length,
+      });
+    }
+
+    return last6Months;
+  } catch (err: any) {
+    return { error: err.message || "Something went wrong" };
   }
 };
