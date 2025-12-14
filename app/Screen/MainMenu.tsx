@@ -11,7 +11,7 @@ const MainMenu = () => {
     { label: "Task Library", value: "TaskLibrary" },
     { label: "Flash Back", value: "FlashBack" },
     { label: "Settings", value: "Settings" },
-    { label: "FeedBack", value: "FeedBack" },
+    { label: "FeedBack", value: "FeedBackScreen" },
     { label: "Logout", value: "logout" },
   ];
   const renderItem = ({ item }: { item: (typeof list)[0] }) => (

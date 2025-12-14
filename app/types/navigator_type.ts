@@ -24,6 +24,7 @@ export type HomeStackParamList = {
   Settings: undefined;
   InviteUserScreen: undefined;
   ResetPasswordScreen: undefined;
+  FeedBackScreen: undefined;
   SpruceScreen: {
     sweepId: undefined;
     selectedData: string;

@@ -4,6 +4,7 @@ import index from "../(tabs)";
 import BottomSheetScreen from "../Screen/BottomSheetScreen";
 import CreateHouseholdScreen from "../Screen/CreateHouseHoldScreen";
 import CreateNewPasswordScreen from "../Screen/CreateNewPasswordScreen";
+import FeedBack from "../Screen/FeedBack";
 import FlashbackScreen from "../Screen/FlashbackScreen";
 import InviteUserScreen from "../Screen/InviteUserScreen";
 import MainMenu from "../Screen/MainMenu";
@@ -39,6 +40,8 @@ const HomeNavigator = () => {
       />
       <Stack.Screen name="SpruceScreen" component={SpruceScreen} />
       <Stack.Screen name="BottomSheetScreen" component={BottomSheetScreen} />
+
+      <Stack.Screen name="FeedBackScreen" component={FeedBack} />
     </Stack.Navigator>
   );
 };
