@@ -184,7 +184,10 @@ const SpruceScreen = () => {
           profile?.household_id,
           route.params.selectedData
         );
-
+        console.log(
+          "         route.params.selectedData",
+          route.params.selectedData
+        );
         if (error) {
           Snackbar.show({
             text: error,
@@ -198,6 +201,8 @@ const SpruceScreen = () => {
 
         if (data && Array.isArray(data)) {
           const grouped = groupTasks(data, groupValue);
+
+          console.log("groupData", grouped);
           setGroupData(grouped);
         }
 

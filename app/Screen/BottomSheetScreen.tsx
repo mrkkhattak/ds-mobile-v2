@@ -260,6 +260,7 @@ const BottomSheetScreen = () => {
                 profile={profile}
                 onSuccess={() => console.log("FORM RESET")}
                 handleClose={handleClose}
+                showAssing={route.params?.showAssing ? true : false}
               />
             )}
           </ScrollView>

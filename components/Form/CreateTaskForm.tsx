@@ -42,11 +42,13 @@ interface CreateTaskFormProps {
   onSuccess?: () => void;
   taskName?: String | undefined;
   handleClose: () => Promise<void>;
+  showAssing: boolean;
 }
 
 const CreateTaskForm = (props: CreateTaskFormProps) => {
   const navigation = useNavigation();
-  const { onSubmit, profile, onSuccess, taskName, handleClose } = props;
+  const { onSubmit, profile, onSuccess, taskName, handleClose, showAssing } =
+    props;
   const [open, setOpen] = useState(false);
   const [openModal, setOpenModal] = useState(false);
 
@@ -60,6 +62,7 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
   const [currentMember, setCurrentMember] = useState<Member | undefined>(
     undefined
   );
+  const [showAssingUserSwitch, setShowAssingUserSwitch] = useState(false);
   const {
     control,
     handleSubmit,
@@ -407,13 +410,11 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
                   )}
                 />
                 <TouchableOpacity onPress={() => setShowIcons(!showIcons)}>
-                  {" "}
                   <StartIcon style={{ marginLeft: 10 }} />
                 </TouchableOpacity>
               </View>
               {showIcons && (
                 <View style={{ width: "100%" }}>
-                  {" "}
                   <IconSelector handleSelect={handleSelect} />
                 </View>
               )}
@@ -1089,160 +1090,362 @@ const CreateTaskForm = (props: CreateTaskFormProps) => {
               </View>
             )}
           />
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Text
+          {showAssing === true ? (
+            <View
               style={{
-                fontFamily: "inter",
-                fontWeight: "300",
-                fontSize: 20,
-                lineHeight: 22,
-                width: 80,
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+                justifyContent: "space-between",
               }}
             >
-              ASSIGN
-            </Text>
-            {watch("assign") && currentMember ? (
-              <TouchableOpacity
-                onPress={() => {
-                  setOpenModal(true);
+              <View style={{}}></View>
+              <View
+                style={{
+                  gap: 10,
+                  flex: 1,
                 }}
               >
-                <Avatar.Text
-                  size={44}
-                  label={`${currentMember?.first_name} ${currentMember?.last_name}`
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()}
+                <Text
                   style={{
-                    backgroundColor: "#6915E0",
+                    fontFamily: "inter",
+                    fontWeight: "300",
+                    fontSize: 20,
+                    lineHeight: 22,
                   }}
-                />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => {
-                  setOpenModal(true);
-                }}
-              >
-                <Image
-                  source={require("../../assets/images/addUser.png")}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 17,
-                    marginLeft: 4,
-                  }}
-                />
-              </TouchableOpacity>
-            )}
+                >
+                  Add task to today’s spruce
+                </Text>
 
-            <View style={{ flex: 1 }}>
-              <Controller
-                control={control}
-                name="assign"
-                render={({
-                  field: { value, onChange },
-                  fieldState: { error },
-                }) => (
-                  <View>
-                    <Modal
-                      visible={openModal}
-                      transparent
-                      animationType="fade"
-                      onRequestClose={() => setOpenModal(false)}
+                <Switch
+                  trackColor={{ false: "#ccc", true: "#4f46e5" }}
+                  thumbColor={showAssingUserSwitch ? "#fff" : "#f4f3f4"}
+                  ios_backgroundColor="#ccc"
+                  onValueChange={(va) => {
+                    setShowAssingUserSwitch(!showAssingUserSwitch);
+                  }}
+                  value={showAssingUserSwitch}
+                />
+              </View>
+
+              <View style={{}}>
+                {showAssingUserSwitch && (
+                  <>
+                    <Text
+                      style={{
+                        fontFamily: "inter",
+                        fontWeight: "300",
+                        fontSize: 20,
+                        lineHeight: 22,
+                      }}
                     >
-                      {/* Background press closes modal */}
-                      <Pressable
-                        style={{
-                          flex: 1,
-                          backgroundColor: "rgba(0,0,0,0.4)",
-                          justifyContent: "center",
-                          alignItems: "center",
+                      ASSIGN
+                    </Text>
+                    {watch("assign") && currentMember ? (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setOpenModal(true);
                         }}
-                        onPress={() => setOpenModal(false)}
                       >
-                        {/* Inner area should NOT close modal */}
-                        <Pressable
+                        <Avatar.Text
+                          size={44}
+                          label={`${currentMember?.first_name} ${currentMember?.last_name}`
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()}
                           style={{
-                            width: "80%",
-                            backgroundColor: "#F7F6FB",
-                            padding: 20,
-                            borderRadius: 12,
+                            backgroundColor: "#6915E0",
                           }}
-                          onPress={(e) => e.stopPropagation()}
-                        >
-                          <Text
-                            style={{
-                              fontSize: 18,
-                              fontWeight: "600",
-                              marginBottom: 16,
-                            }}
-                          >
-                            Add User
-                          </Text>
-
-                          <ScrollView
-                            style={{ paddingBottom: 20, maxHeight: 200 }}
-                          >
-                            {members?.map((member: Member) => {
-                              const selected =
-                                selectedMember === member.user_id;
-                              const name = `${member.first_name} ${member.last_name}`;
-                              const role = member.family_role;
-                              return (
-                                <Memberlist
-                                  member={member}
-                                  setSelectedMember={setSelectedMember}
-                                  selected={selected}
-                                  name={name}
-                                  role={role}
-                                />
-                              );
-                            })}
-                          </ScrollView>
-                          {selectedMember && (
-                            <SecondaryButton
-                              label={"Add User"}
-                              onPress={() => {
-                                onChange(selectedMember);
-                                setOpenModal(false);
-                              }}
-                              buttonStyle={{
-                                backgroundColor: "#6915E0",
-                                paddingVertical: 12,
-                                borderRadius: 10,
-                                width: "100%",
-                              }}
-                            />
-                          )}
-                        </Pressable>
-                      </Pressable>
-                    </Modal>
-
-                    {error && (
-                      <Text
-                        style={{
-                          color: "red",
-                          fontSize: 12,
-                          marginTop: 4,
-                          fontFamily: "Inter",
+                        />
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setOpenModal(true);
                         }}
                       >
-                        {error.message}
-                      </Text>
+                        <Image
+                          source={require("../../assets/images/addUser.png")}
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 17,
+                            marginLeft: 4,
+                          }}
+                        />
+                      </TouchableOpacity>
                     )}
-                  </View>
+
+                    <View style={{ flex: 1 }}>
+                      <Controller
+                        control={control}
+                        name="assign"
+                        render={({
+                          field: { value, onChange },
+                          fieldState: { error },
+                        }) => (
+                          <View>
+                            <Modal
+                              visible={openModal}
+                              transparent
+                              animationType="fade"
+                              onRequestClose={() => setOpenModal(false)}
+                            >
+                              {/* Background press closes modal */}
+                              <Pressable
+                                style={{
+                                  flex: 1,
+                                  backgroundColor: "rgba(0,0,0,0.4)",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                }}
+                                onPress={() => setOpenModal(false)}
+                              >
+                                {/* Inner area should NOT close modal */}
+                                <Pressable
+                                  style={{
+                                    width: "80%",
+                                    backgroundColor: "#F7F6FB",
+                                    padding: 20,
+                                    borderRadius: 12,
+                                  }}
+                                  onPress={(e) => e.stopPropagation()}
+                                >
+                                  <Text
+                                    style={{
+                                      fontSize: 18,
+                                      fontWeight: "600",
+                                      marginBottom: 16,
+                                    }}
+                                  >
+                                    Add User
+                                  </Text>
+
+                                  <ScrollView
+                                    style={{
+                                      paddingBottom: 20,
+                                      maxHeight: 200,
+                                    }}
+                                  >
+                                    {members?.map((member: Member) => {
+                                      const selected =
+                                        selectedMember === member.user_id;
+                                      const name = `${member.first_name} ${member.last_name}`;
+                                      const role = member.family_role;
+                                      return (
+                                        <Memberlist
+                                          member={member}
+                                          setSelectedMember={setSelectedMember}
+                                          selected={selected}
+                                          name={name}
+                                          role={role}
+                                        />
+                                      );
+                                    })}
+                                  </ScrollView>
+                                  {selectedMember && (
+                                    <SecondaryButton
+                                      label={"Add User"}
+                                      onPress={() => {
+                                        onChange(selectedMember);
+                                        setOpenModal(false);
+                                      }}
+                                      buttonStyle={{
+                                        backgroundColor: "#6915E0",
+                                        paddingVertical: 12,
+                                        borderRadius: 10,
+                                        width: "100%",
+                                      }}
+                                    />
+                                  )}
+                                </Pressable>
+                              </Pressable>
+                            </Modal>
+
+                            {error && (
+                              <Text
+                                style={{
+                                  color: "red",
+                                  fontSize: 12,
+                                  marginTop: 4,
+                                  fontFamily: "Inter",
+                                }}
+                              >
+                                {error.message}
+                              </Text>
+                            )}
+                          </View>
+                        )}
+                      />
+                    </View>
+                  </>
                 )}
-              />
+              </View>
             </View>
-          </View>
+          ) : (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 16,
+                justifyContent: "flex-end",
+              }}
+            >
+              <View style={{}}>
+                <>
+                  <Text
+                    style={{
+                      fontFamily: "inter",
+                      fontWeight: "300",
+                      fontSize: 20,
+                      lineHeight: 22,
+                    }}
+                  >
+                    ASSIGN
+                  </Text>
+                  {watch("assign") && currentMember ? (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setOpenModal(true);
+                      }}
+                    >
+                      <Avatar.Text
+                        size={44}
+                        label={`${currentMember?.first_name} ${currentMember?.last_name}`
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()}
+                        style={{
+                          backgroundColor: "#6915E0",
+                        }}
+                      />
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setOpenModal(true);
+                      }}
+                    >
+                      <Image
+                        source={require("../../assets/images/addUser.png")}
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 17,
+                          marginLeft: 4,
+                        }}
+                      />
+                    </TouchableOpacity>
+                  )}
+
+                  <View style={{ flex: 1 }}>
+                    <Controller
+                      control={control}
+                      name="assign"
+                      render={({
+                        field: { value, onChange },
+                        fieldState: { error },
+                      }) => (
+                        <View>
+                          <Modal
+                            visible={openModal}
+                            transparent
+                            animationType="fade"
+                            onRequestClose={() => setOpenModal(false)}
+                          >
+                            {/* Background press closes modal */}
+                            <Pressable
+                              style={{
+                                flex: 1,
+                                backgroundColor: "rgba(0,0,0,0.4)",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }}
+                              onPress={() => setOpenModal(false)}
+                            >
+                              {/* Inner area should NOT close modal */}
+                              <Pressable
+                                style={{
+                                  width: "80%",
+                                  backgroundColor: "#F7F6FB",
+                                  padding: 20,
+                                  borderRadius: 12,
+                                }}
+                                onPress={(e) => e.stopPropagation()}
+                              >
+                                <Text
+                                  style={{
+                                    fontSize: 18,
+                                    fontWeight: "600",
+                                    marginBottom: 16,
+                                  }}
+                                >
+                                  Add User
+                                </Text>
+
+                                <ScrollView
+                                  style={{
+                                    paddingBottom: 20,
+                                    maxHeight: 200,
+                                  }}
+                                >
+                                  {members?.map((member: Member) => {
+                                    const selected =
+                                      selectedMember === member.user_id;
+                                    const name = `${member.first_name} ${member.last_name}`;
+                                    const role = member.family_role;
+                                    return (
+                                      <Memberlist
+                                        member={member}
+                                        setSelectedMember={setSelectedMember}
+                                        selected={selected}
+                                        name={name}
+                                        role={role}
+                                      />
+                                    );
+                                  })}
+                                </ScrollView>
+                                {selectedMember && (
+                                  <SecondaryButton
+                                    label={"Add User"}
+                                    onPress={() => {
+                                      onChange(selectedMember);
+                                      setOpenModal(false);
+                                    }}
+                                    buttonStyle={{
+                                      backgroundColor: "#6915E0",
+                                      paddingVertical: 12,
+                                      borderRadius: 10,
+                                      width: "100%",
+                                    }}
+                                  />
+                                )}
+                              </Pressable>
+                            </Pressable>
+                          </Modal>
+
+                          {error && (
+                            <Text
+                              style={{
+                                color: "red",
+                                fontSize: 12,
+                                marginTop: 4,
+                                fontFamily: "Inter",
+                              }}
+                            >
+                              {error.message}
+                            </Text>
+                          )}
+                        </View>
+                      )}
+                    />
+                  </View>
+                </>
+              </View>
+            </View>
+          )}
         </View>
       </KeyboardAwareScrollView>
     </>

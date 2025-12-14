@@ -30,6 +30,7 @@ export type HomeStackParamList = {
   };
   BottomSheetScreen: {
     taskName?: String;
-    selectedData: string;
+    selectedData?: string;
+    showAssing?: boolean;
   };
 };
